@@ -3,7 +3,7 @@ import '../../services/locale_provider.dart';
 import '../theme/lupus_theme.dart';
 
 /// Boîte de dialogue de sélection de langue proposant le Français, l'Arabe et l'Anglais
-/// avec drapeaux natifs et design Dark Gothic néon.
+/// avec codes textuels officiels (sans drapeaux) et design Dark Gothic néon.
 /// Utilisable tant au premier démarrage (non dismissible) que depuis le lobby (dismissible).
 class LanguageDialog extends StatelessWidget {
   final bool dismissible;
@@ -133,7 +133,6 @@ class LanguageDialog extends StatelessWidget {
               _buildLangTile(
                 context,
                 label: 'Français',
-                flag: '🇫🇷',
                 code: 'fr',
                 isSelected: currentCode == 'fr',
               ),
@@ -141,7 +140,6 @@ class LanguageDialog extends StatelessWidget {
               _buildLangTile(
                 context,
                 label: 'العربية',
-                flag: '🇩🇿',
                 code: 'ar',
                 isSelected: currentCode == 'ar',
               ),
@@ -149,7 +147,6 @@ class LanguageDialog extends StatelessWidget {
               _buildLangTile(
                 context,
                 label: 'English',
-                flag: '🇬🇧',
                 code: 'en',
                 isSelected: currentCode == 'en',
               ),
@@ -163,7 +160,6 @@ class LanguageDialog extends StatelessWidget {
   Widget _buildLangTile(
     BuildContext context, {
     required String label,
-    required String flag,
     required String code,
     required bool isSelected,
   }) {
@@ -192,7 +188,32 @@ class LanguageDialog extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
             children: [
-              Text(flag, style: const TextStyle(fontSize: 24)),
+              Container(
+                width: 36,
+                height: 28,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? LupusColors.arcaneGold.withValues(alpha: 0.2)
+                      : Colors.white.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: isSelected
+                        ? LupusColors.arcaneGold
+                        : Colors.white24,
+                    width: 1,
+                  ),
+                ),
+                child: Text(
+                  code.toUpperCase(),
+                  style: TextStyle(
+                    color: isSelected ? LupusColors.arcaneGold : Colors.white70,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+              ),
               const SizedBox(width: 14),
               Expanded(
                 child: Text(

@@ -26,6 +26,7 @@ import '../../services/app_translations.dart';
 import '../bento/language_dialog.dart';
 import '../bento/music_mute_button.dart';
 import 'arena_game_screen.dart';
+import '../../services/room_share_service.dart';
 
 class LobbyScreen extends ConsumerStatefulWidget {
   final LocaleProvider? localeProvider;
@@ -691,10 +692,10 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
                                       const SizedBox(width: 6),
                                       Text(
                                         LocaleProvider.instance.languageCode == 'ar'
-                                            ? 'العربية 🇩🇿'
+                                            ? 'العربية'
                                             : (LocaleProvider.instance.languageCode == 'en'
-                                                ? 'EN 🇬🇧'
-                                                : 'FR 🇫🇷'),
+                                                ? 'English'
+                                                : 'Français'),
                                         style: const TextStyle(
                                           color: LupusColors.arcaneGold,
                                           fontWeight: FontWeight.w800,
@@ -891,14 +892,38 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
                           ),
                         ],
                       ),
-                      IconButton.filledTonal(
-                        onPressed: () {
-                          Clipboard.setData(ClipboardData(text: room.roomCode));
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(context.tr('copy_code'))),
-                          );
-                        },
-                        icon: const Icon(Icons.copy_rounded, size: 20),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton.filledTonal(
+                            tooltip: context.tr('copy_code'),
+                            onPressed: () {
+                              Clipboard.setData(ClipboardData(text: room.roomCode));
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(context.tr('copy_code'))),
+                              );
+                            },
+                            icon: const Icon(Icons.copy_rounded, size: 20),
+                          ),
+                          const SizedBox(width: 8),
+                          Builder(
+                            builder: (shareBtnContext) => IconButton.filledTonal(
+                              tooltip: context.tr('share_code'),
+                              onPressed: () {
+                                final box = shareBtnContext.findRenderObject() as RenderBox?;
+                                final origin = box != null && box.hasSize
+                                    ? (box.localToGlobal(Offset.zero) & box.size)
+                                    : null;
+                                RoomShareService.shareRoomCode(
+                                  context: shareBtnContext,
+                                  roomCode: room.roomCode,
+                                  sharePositionOrigin: origin,
+                                );
+                              },
+                              icon: const Icon(Icons.share, size: 20),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),

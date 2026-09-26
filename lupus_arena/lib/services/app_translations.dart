@@ -66,6 +66,10 @@ class AppTranslations {
       'settings': 'Paramètres',
       'leave_room': 'Quitter le salon',
       'copy_code': 'Code copié dans le presse-papiers !',
+      'share_code': 'Partager le code',
+      'share_room_subject': 'Rejoins ma partie Lupus Arena !',
+      'share_room_message':
+          '🌕 La pleine lune se lève sur Lupus Arena...\n\nRejoins vite la meute ! 🐺\n\n🗝️ Code de la room : {ROOM_CODE}',
       'enter_valid_name': 'Veuillez saisir un pseudo valide.',
       'enter_valid_code': 'Veuillez saisir un code valide.',
       'room_not_found': 'Salon introuvable. Vérifiez le code.',
@@ -723,6 +727,10 @@ class AppTranslations {
       'settings': 'الإعدادات',
       'leave_room': 'مغادرة الغرفة',
       'copy_code': 'تم نسخ الرمز إلى الحافظة!',
+      'share_code': 'مشاركة الرمز',
+      'share_room_subject': 'انضم إلى مباراتي في Lupus Arena!',
+      'share_room_message':
+          '🌕 يكتمل القمر فوق Lupus Arena...\n\nانضم بسرعة إلى القطيع! 🐺\n\n🗝️ رمز الغرفة : {ROOM_CODE}',
       'enter_valid_name': 'يرجى إدخال اسم مستعار صالح.',
       'enter_valid_code': 'يرجى إدخال رمز صالح.',
       'room_not_found': 'الغرفة غير موجودة. تحقق من الرمز.',
@@ -1380,6 +1388,10 @@ class AppTranslations {
       'settings': 'Settings',
       'leave_room': 'Leave Room',
       'copy_code': 'Code copied to clipboard!',
+      'share_code': 'Share code',
+      'share_room_subject': 'Join my Lupus Arena game!',
+      'share_room_message':
+          '🌕 The full moon rises over Lupus Arena...\n\nJoin the pack quickly! 🐺\n\n🗝️ Room code: {ROOM_CODE}',
       'enter_valid_name': 'Please enter a valid nickname.',
       'enter_valid_code': 'Please enter a valid code.',
       'room_not_found': 'Room not found. Check code.',

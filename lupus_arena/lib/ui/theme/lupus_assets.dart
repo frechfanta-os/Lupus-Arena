@@ -60,7 +60,7 @@ class LupusAssets {
               file,
               fit: fit,
               alignment: alignment,
-              errorBuilder: (_, __, ___) => _buildLobbyAssetCascade(fit, alignment),
+              errorBuilder: (context, error, stackTrace) => _buildLobbyAssetCascade(fit, alignment),
             );
           }
         } catch (_) {}
