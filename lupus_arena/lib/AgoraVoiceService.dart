@@ -243,12 +243,23 @@ class AgoraVoiceService {
         profile: AudioProfileType.audioProfileSpeechStandard,
         scenario: AudioScenarioType.audioScenarioGameStreaming,
       );
+
+      // Maintien strict de l'AEC (Acoustic Echo Cancellation) pour éviter tout retour sonore
+      // de la musique de fond dans le micro du joueur
+      try {
+        await _engine!.setParameters('{"che.audio.enable.aec":true}');
+        await _engine!.setParameters('{"che.audio.enable.agc":true}');
+        await _engine!.setParameters('{"che.audio.enable.ns":true}');
+      } catch (e) {
+        debugPrint('[AgoraVoiceService] Configuration AEC params: $e');
+      }
+
       await _engine!.enableAudioVolumeIndication(
         interval: 250,
         smooth: 3,
         reportVad: true,
       );
-      addLog('Module audio activé avec monitoring de volume.');
+      addLog('Module audio activé avec monitoring de volume et AEC strict.');
 
       _isInitialized = true;
       return true;

@@ -5,6 +5,7 @@ import '../../models/game_phase.dart';
 import '../../services/app_translations.dart';
 import '../theme/lupus_theme.dart';
 import 'bento_card.dart';
+import 'music_mute_button.dart';
 
 /// Barre de contrôle vocal Bento pour Agora RTC
 class BentoVoiceControls extends StatelessWidget {
@@ -306,6 +307,10 @@ class BentoVoiceControls extends StatelessWidget {
                                   size: 20,
                                 ),
                               ),
+                              const SizedBox(width: 8),
+
+                              // Bouton Mute Musique (Strictement indépendant du SDK Agora RTC)
+                              const MusicMuteButton(),
                             ],
                           ),
                         );

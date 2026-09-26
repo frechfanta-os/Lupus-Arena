@@ -24,6 +24,7 @@ import '../../services/locale_provider.dart';
 import '../../services/lupus_permission_service.dart';
 import '../../services/app_translations.dart';
 import '../bento/language_dialog.dart';
+import '../bento/music_mute_button.dart';
 import 'arena_game_screen.dart';
 
 class LobbyScreen extends ConsumerStatefulWidget {
@@ -149,8 +150,8 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
         _isNavigatingToArena = true;
         WidgetsBinding.instance.addPostFrameCallback((_) async {
           final nav = Navigator.of(context);
-          // 1. COUPER D'ABORD ET ATTENDRE LE VERROU
-          await LobbyAudioManager.instance.stopLobbyMusic();
+          // 1. COUPER D'ABORD PAR FONDU PROPRE ET ATTENDRE LE VERROU
+          await LobbyAudioManager.instance.fadeOutAndStopLobbyMusic();
           // 2. NAVIGUER ENSUITE
           if (mounted) {
             nav.pushReplacement(
@@ -190,33 +191,9 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // 1. Image d'arrière-plan en plein écran avec BoxFit.cover (garantit 0 vide noir)
+          // 1. Image d'arrière-plan officielle plein écran (lobby screen.jpg avec résolution dynamique & fallbacks)
           Positioned.fill(
-            child: Image.asset(
-              LupusAssets.lobbyBackdropAsset,
-              fit: BoxFit.cover,
-              alignment: Alignment.topCenter,
-              errorBuilder: (context, error, stackTrace) => Image.asset(
-                LupusAssets.lobbyFantasyBgFallbackAsset,
-                fit: BoxFit.cover,
-                alignment: Alignment.topCenter,
-                errorBuilder: (context, error, stackTrace) => Image.asset(
-                  LupusAssets.lobbyFantasyBgAltAsset,
-                  fit: BoxFit.cover,
-                  alignment: Alignment.topCenter,
-                  errorBuilder: (context, error, stackTrace) => Image.asset(
-                    LupusAssets.lobbyCleanBgAsset,
-                    fit: BoxFit.cover,
-                    alignment: Alignment.topCenter,
-                    errorBuilder: (context, error, stackTrace) => Image.asset(
-                      LupusAssets.villageNightBgAssetFallback,
-                      fit: BoxFit.cover,
-                      alignment: Alignment.topCenter,
-                    ),
-                  ),
-                ),
-              ),
-            ),
+            child: LupusAssets.buildLobbyBackground(),
           ),
 
           // 2. Déclencheur secret Admin sur le Sceau en haut (Double tap ou Appui long)
@@ -583,6 +560,10 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
               ),
               const SizedBox(width: 6),
             ],
+
+            // ── Bouton Mute Musique (Isolation totale d'Agora RTC) ──
+            const MusicMuteButton(isCompact: true, size: 32),
+            const SizedBox(width: 6),
 
             // ── Bouton Globe — IDENTIQUE au HUD de l'Arena (_buildStitchTopHUD) ──
             // Cercle 32×32 · fond 0xC012182E · border arcaneGold 0.4 · icône language_rounded 16pt

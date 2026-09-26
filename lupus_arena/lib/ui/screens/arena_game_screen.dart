@@ -22,6 +22,7 @@ import '../theme/lupus_assets.dart';
 import '../theme/lupus_theme.dart';
 import '../../services/app_translations.dart';
 import '../../services/audio_manager.dart';
+import '../bento/music_mute_button.dart';
 import '../../services/locale_provider.dart';
 import '../../services/server_time_service.dart';
 import '../../services/death_registry_service.dart';
@@ -107,7 +108,8 @@ class ArenaGameScreen extends ConsumerStatefulWidget {
   ConsumerState<ArenaGameScreen> createState() => _ArenaGameScreenState();
 }
 
-class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen> {
+class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
+    with WidgetsBindingObserver {
   String? _selectedPlayerId;
   bool _useRadialView = true; // Bascule entre Table Mystique et Grille Bento
   bool _isLeavingOrNavigating = false;
@@ -134,7 +136,25 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen> {
   @override
   void initState() {
     super.initState();
-    LupusAudioManager.instance.stopLobbyMusic();
+    WidgetsBinding.instance.addObserver(this);
+    // Arrêt propre / fade out de la musique du Lobby
+    LupusAudioManager.instance.fadeOutAndStopLobbyMusic();
+    // Démarrage de la musique de la Room en boucle à volume subtil (15%-20%)
+    LupusAudioManager.instance.playRoomMusic();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.detached) {
+      LupusAudioManager.instance.pauseRoomMusic();
+    } else if (state == AppLifecycleState.resumed) {
+      if (mounted && ref.read(gameNotifierProvider).room != null) {
+        LupusAudioManager.instance.resumeRoomMusic();
+      }
+    }
   }
 
   void _checkAndQueueDeathAnnouncements(GameRoom room) {
@@ -202,6 +222,8 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    LupusAudioManager.instance.stopRoomMusic();
     _countdownNotifier.dispose();
     _victoryVoiceTimer?.cancel();
     _victoryVoiceCountdownNotifier.dispose();
@@ -955,7 +977,11 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen> {
           ),
           const SizedBox(width: 6),
 
-          // 6. [Globe de langue] : Bouton circulaire avec l'icône globe tout à droite
+          // 6. [Bouton Mute Musique] : Mute indépendant d'Agora RTC
+          const MusicMuteButton(isCompact: true, size: 32),
+          const SizedBox(width: 6),
+
+          // 7. [Globe de langue] : Bouton circulaire avec l'icône globe tout à droite
           GestureDetector(
             onTap: () =>
                 LanguageDialog.show(context, LocaleProvider.instance),

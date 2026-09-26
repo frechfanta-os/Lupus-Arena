@@ -1,3 +1,5 @@
+import 'dart:io' show File;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 /// Références aux ressources visuelles officielles issues de la génération Stitch.
@@ -18,8 +20,15 @@ class LupusAssets {
   static const String villageNightBgAssetFallback =
       'village_background.png';
   static const String wolfSealAsset = 'assets/images/lupus_seal.png';
-  static const String lobbyBackdropAsset = 'assets/images/backlobby.jpg';
-  static const String lobbyFantasyBgAsset = 'assets/images/backlobby.jpg';
+
+  /// Chemin strict sur l'appareil (téléphone)
+  static const String lobbyScreenSourcePath =
+      'Tous les fichiers/Pictures/lobby screen.jpg';
+  static const String lobbyScreenAsset = 'assets/images/lobby screen.jpg';
+  static const String lobbyScreenNormalizedAsset = 'assets/images/lobby_screen.jpg';
+  static const String lobbyBackdropAsset = 'assets/images/lobby_screen.jpg';
+  static const String lobbyFantasyBgAsset = 'assets/images/lobby_screen.jpg';
+  static const String lobbyBackdropLegacyAsset = 'assets/images/backlobby.jpg';
   static const String lobbyFantasyBgFallbackAsset = 'assets/images/lobby_fantasy_bg.png';
   static const String lobbyFantasyBgAltAsset = 'assets/images/IMG_20260918_175859.png';
   static const String lobbyCleanBgAsset = 'assets/images/lobby_clean_bg.png';
@@ -27,6 +36,77 @@ class LupusAssets {
   static const String cardBackFallbackAsset = 'assets/cards/card_back.png';
   static const String tableNuitMockupAsset =
       'assets/images/table_nuit_mockup.png';
+
+  /// Construit le widget officiel de fond pour le Lobby avec résolution automatique :
+  /// 1. Tente le fichier local sur l'appareil (`/sdcard/Pictures/lobby screen.jpg` ou candidate)
+  /// 2. Si non trouvé ou sur le Web, utilise l'asset embarqué `assets/images/lobby_screen.jpg`
+  /// 3. Cascade gracieuse vers les fallbacks en cas de besoin.
+  static Widget buildLobbyBackground({
+    BoxFit fit = BoxFit.cover,
+    Alignment alignment = Alignment.topCenter,
+  }) {
+    if (!kIsWeb) {
+      final fileName = lobbyScreenSourcePath.split('/').last;
+      final candidatePaths = [
+        '/sdcard/Pictures/$fileName',
+        '/storage/emulated/0/Pictures/$fileName',
+        lobbyScreenSourcePath,
+      ];
+      for (final path in candidatePaths) {
+        try {
+          final file = File(path);
+          if (file.existsSync()) {
+            return Image.file(
+              file,
+              fit: fit,
+              alignment: alignment,
+              errorBuilder: (_, __, ___) => _buildLobbyAssetCascade(fit, alignment),
+            );
+          }
+        } catch (_) {}
+      }
+    }
+
+    return _buildLobbyAssetCascade(fit, alignment);
+  }
+
+  static Widget _buildLobbyAssetCascade(BoxFit fit, Alignment alignment) {
+    return Image.asset(
+      lobbyScreenNormalizedAsset,
+      fit: fit,
+      alignment: alignment,
+      errorBuilder: (context, error, stackTrace) => Image.asset(
+        lobbyScreenAsset,
+        fit: fit,
+        alignment: alignment,
+        errorBuilder: (context, error, stackTrace) => Image.asset(
+          lobbyBackdropLegacyAsset,
+          fit: fit,
+          alignment: alignment,
+          errorBuilder: (context, error, stackTrace) => Image.asset(
+            lobbyFantasyBgFallbackAsset,
+            fit: fit,
+            alignment: alignment,
+            errorBuilder: (context, error, stackTrace) => Image.asset(
+              lobbyFantasyBgAltAsset,
+              fit: fit,
+              alignment: alignment,
+              errorBuilder: (context, error, stackTrace) => Image.asset(
+                lobbyCleanBgAsset,
+                fit: fit,
+                alignment: alignment,
+                errorBuilder: (context, error, stackTrace) => Image.asset(
+                  villageNightBgAssetFallback,
+                  fit: fit,
+                  alignment: alignment,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
   /// Widget intelligent chargeant l'asset local avec bascule gracieuse sur l'URL hébergée
   static Widget adaptiveImage({

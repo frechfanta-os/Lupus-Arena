@@ -81,8 +81,12 @@ flutter:
 
   assets:
     - assets/images/
+    - assets/images/lobby_screen.jpg
+    - assets/images/backlobby.jpg
     - assets/cards/
     - assets/audio/
+    - assets/audio/Aldeas de Niebla.mp3
+    - assets/audio/Village at Night.mp3
     - assets/audio/son-lupus.mp3
     - village_background.png
 

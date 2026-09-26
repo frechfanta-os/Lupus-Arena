@@ -1,159 +1,406 @@
+import 'dart:async';
+import 'dart:io';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 
-/// Gestionnaire audio exclusif du Lobby (LobbyAudioManager).
-/// Implémente un verrou atomique (_isExplicitlyStopped) empêchant toute résurgence sonore fantôme
-/// lors des transitions d'écrans ou des réveils du cycle de vie Android / iOS.
+/// Gestionnaire audio centralisé de Lupus Arena (Lobby & Room).
+///
+/// Spécifications techniques et coexistence avec Agora RTC :
+/// 1. Piste Lobby : 'Tous les fichiers/Download/Aldeas de Niebla.mp3' en boucle.
+/// 2. Piste Room : 'Tous les fichiers/Download/Village at Night.mp3' en boucle avec volume bas (15%-20%).
+/// 3. Coexistence Agora RTC : AudioContext configuré avec [AndroidAudioFocus.none] et
+///    [AVAudioSessionOptions.mixWithOthers] pour garantir que la musique n'interrompt pas,
+///    ne coupe pas et ne bloque pas le flux vocal et micro Agora.
+/// 4. Isolation stricte : Le bouton Mute Musique n'interagit JAMAIS avec Agora RTC.
 class LobbyAudioManager {
   static final LobbyAudioManager instance = LobbyAudioManager._internal();
   factory LobbyAudioManager() => instance;
   LobbyAudioManager._internal();
 
-  AudioPlayer? _player;
-  bool _isExplicitlyStopped = false;
-  double _volume = 0.70;
-  bool _isMuted = false;
+  // --- CHEMINS SOURCES OBLIGATOIRES (CHEMINS STRICTS) ---
+  static const String lobbySourcePath = 'Tous les fichiers/Download/Aldeas de Niebla.mp3';
+  static const String roomSourcePath = 'Tous les fichiers/Download/Village at Night.mp3';
 
-  static const String lobbyMusicAsset = 'audio/son-lupus.mp3';
+  // --- FALLBACKS PACKAGÉS DANS L'APPLICATION ---
+  static const String lobbyAssetFallback = 'assets/audio/Aldeas de Niebla.mp3';
+  static const String roomAssetFallback = 'assets/audio/Village at Night.mp3';
 
-  bool get isExplicitlyStopped => _isExplicitlyStopped;
-  bool get isPlaying => _player?.state == PlayerState.playing;
-  bool get isMuted => _isMuted;
-  double get volume => _volume;
+  // Rétrocompatibilité
+  static const String lobbyMusicAsset = lobbyAssetFallback;
 
-  Future<void> init() async {
-    if (_player == null) {
+  AudioPlayer? _lobbyPlayer;
+  AudioPlayer? _roomPlayer;
+
+  bool _isLobbyExplicitlyStopped = false;
+  bool _isRoomExplicitlyStopped = true;
+
+  // Niveaux de volume par défaut
+  double _lobbyVolume = 0.50;
+  // Volume Room : strictement maintenu entre 15% et 20% (18%) pour ne pas masquer la voix
+  double _roomVolume = 0.18;
+
+  // État Mute Musique (Strictement indépendant du SDK Agora RTC)
+  final ValueNotifier<bool> isMusicMutedNotifier = ValueNotifier<bool>(false);
+
+  bool get isMusicMuted => isMusicMutedNotifier.value;
+  bool get isMuted => isMusicMuted; // Rétrocompatibilité
+
+  bool get isLobbyPlaying => _lobbyPlayer?.state == PlayerState.playing;
+  bool get isRoomPlaying => _roomPlayer?.state == PlayerState.playing;
+  bool get isPlaying => isLobbyPlaying || isRoomPlaying;
+  bool get isExplicitlyStopped => _isLobbyExplicitlyStopped;
+
+  double get lobbyVolume => _lobbyVolume;
+  double get roomVolume => _roomVolume;
+  double get volume => _lobbyVolume; // Rétrocompatibilité
+
+  /// Résout la source audio : tente le chemin direct sur l'appareil (/sdcard/Download/...)
+  /// et bascule gracieusement sur l'asset local si le fichier n'est pas accessible.
+  static Source resolveAudioSource(String strictPath, String fallbackAsset) {
+    final fileName = strictPath.split('/').last;
+    final candidatePaths = [
+      '/sdcard/Download/$fileName',
+      '/storage/emulated/0/Download/$fileName',
+      strictPath,
+    ];
+
+    for (final path in candidatePaths) {
+      try {
+        final file = File(path);
+        if (file.existsSync()) {
+          return DeviceFileSource(file.path);
+        }
+      } catch (_) {}
+    }
+
+    return AssetSource(fallbackAsset);
+  }
+
+  /// Contexte audio pour coexistence parfaite avec Agora RTC
+  AudioContext _buildAgoraCoexistenceContext() {
+    return AudioContext(
+      android: const AudioContextAndroid(
+        isSpeakerphoneOn: true,
+        stayAwake: false,
+        contentType: AndroidContentType.music,
+        usageType: AndroidUsageType.media,
+        audioFocus: AndroidAudioFocus.none, // Ne vole jamais le focus VoIP d'Agora
+      ),
+      iOS: AudioContextIOS(
+        category: AVAudioSessionCategory.ambient, // Mixe avec le chat vocal sans couper
+        options: {
+          AVAudioSessionOptions.mixWithOthers,
+        },
+      ),
+    );
+  }
+
+  /// Initialise le lecteur du Lobby
+  Future<void> _initLobbyPlayer() async {
+    if (_lobbyPlayer == null) {
       final player = AudioPlayer();
       try {
-        await player.setAudioContext(
-          AudioContext(
-            android: const AudioContextAndroid(
-              isSpeakerphoneOn: true,
-              stayAwake: false,
-              contentType: AndroidContentType.music,
-              usageType: AndroidUsageType.media,
-              audioFocus: AndroidAudioFocus.none,
-            ),
-            iOS: AudioContextIOS(
-              category: AVAudioSessionCategory.ambient,
-              options: {
-                AVAudioSessionOptions.mixWithOthers,
-              },
-            ),
-          ),
-        );
+        await player.setAudioContext(_buildAgoraCoexistenceContext());
         await player.setReleaseMode(ReleaseMode.loop);
-        await player.setVolume(_isMuted ? 0.0 : _volume);
-        _player = player;
+        await player.setVolume(isMusicMuted ? 0.0 : _lobbyVolume);
+        _lobbyPlayer = player;
       } catch (e) {
-        debugPrint('[LobbyAudioManager] Configuration AudioPlayer: $e');
-        _player = player;
+        debugPrint('[LobbyAudioManager] Configuration _lobbyPlayer: $e');
+        _lobbyPlayer = player;
       }
     }
   }
 
-  /// Démarre la lecture de la musique d'ambiance du Lobby en boucle
-  Future<void> playLobbyMusic({bool resetPosition = false}) async {
-    _isExplicitlyStopped = false;
-    await init();
+  /// Initialise le lecteur de la Room (In-Game)
+  Future<void> _initRoomPlayer() async {
+    if (_roomPlayer == null) {
+      final player = AudioPlayer();
+      try {
+        await player.setAudioContext(_buildAgoraCoexistenceContext());
+        await player.setReleaseMode(ReleaseMode.loop);
+        await player.setVolume(isMusicMuted ? 0.0 : _roomVolume);
+        _roomPlayer = player;
+      } catch (e) {
+        debugPrint('[LobbyAudioManager] Configuration _roomPlayer: $e');
+        _roomPlayer = player;
+      }
+    }
+  }
 
-    // Si le moteur audio est déjà en lecture, ne pas re-déclencher
-    if (_player != null && _player!.state == PlayerState.playing) return;
+  // ===========================================================================
+  // GESTION DU LOBBY
+  // ===========================================================================
+
+  /// Lance la musique du Lobby en boucle
+  Future<void> playLobbyMusic({bool resetPosition = false}) async {
+    _isLobbyExplicitlyStopped = false;
+    // Arrête proprement toute musique de room en cours
+    await stopRoomMusic();
+    await _initLobbyPlayer();
+
+    if (_lobbyPlayer != null && _lobbyPlayer!.state == PlayerState.playing) {
+      return;
+    }
 
     try {
-      if (_player != null) {
-        await _player!.stop(); // Nettoie tout buffer résiduel
+      if (_lobbyPlayer != null) {
+        await _lobbyPlayer!.stop();
       }
-      if (!_isExplicitlyStopped && _player != null) {
-        await _player!.setReleaseMode(ReleaseMode.loop);
-        await _player!.setVolume(_isMuted ? 0.0 : _volume);
+      if (!_isLobbyExplicitlyStopped && _lobbyPlayer != null) {
+        await _lobbyPlayer!.setReleaseMode(ReleaseMode.loop);
+        await _lobbyPlayer!.setVolume(isMusicMuted ? 0.0 : _lobbyVolume);
         if (resetPosition) {
           try {
-            await _player!.seek(Duration.zero);
+            await _lobbyPlayer!.seek(Duration.zero);
           } catch (_) {}
         }
-        try {
-          await _player!.play(AssetSource(lobbyMusicAsset));
-        } catch (e) {
-          debugPrint('[LobbyAudioManager] Fallback asset play: $e');
-          await _player!.play(AssetSource('assets/audio/son-lupus.mp3'));
-        }
-        debugPrint('[LobbyAudioManager] 🎵 Musique du lobby lancée en boucle.');
+        final source = resolveAudioSource(lobbySourcePath, lobbyAssetFallback);
+        await _lobbyPlayer!.play(source);
+        debugPrint('[LobbyAudioManager] 🎵 Musique Lobby ($lobbySourcePath) lancée en boucle.');
       }
     } catch (e) {
       debugPrint('[LobbyAudioManager] Erreur playLobbyMusic: $e');
+      // Tentative de secours sur l'asset
+      try {
+        await _lobbyPlayer?.play(AssetSource(lobbyAssetFallback));
+      } catch (_) {}
     }
   }
 
-  /// Arrêt FORCÉ, SYNCHRONE de l'intention et verrouillé
+  /// Arrêt forcé de la musique du Lobby
   Future<void> stopLobbyMusic() async {
-    _isExplicitlyStopped = true;
-    if (_player != null) {
+    _isLobbyExplicitlyStopped = true;
+    if (_lobbyPlayer != null) {
       try {
-        await _player!.stop();
-        debugPrint('[LobbyAudioManager] ⏹️ Musique du lobby arrêtée proprement.');
+        await _lobbyPlayer!.stop();
+        debugPrint('[LobbyAudioManager] ⏹️ Musique Lobby arrêtée.');
       } catch (e) {
         debugPrint('[LobbyAudioManager] Erreur stopLobbyMusic: $e');
       }
     }
   }
 
-  /// Met en pause temporairement la musique
-  Future<void> pauseLobbyMusic() async {
-    if (_player != null && _player!.state == PlayerState.playing) {
+  /// Arrêt progressif (fade out) de la musique du Lobby lors de la transition vers la Room
+  Future<void> fadeOutAndStopLobbyMusic({
+    Duration duration = const Duration(milliseconds: 500),
+  }) async {
+    _isLobbyExplicitlyStopped = true;
+    if (_lobbyPlayer != null && _lobbyPlayer!.state == PlayerState.playing && !isMusicMuted) {
       try {
-        await _player!.pause();
-        debugPrint('[LobbyAudioManager] ⏸️ Musique du lobby mise en pause.');
+        const steps = 5;
+        final stepDuration = Duration(milliseconds: duration.inMilliseconds ~/ steps);
+        final currentVol = _lobbyVolume;
+        for (int i = steps - 1; i >= 0; i--) {
+          await _lobbyPlayer?.setVolume((currentVol * i) / steps);
+          await Future.delayed(stepDuration);
+        }
+      } catch (e) {
+        debugPrint('[LobbyAudioManager] Erreur fadeOut Lobby: $e');
+      }
+    }
+    await stopLobbyMusic();
+  }
+
+  /// Met en pause temporairement la musique du Lobby
+  Future<void> pauseLobbyMusic() async {
+    if (_lobbyPlayer != null && _lobbyPlayer!.state == PlayerState.playing) {
+      try {
+        await _lobbyPlayer!.pause();
+        debugPrint('[LobbyAudioManager] ⏸️ Musique Lobby mise en pause.');
       } catch (e) {
         debugPrint('[LobbyAudioManager] Erreur pauseLobbyMusic: $e');
       }
     }
   }
 
-  /// Reprend la musique UNIQUEMENT si l'arrêt forcé n'a pas été demandé
+  /// Reprend la musique du Lobby
   Future<void> resumeLobbyMusic() async {
-    // Ne reprend JAMAIS si l'arrêt a été explicitement demandé (ex: entrée dans une room / partie)
-    if (!_isExplicitlyStopped && _player != null) {
+    if (!_isLobbyExplicitlyStopped && _lobbyPlayer != null) {
       try {
-        await _player!.resume();
-        debugPrint('[LobbyAudioManager] ▶️ Musique du lobby reprise.');
+        await _lobbyPlayer!.resume();
+        debugPrint('[LobbyAudioManager] ▶️ Musique Lobby reprise.');
       } catch (e) {
         debugPrint('[LobbyAudioManager] Erreur resumeLobbyMusic: $e');
       }
     }
   }
 
-  /// Ajuste le volume sonore (0.0 à 1.0)
-  Future<void> setVolume(double newVolume) async {
-    _volume = newVolume.clamp(0.0, 1.0);
-    if (_player != null && !_isMuted) {
+  // ===========================================================================
+  // GESTION DE LA ROOM (IN-GAME)
+  // ===========================================================================
+
+  /// Lance la musique de la Room en boucle à volume bas (15%-20%)
+  Future<void> playRoomMusic({bool resetPosition = false}) async {
+    _isRoomExplicitlyStopped = false;
+    // Arrête la musique du Lobby
+    await stopLobbyMusic();
+    await _initRoomPlayer();
+
+    if (_roomPlayer != null && _roomPlayer!.state == PlayerState.playing) {
+      return;
+    }
+
+    try {
+      if (_roomPlayer != null) {
+        await _roomPlayer!.stop();
+      }
+      if (!_isRoomExplicitlyStopped && _roomPlayer != null) {
+        await _roomPlayer!.setReleaseMode(ReleaseMode.loop);
+        await _roomPlayer!.setVolume(isMusicMuted ? 0.0 : _roomVolume);
+        if (resetPosition) {
+          try {
+            await _roomPlayer!.seek(Duration.zero);
+          } catch (_) {}
+        }
+        final source = resolveAudioSource(roomSourcePath, roomAssetFallback);
+        await _roomPlayer!.play(source);
+        debugPrint('[LobbyAudioManager] 🌙 Musique Room ($roomSourcePath) lancée en boucle (Vol: ${(_roomVolume * 100).toInt()}%).');
+      }
+    } catch (e) {
+      debugPrint('[LobbyAudioManager] Erreur playRoomMusic: $e');
+      // Tentative de secours sur l'asset
       try {
-        await _player!.setVolume(_volume);
+        await _roomPlayer?.play(AssetSource(roomAssetFallback));
+      } catch (_) {}
+    }
+  }
+
+  /// Arrêt forcé de la musique de la Room
+  Future<void> stopRoomMusic() async {
+    _isRoomExplicitlyStopped = true;
+    if (_roomPlayer != null) {
+      try {
+        await _roomPlayer!.stop();
+        debugPrint('[LobbyAudioManager] ⏹️ Musique Room arrêtée.');
+      } catch (e) {
+        debugPrint('[LobbyAudioManager] Erreur stopRoomMusic: $e');
+      }
+    }
+  }
+
+  /// Arrêt progressif (fade out) de la musique de la Room
+  Future<void> fadeOutAndStopRoomMusic({
+    Duration duration = const Duration(milliseconds: 500),
+  }) async {
+    _isRoomExplicitlyStopped = true;
+    if (_roomPlayer != null && _roomPlayer!.state == PlayerState.playing && !isMusicMuted) {
+      try {
+        const steps = 5;
+        final stepDuration = Duration(milliseconds: duration.inMilliseconds ~/ steps);
+        final currentVol = _roomVolume;
+        for (int i = steps - 1; i >= 0; i--) {
+          await _roomPlayer?.setVolume((currentVol * i) / steps);
+          await Future.delayed(stepDuration);
+        }
+      } catch (e) {
+        debugPrint('[LobbyAudioManager] Erreur fadeOut Room: $e');
+      }
+    }
+    await stopRoomMusic();
+  }
+
+  /// Met en pause la musique de la Room
+  Future<void> pauseRoomMusic() async {
+    if (_roomPlayer != null && _roomPlayer!.state == PlayerState.playing) {
+      try {
+        await _roomPlayer!.pause();
+        debugPrint('[LobbyAudioManager] ⏸️ Musique Room mise en pause.');
+      } catch (e) {
+        debugPrint('[LobbyAudioManager] Erreur pauseRoomMusic: $e');
+      }
+    }
+  }
+
+  /// Reprend la musique de la Room
+  Future<void> resumeRoomMusic() async {
+    if (!_isRoomExplicitlyStopped && _roomPlayer != null) {
+      try {
+        await _roomPlayer!.resume();
+        debugPrint('[LobbyAudioManager] ▶️ Musique Room reprise.');
+      } catch (e) {
+        debugPrint('[LobbyAudioManager] Erreur resumeRoomMusic: $e');
+      }
+    }
+  }
+
+  // ===========================================================================
+  // BOUTON "MUTE MUSIQUE" (ISOLATION TOTALE D'AGORA RTC)
+  // ===========================================================================
+
+  /// Bascule l'état Mute de la musique.
+  ///
+  /// RÈGLE STRICTE : N'interagit JAMAIS avec Agora RTC (aucun appel à RtcEngine,
+  /// muteLocalAudioStream, muteAllRemoteAudioStreams, adjustPlaybackSignalVolume).
+  /// Les flux micro et voix restent 100% actifs.
+  Future<void> toggleMusicMute() async {
+    final nextMuteState = !isMusicMuted;
+    await setMusicMuted(nextMuteState);
+  }
+
+  /// Définit l'état Mute de la musique.
+  Future<void> setMusicMuted(bool mute) async {
+    isMusicMutedNotifier.value = mute;
+
+    if (mute) {
+      // Mute activé : passe le volume local à 0 ou met en pause
+      try {
+        await _lobbyPlayer?.setVolume(0.0);
+        await _roomPlayer?.setVolume(0.0);
+      } catch (e) {
+        debugPrint('[LobbyAudioManager] Erreur mute setVolume: $e');
+      }
+      debugPrint('[LobbyAudioManager] 🔇 Musique locale coupée (Agora RTC non impacté).');
+    } else {
+      // Mute désactivé : rétablit le volume par défaut
+      try {
+        await _lobbyPlayer?.setVolume(_lobbyVolume);
+        await _roomPlayer?.setVolume(_roomVolume);
+      } catch (e) {
+        debugPrint('[LobbyAudioManager] Erreur unmute setVolume: $e');
+      }
+      debugPrint('[LobbyAudioManager] 🔊 Musique locale rétablie (Room: ${(_roomVolume * 100).toInt()}%, Agora RTC non impacté).');
+    }
+  }
+
+  /// Rétrocompatibilité pour toggleMute
+  Future<void> toggleMute() async => toggleMusicMute();
+
+  /// Ajuste le volume sonore général du lobby
+  Future<void> setVolume(double newVolume) async {
+    _lobbyVolume = newVolume.clamp(0.0, 1.0);
+    if (_lobbyPlayer != null && !isMusicMuted) {
+      try {
+        await _lobbyPlayer!.setVolume(_lobbyVolume);
       } catch (e) {
         debugPrint('[LobbyAudioManager] Erreur setVolume: $e');
       }
     }
   }
 
-  /// Active ou désactive le mode muet
-  Future<void> toggleMute() async {
-    _isMuted = !_isMuted;
-    if (_player != null) {
+  /// Ajuste le volume sonore de la room (maintenu entre 15% et 20%)
+  Future<void> setRoomVolume(double newVolume) async {
+    _roomVolume = newVolume.clamp(0.05, 0.50);
+    if (_roomPlayer != null && !isMusicMuted) {
       try {
-        await _player!.setVolume(_isMuted ? 0.0 : _volume);
+        await _roomPlayer!.setVolume(_roomVolume);
       } catch (e) {
-        debugPrint('[LobbyAudioManager] Erreur toggleMute: $e');
+        debugPrint('[LobbyAudioManager] Erreur setRoomVolume: $e');
       }
     }
   }
 
-  /// Libère les ressources
+  /// Libère toutes les ressources audio
   void dispose() {
     try {
-      _isExplicitlyStopped = true;
-      _player?.stop();
-      _player?.dispose();
-      _player = null;
+      _isLobbyExplicitlyStopped = true;
+      _isRoomExplicitlyStopped = true;
+      _lobbyPlayer?.stop();
+      _lobbyPlayer?.dispose();
+      _lobbyPlayer = null;
+
+      _roomPlayer?.stop();
+      _roomPlayer?.dispose();
+      _roomPlayer = null;
     } catch (e) {
       debugPrint('[LobbyAudioManager] Erreur dispose: $e');
     }
