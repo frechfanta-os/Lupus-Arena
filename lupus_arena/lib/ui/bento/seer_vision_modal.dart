@@ -175,7 +175,7 @@ class _SeerVisionModalState extends State<SeerVisionModal>
 
             const SizedBox(height: 16),
 
-            // Carte d'illustration officielle issue de LOUP GAROU ENHANCED
+            // Carte d'illustration officielle issue de assets/cards/
             RoleCardImage(
               role: role,
               width: 140,

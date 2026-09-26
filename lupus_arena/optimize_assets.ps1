@@ -1,6 +1,6 @@
 # ==============================================================================
 # SCRIPT D'OPTIMISATION DES ASSETS - LUPUS ARENA
-# Réduit le dossier 'LOUP GAROU ENHANCED' de ~165 Mo à ~2.5 Mo
+# Optimise les cartes sous 'assets/cards'
 # Garantit un APK propre sous les 50 Mo sans perte de qualité visuelle sur mobile
 # ==============================================================================
 
@@ -11,9 +11,9 @@ if (-not $projectRoot) {
     $projectRoot = Get-Location
 }
 
-$sourceDir = Join-Path $projectRoot "LOUP GAROU ENHANCED"
-$backupDir = Join-Path $projectRoot "LOUP GAROU ENHANCED_BACKUP"
-$tempDir   = Join-Path $projectRoot "LOUP GAROU ENHANCED_TEMP"
+$sourceDir = Join-Path (Join-Path $projectRoot "assets") "cards"
+$backupDir = Join-Path $projectRoot "assets_cards_backup"
+$tempDir   = Join-Path $projectRoot "assets_cards_temp"
 
 Write-Host "--- OPTIMISATION DES ASSETS LUPUS ARENA ---" -ForegroundColor Cyan
 Write-Host "Dossier source : $sourceDir"
@@ -25,11 +25,11 @@ if (-not (Test-Path $sourceDir)) {
 
 # 1. Sauvegarde des originaux HD si pas déjà fait
 if (-not (Test-Path $backupDir)) {
-    Write-Host "Création d'une sauvegarde des cartes haute résolution dans LOUP GAROU ENHANCED_BACKUP..." -ForegroundColor Yellow
+    Write-Host "Création d'une sauvegarde des cartes haute résolution..." -ForegroundColor Yellow
     Copy-Item -Path $sourceDir -Destination $backupDir -Recurse
     Write-Host "Sauvegarde terminée avec succès !" -ForegroundColor Green
 } else {
-    Write-Host "Sauvegarde déjà existante dans LOUP GAROU ENHANCED_BACKUP." -ForegroundColor Gray
+    Write-Host "Sauvegarde déjà existante dans $backupDir." -ForegroundColor Gray
 }
 
 # Création du dossier temporaire
@@ -101,7 +101,7 @@ foreach ($file in $files) {
     }
 }
 
-# Remplacement des fichiers dans LOUP GAROU ENHANCED
+# Remplacement des fichiers dans assets/cards
 Write-Host "Remplacement des fichiers par les versions optimisées..." -ForegroundColor Yellow
 Copy-Item -Path "$tempDir\*" -Destination $sourceDir -Force
 Remove-Item $tempDir -Recurse -Force

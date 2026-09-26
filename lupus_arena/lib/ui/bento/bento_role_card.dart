@@ -89,7 +89,7 @@ class _BentoRoleCardState extends State<BentoRoleCard> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Illustration officielle de la carte (LOUP GAROU ENHANCED)
+                // Illustration officielle de la carte (assets/cards/)
                 GestureDetector(
                   onTap: () => _showFullCardDialog(context, role),
                   child: Hero(

@@ -23,6 +23,8 @@ class LupusAssets {
   static const String lobbyFantasyBgFallbackAsset = 'assets/images/lobby_fantasy_bg.png';
   static const String lobbyFantasyBgAltAsset = 'assets/images/IMG_20260918_175859.png';
   static const String lobbyCleanBgAsset = 'assets/images/lobby_clean_bg.png';
+  static const String cardBackAsset = 'assets/cards/Fond.jpg';
+  static const String cardBackFallbackAsset = 'assets/cards/card_back.png';
   static const String tableNuitMockupAsset =
       'assets/images/table_nuit_mockup.png';
 

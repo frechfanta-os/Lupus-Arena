@@ -1170,7 +1170,7 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
             ),
             child: Row(
               children: [
-                // Illustration officielle de la carte (LOUP GAROU ENHANCED)
+                // Illustration officielle de la carte (assets/cards/)
                 RoleCardImage(
                   role: player.role,
                   width: 44,

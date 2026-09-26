@@ -346,7 +346,7 @@ class _RevealedDeathCardOverlayState extends State<RevealedDeathCardOverlay>
     );
   }
 
-  /// Face arrière : Dos de carte mystique (FOND officiel ou assets/cards/card_back.png)
+  /// Face arrière : Dos de carte mystique (assets/cards/Fond.jpg ou assets/cards/card_back.png)
   Widget _buildCardBack(double width, double height) {
     return Container(
       width: width,
@@ -368,14 +368,14 @@ class _RevealedDeathCardOverlayState extends State<RevealedDeathCardOverlay>
       child: ClipRRect(
         borderRadius: BorderRadius.circular(11),
         child: Image.asset(
-          'assets/cards/card_back.png',
+          RoleAssetMap.cardBackPath,
           width: width,
           height: height,
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) {
-            // Fallback 1 : FOND officiel de LOUP GAROU ENHANCED
+            // Fallback 1 : card_back.png alternatif
             return Image.asset(
-              'LOUP GAROU ENHANCED/FOND.jpg',
+              RoleAssetMap.cardBackFallback,
               width: width,
               height: height,
               fit: BoxFit.cover,
@@ -443,7 +443,7 @@ class _RevealedDeathCardOverlayState extends State<RevealedDeathCardOverlay>
         child: Stack(
           fit: StackFit.expand,
           children: [
-            // Illustration officielle du rôle (LOUP GAROU ENHANCED ou assets/cards/)
+            // Illustration officielle du rôle (assets/cards/)
             RoleCardImage(
               role: role,
               width: width,

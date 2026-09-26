@@ -2,76 +2,83 @@ import 'package:flutter/material.dart';
 import '../../models/game_role.dart';
 
 /// Helper associant chaque rôle du jeu à sa carte d'illustration officielle
-/// issue du dossier 'LOUP GAROU ENHANCED'.
+/// issue du dossier 'assets/cards/'.
 class RoleAssetMap {
+  /// Fond de carte officiel (dos de carte)
+  static const String cardBackPath = 'assets/cards/Fond.jpg';
+  static const String cardBackFallback = 'assets/cards/card_back.png';
+
+  /// Vérifie si un rôle possède une illustration de carte dédiée
+  static bool hasCardAsset(GameRole role) => getImagePath(role) != null;
+
   static String? getImagePath(GameRole role) {
     switch (role) {
       case GameRole.simpleVillager:
-        return 'LOUP GAROU ENHANCED/Simple Villageois.jpg';
+        return 'assets/cards/Simple villageois.jpg';
       case GameRole.seer:
-        return 'LOUP GAROU ENHANCED/VOYANTE.jpg';
+        return 'assets/cards/Voyante.jpg';
       case GameRole.witch:
-        return 'LOUP GAROU ENHANCED/Sorcière.jpg';
+        return 'assets/cards/Sorcière.jpg';
       case GameRole.hunter:
-        return 'LOUP GAROU ENHANCED/Chasseur.jpg';
+        return 'assets/cards/Chasseur.jpg';
       case GameRole.cupid:
-        return 'LOUP GAROU ENHANCED/CUPIDON.jpg';
+        return 'assets/cards/Cupidon.jpg';
       case GameRole.littleGirl:
-        return 'LOUP GAROU ENHANCED/Petite Fille.jpg';
+        return 'assets/cards/Petite fille.jpg';
       case GameRole.thief:
-        return 'LOUP GAROU ENHANCED/Voleur.jpg';
+        return 'assets/cards/Voleur.jpg';
       case GameRole.defender:
-        return 'LOUP GAROU ENHANCED/Salvateur.jpg';
+        return 'assets/cards/Salvateur.jpg';
       case GameRole.elder:
-        return 'LOUP GAROU ENHANCED/Ancien.jpg';
+        return 'assets/cards/Ancien.jpg';
       case GameRole.scapegoat:
-        return 'LOUP GAROU ENHANCED/Bouc Émissaire.jpg';
+        return 'assets/cards/Bouc Émissaire.jpg';
       case GameRole.idiot:
-        return 'LOUP GAROU ENHANCED/Idiot du village.jpg';
+        return 'assets/cards/Idiot du village.jpg';
       case GameRole.twoSisters:
-        return 'LOUP GAROU ENHANCED/Deux Sœurs.jpg';
+        return 'assets/cards/Deux Sœurs.jpg';
       case GameRole.threeBrothers:
-        return 'LOUP GAROU ENHANCED/Trois Frères.jpg';
+        return 'assets/cards/Trois frères.jpg';
       case GameRole.fox:
-        return 'LOUP GAROU ENHANCED/Renard.jpg';
+        return 'assets/cards/Renard.jpg';
       case GameRole.bearTamer:
-        return 'LOUP GAROU ENHANCED/Montreur d\'Ours.jpg';
+        return 'assets/cards/Montreur d\'ours.jpg';
       case GameRole.stutteringJudge:
-        return 'LOUP GAROU ENHANCED/Juge bègue.jpg';
+        return 'assets/cards/Juge Bègue.jpg';
       case GameRole.knightRustySword:
-        return 'LOUP GAROU ENHANCED/Chevalier à l\'Épée Rouillée.jpg';
+        return 'assets/cards/Chevalier à l\'épée roulliée.jpg';
       case GameRole.servantMaid:
-        return 'LOUP GAROU ENHANCED/Servante Dévouée.jpg';
+        return 'assets/cards/Servante dévoué.jpg';
       case GameRole.actor:
-        return 'LOUP GAROU ENHANCED/Comédien.jpg';
+        return 'assets/cards/Comédien.jpg';
       case GameRole.simpleWerewolf:
-        return 'LOUP GAROU ENHANCED/Loup-Garou.jpg';
+        return 'assets/cards/Loup noir.jpg';
       case GameRole.bigBadWolf:
-        return 'LOUP GAROU ENHANCED/Grand-Méchant-Loup.jpg';
+        return 'assets/cards/Grand méchant loup.jpg';
       case GameRole.whiteWerewolf:
-        return 'LOUP GAROU ENHANCED/Loup Blanc.jpg';
+        return 'assets/cards/Loup blanc.jpg';
       case GameRole.blackWolf:
-        return 'LOUP GAROU ENHANCED/Grand-Méchant-Loup.jpg';
+        return 'assets/cards/Loup noir.jpg';
       case GameRole.vileFatherOfWolves:
-        return 'LOUP GAROU ENHANCED/Infect Père des Loups.jpg';
+        return 'assets/cards/Infect père des loups.jpg';
       case GameRole.wolfCub:
-        return 'LOUP GAROU ENHANCED/Chien-loup.jpg';
+        return 'assets/cards/Chien loup.jpg';
       case GameRole.wildChild:
-        return 'LOUP GAROU ENHANCED/Enfant Sauvage.jpg';
+        return 'assets/cards/Enfant sauvage.jpg';
       case GameRole.pyromaniac:
-        return 'LOUP GAROU ENHANCED/Pyromane.jpg';
+        return 'assets/cards/Pyromane.jpg';
       case GameRole.raven:
-        return 'LOUP GAROU ENHANCED/Corbeau.jpg';
+        return 'assets/cards/Corbeau.jpg';
       case GameRole.angel:
-        return 'LOUP GAROU ENHANCED/Ange.jpg';
+        return 'assets/cards/Ange.jpg';
       case GameRole.piedPiper:
-        return 'LOUP GAROU ENHANCED/Joueur de Flûte.jpg';
+        return 'assets/cards/Joueur de flute.jpg';
       case GameRole.sectLeader:
-        return 'LOUP GAROU ENHANCED/Abominable Sectaire.jpg';
+        return 'assets/cards/Abominable Sectaire.jpg';
       case GameRole.thiefOfHearts:
-        return 'LOUP GAROU ENHANCED/Gitane.jpg';
+        return 'assets/cards/Gitan.jpg';
       case GameRole.mayor:
-        return 'LOUP GAROU ENHANCED/Maire.jpg';
+        return null; // Titre honorifique électif (aucun asset carte requis)
     }
   }
 }
