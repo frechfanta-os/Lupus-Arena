@@ -123,24 +123,36 @@ jobs:
           tag_name: ${{ env.APP_VERSION }}
           name: "Lupus Arena ${{ env.APP_VERSION }}"
           body: |
-            ### 🐺 Lupus Arena - ${{ env.APP_VERSION }} (Traduction Intégrale FR/AR/EN · UI Non-Inversée en Arabe · Boutons Épurés Sans Emoji)
+            ### 🐺 Lupus Arena - ${{ env.APP_VERSION }} (Deck Officiel · Gestion Audio & Mute · Partage Multilingue · Élimination des Drapeaux)
 
-            #### 🌟 Nouveautés & Améliorations
+            #### 🌟 Nouveautés & Améliorations de cette Release
 
-            **🌐 Traduction Intégrale en 3 Langues (FR / AR / EN)**
-            - Chaque chaîne et terme du jeu traduit à 100% dans le dictionnaire centralisé (621 clés par langue).
-            - Traduction dynamique des rôles, descriptions, phases, chroniques et panneaux d'administration.
-            - Bouton "REJOINDRE" traduit de manière réactive : FR `REJOINDRE` / AR `انضمام` / EN `JOIN`.
+            **🃏 Refactorisation Complète des Cartes (Deck Officiel)**
+            - Remplacement intégral de l'ancien jeu de cartes par la nouvelle collection officielle dans `assets/cards/`.
+            - Suppression définitive de l'ancien dossier obsolète `LOUP GAROU ENHANCED/`.
+            - Mappages stricts et gestion robuste de toutes les cartes (Servante Dévouée, Chevalier à l'Épée Rouillée, Grand Méchant Loup, etc.).
+            - Dos de carte officiel harmonisé (`assets/cards/Fond.jpg`).
 
-            **📐 UI Non-Inversée en Langue Arabe (LTR Strict)**
-            - Directionnalité de l'interface (`TextDirection.ltr`) verrouillée à la racine de l'application : l'UI ne se retourne plus en mode miroir lors de la sélection de la langue arabe.
-            - Repères visuels, boutons, tables radiales et capsules restent stables et parfaitement ergonomiques.
+            **🎵 Gestion Sonore & Coexistence Parfaite avec Agora RTC**
+            - Pistes dédiées en boucle continue :
+              • Lobby : *Aldeas de Niebla* avec fondu (*fade-out*) à l'entrée dans la Room.
+              • Room (en jeu) : *Village at Night* avec volume subtil (18%) préservant les échanges vocaux.
+            - Coexistence RTC avancée : `AndroidAudioFocus.none` et `mixWithOthers` pour ne jamais couper ni interférer avec le chat vocal.
+            - Suppression de tout retour micro : activation forcée de l'AEC (*Acoustic Echo Cancellation*), AGC et NS sur Agora.
+            - Bouton Mute Musique dédié (`MusicMuteButton`), 100% indépendant d'Agora (ne coupe jamais le micro ni les voix des joueurs).
 
-            **📍 Déplacement des Boutons d'Action & Style Épuré**
-            - Boutons descendus en bas (`bottom: 110 dp`), pile à l'emplacement « X » au-dessus du grand cercle runique au sol.
-            - Corps et socle rocheux du loup-garou 100% dégagés et visibles.
-            - Retrait des emojis et icônes sur les boutons pour un rendu noble, sobre et lisible.
-            - Capsule pseudo épurée avec logo loup officiel en 28×28 dp (crayon retiré).
+            **🖼️ Nouveau Fond d'Écran du Lobby**
+            - Intégration du fond officiel (`lobby screen.jpg` / `lobby_screen.jpg` / `backlobby.jpg`).
+            - Résolution dynamique sur smartphone avec fallback cascade élégant.
+
+            **📲 Partage Natif du Code de Room (Multilingue FR / EN / AR)**
+            - Nouveau bouton de partage `Icons.share` immédiatement à côté du bouton de copie du code.
+            - Messages d'invitation dynamiques selon la langue du joueur (Arabe, Français, Anglais).
+            - Support popover iPad/tablettes via `sharePositionOrigin` calculé sur le `RenderBox`.
+
+            **🏳️ Élimination Complète des Drapeaux dans l'UI**
+            - Retrait intégral de tous les drapeaux dans les sélecteurs de langue et boîtes de dialogue.
+            - Affichage épuré basé exclusivement sur les codes textuels (`FR`, `AR`, `EN`) et les noms des langues.
 
             ---
             #### 📲 Binaires Téléchargeables
