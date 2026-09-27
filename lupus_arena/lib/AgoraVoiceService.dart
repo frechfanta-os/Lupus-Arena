@@ -74,7 +74,7 @@ class AgoraVoiceService {
   );
   static const String appCertificate = String.fromEnvironment(
     'AGORA_APP_CERTIFICATE',
-    defaultValue: '',
+    defaultValue: '9263c2350773468991e500b63e61d6e1',
   );
 
   Future<bool> initialize({String appId = defaultAppId}) async {
@@ -401,6 +401,10 @@ class AgoraVoiceService {
   Future<void> retryJoin() async {
     if (_lastChannelId != null && _lastUid != null) {
       addLog('🔄 Relance manuelle de la connexion vocale...');
+      _hasFailed = false;
+      _failedChannelId = null;
+      lastErrorMessage.value = null;
+      connectionError.value = null;
       await joinChannel(
         channelId: _lastChannelId!,
         uid: _lastUid!,

@@ -1,16 +1,19 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:path_provider/path_provider.dart';
 
-class LobbyAudioManager {
+class LobbyAudioManager with WidgetsBindingObserver {
   static final LobbyAudioManager instance = LobbyAudioManager._internal();
   factory LobbyAudioManager() => instance;
   LobbyAudioManager._internal() {
     try {
       AudioCache.instance.prefix = '';
+    } catch (_) {}
+    try {
+      WidgetsBinding.instance.addObserver(this);
     } catch (_) {}
   }
 
@@ -45,6 +48,63 @@ class LobbyAudioManager {
   double get lobbyVolume => _lobbyVolume;
   double get roomVolume => _roomVolume;
   double get volume => _lobbyVolume;
+
+  bool _wasLobbyPlayingBeforeBackground = false;
+  bool _wasRoomPlayingBeforeBackground = false;
+  bool _isBackgrounded = false;
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.hidden) {
+      _handleAppBackgrounded();
+    } else if (state == AppLifecycleState.detached) {
+      _handleAppDetached();
+    } else if (state == AppLifecycleState.resumed) {
+      _handleAppForegrounded();
+    }
+  }
+
+  void _handleAppBackgrounded() {
+    _isBackgrounded = true;
+    _wasLobbyPlayingBeforeBackground = isLobbyPlaying;
+    _wasRoomPlayingBeforeBackground = isRoomPlaying;
+    try {
+      _lobbyPlayer?.pause();
+    } catch (_) {}
+    try {
+      _roomPlayer?.pause();
+    } catch (_) {}
+  }
+
+  void _handleAppDetached() {
+    _isBackgrounded = true;
+    _wasLobbyPlayingBeforeBackground = false;
+    _wasRoomPlayingBeforeBackground = false;
+    try {
+      _lobbyPlayer?.stop();
+    } catch (_) {}
+    try {
+      _roomPlayer?.stop();
+    } catch (_) {}
+  }
+
+  void _handleAppForegrounded() {
+    _isBackgrounded = false;
+    if (_wasLobbyPlayingBeforeBackground && !_isLobbyExplicitlyStopped && !isMusicMuted) {
+      try {
+        _lobbyPlayer?.resume();
+      } catch (_) {}
+    }
+    if (_wasRoomPlayingBeforeBackground && !_isRoomExplicitlyStopped && !isMusicMuted) {
+      try {
+        _roomPlayer?.resume();
+      } catch (_) {}
+    }
+    _wasLobbyPlayingBeforeBackground = false;
+    _wasRoomPlayingBeforeBackground = false;
+  }
 
   static Source resolveAudioSource(String strictPath, String fallbackAsset) {
     final fileName = strictPath.split('/').last;
@@ -172,6 +232,11 @@ class LobbyAudioManager {
   Future<void> playLobbyMusic({bool resetPosition = false}) async {
     _isLobbyExplicitlyStopped = false;
 
+    if (_isBackgrounded) {
+      _wasLobbyPlayingBeforeBackground = true;
+      return;
+    }
+
     await stopRoomMusic();
     await _initLobbyPlayer();
 
@@ -217,6 +282,7 @@ class LobbyAudioManager {
 
   Future<void> stopLobbyMusic() async {
     _isLobbyExplicitlyStopped = true;
+    _wasLobbyPlayingBeforeBackground = false;
     if (_lobbyPlayer != null) {
       try {
         await _lobbyPlayer!.stop();
@@ -231,6 +297,7 @@ class LobbyAudioManager {
     Duration duration = const Duration(milliseconds: 500),
   }) async {
     _isLobbyExplicitlyStopped = true;
+    _wasLobbyPlayingBeforeBackground = false;
     if (_lobbyPlayer != null && _lobbyPlayer!.state == PlayerState.playing && !isMusicMuted) {
       try {
         const steps = 5;
@@ -248,7 +315,7 @@ class LobbyAudioManager {
   }
 
   Future<void> pauseLobbyMusic() async {
-    if (_lobbyPlayer != null && _lobbyPlayer!.state == PlayerState.playing) {
+    if (_lobbyPlayer != null) {
       try {
         await _lobbyPlayer!.pause();
         debugPrint('[LobbyAudioManager] ⏸️ Musique Lobby mise en pause.');
@@ -259,7 +326,7 @@ class LobbyAudioManager {
   }
 
   Future<void> resumeLobbyMusic() async {
-    if (!_isLobbyExplicitlyStopped && _lobbyPlayer != null) {
+    if (!_isLobbyExplicitlyStopped && _lobbyPlayer != null && !_isBackgrounded && !isMusicMuted) {
       try {
         await _lobbyPlayer!.resume();
         debugPrint('[LobbyAudioManager] ▶️ Musique Lobby reprise.');
@@ -271,6 +338,11 @@ class LobbyAudioManager {
 
   Future<void> playRoomMusic({bool resetPosition = false}) async {
     _isRoomExplicitlyStopped = false;
+
+    if (_isBackgrounded) {
+      _wasRoomPlayingBeforeBackground = true;
+      return;
+    }
 
     await stopLobbyMusic();
     await _initRoomPlayer();
@@ -322,6 +394,7 @@ class LobbyAudioManager {
 
   Future<void> stopRoomMusic() async {
     _isRoomExplicitlyStopped = true;
+    _wasRoomPlayingBeforeBackground = false;
     if (_roomPlayer != null) {
       try {
         await _roomPlayer!.stop();
@@ -336,6 +409,7 @@ class LobbyAudioManager {
     Duration duration = const Duration(milliseconds: 500),
   }) async {
     _isRoomExplicitlyStopped = true;
+    _wasRoomPlayingBeforeBackground = false;
     if (_roomPlayer != null && _roomPlayer!.state == PlayerState.playing && !isMusicMuted) {
       try {
         const steps = 5;
@@ -353,7 +427,7 @@ class LobbyAudioManager {
   }
 
   Future<void> pauseRoomMusic() async {
-    if (_roomPlayer != null && _roomPlayer!.state == PlayerState.playing) {
+    if (_roomPlayer != null) {
       try {
         await _roomPlayer!.pause();
         debugPrint('[LobbyAudioManager] ⏸️ Musique Room mise en pause.');
@@ -364,7 +438,7 @@ class LobbyAudioManager {
   }
 
   Future<void> resumeRoomMusic() async {
-    if (!_isRoomExplicitlyStopped && _roomPlayer != null) {
+    if (!_isRoomExplicitlyStopped && _roomPlayer != null && !_isBackgrounded && !isMusicMuted) {
       try {
         await _roomPlayer!.resume();
         debugPrint('[LobbyAudioManager] ▶️ Musique Room reprise.');
@@ -429,8 +503,11 @@ class LobbyAudioManager {
 
   void dispose() {
     try {
+      WidgetsBinding.instance.removeObserver(this);
       _isLobbyExplicitlyStopped = true;
       _isRoomExplicitlyStopped = true;
+      _wasLobbyPlayingBeforeBackground = false;
+      _wasRoomPlayingBeforeBackground = false;
       _lobbyPlayer?.stop();
       _lobbyPlayer?.dispose();
       _lobbyPlayer = null;

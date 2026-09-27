@@ -1,7 +1,7 @@
 name: lupus_arena
 description: "Lupus Arena Flutter App"
 publish_to: 'none'
-version: 2.5.15+82
+version: 2.5.16+83
 
 environment:
   sdk: ^3.13.2

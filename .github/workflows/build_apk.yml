@@ -123,23 +123,23 @@ jobs:
           tag_name: ${{ env.APP_VERSION }}
           name: "Lupus Arena ${{ env.APP_VERSION }}"
           body: |
-            ### 🐺 Lupus Arena - ${{ env.APP_VERSION }} (Boutons d'Accueil Gothiques · Plage de Saisie Code Salon Interactive · Migration Firebase & Package com.ghdinteractivestudio.lupusarena · i18n FR/AR/EN)
+            ### 🐺 Lupus Arena - ${{ env.APP_VERSION }} (Correctif Agora Voice RTC · Cycle de Vie Audio · Clavier & Fond Fixe · i18n Réactif FR/AR/EN)
 
-            #### 🌟 Nouveautés & Améliorations de cette Release
+            #### 🌟 Nouveautés & Correctifs de cette Release
 
-            **🏰 Refonte Visuelle de l'Écran d'Accueil (Lobby Screen)**
-            - Intégration fidèle des assets gothiques de haute qualité (`UI LOBBY`) selon la composition officielle `DESPOSITION.jpg`.
-            - Plaques de pierre gravées avec emblèmes sculptés et alignement millimétré sous la poutre Lupus Arena :
-              • Bouton de gauche : *CRÉE UN SALON* avec tête de loup arcanique violette et animation de compression tactile (scale 0.93) au toucher.
-              • Plaque centrale : *CODE SALON* transformée en véritable plage de texte interactive (`TextField`) intégrée à la pierre, avec typographie luminescente violette (`#F3E8FF` / `#C084FC`), passage automatique en majuscules et hint contextuel.
-              • Bouton de droite : *REJOINDRE* avec double tête de loup et portail ouvert, validant la saisie pour entrer dans le salon.
+            **🎙️ Rétablissement Complet du Chat Vocal Agora RTC**
+            - Correction de la configuration d'authentification RTC : restauration du certificat d'application et du générateur de jeton 006 HMAC-SHA256 (`AgoraTokenBuilder`).
+            - Résolution définitive du blocage "ERREUR AUDIO AGORA" et amélioration de la reprise manuelle (`retryJoin`) pour rejoindre instantanément les canaux vocaux (`lupus_$roomCode`).
 
-            **🔥 Migration Firebase & Unification du Package**
-            - Basculement complet sur le nouveau projet Firebase `lupusarena` (ID `1050312347949`) avec Realtime Database `europe-west1`.
-            - Harmonisation intégrale du package name `com.ghdinteractivestudio.lupusarena` sur toute l'arborescence Android, Gradle et configurations clientes.
+            **🎵 Gestion Intelligente du Cycle de Vie Audio (Sortie d'application & Veille)**
+            - La musique de jeu et d'ambiance se coupe automatiquement et proprement lorsque l'application passe en arrière-plan, est minimisée (`hidden`, `paused`, `inactive`) ou quittée via le bouton retour (`PopScope`).
+            - Reprise automatique et fluide de la piste appropriée au retour au premier plan (`resumed`).
 
-            **🌐 Internationalisation & Localisation Complète**
-            - Support intégral et symétrique de 3 langues : Français (FR), Arabe (AR) et Anglais (EN) sans aucune clé manquante.
+            **⌨️ Disposition Optimale du Clavier Virtuel**
+            - Alignement dynamique et élégant de la barre d'action juste au-dessus du clavier lors de la saisie du code salon, sans déformation du fond d'écran (`resizeToAvoidBottomInset: false`).
+
+            **🌐 Réactivité Immédiate de la Localisation**
+            - Rendu dynamique des libellés de boutons dans toutes les langues supportées (Français, Arabe, Anglais) avec rafraîchissement instantané lors du changement de langue.
 
             ---
             #### 📲 Binaires Téléchargeables

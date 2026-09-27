@@ -49,6 +49,8 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    final locale = widget.localeProvider ?? LocaleProvider.instance;
+    locale.addListener(_onLocaleChanged);
     final state = ref.read(gameNotifierProvider);
     _nameController.text = state.currentUserName;
 
@@ -109,6 +111,7 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.hidden ||
         state == AppLifecycleState.detached) {
       LobbyAudioManager.instance.pauseLobbyMusic();
       LobbyAudioManager.instance.pauseRoomMusic();
@@ -121,9 +124,17 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
     }
   }
 
+  void _onLocaleChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    final locale = widget.localeProvider ?? LocaleProvider.instance;
+    locale.removeListener(_onLocaleChanged);
     LobbyAudioManager.instance.stopLobbyMusic();
 
     _nameController.dispose();
@@ -171,13 +182,20 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
         systemNavigationBarDividerColor: Colors.transparent,
         systemNavigationBarIconBrightness: Brightness.light,
       ),
-      child: Scaffold(
-        backgroundColor: const Color(0xFF04060E),
-        resizeToAvoidBottomInset: true,
-        body: SizedBox.expand(
-          child: room == null
-              ? _buildMainMenu(context, gameState)
-              : _buildWaitingLobby(context, gameState, room),
+      child: PopScope(
+        canPop: true,
+        onPopInvokedWithResult: (didPop, result) {
+          LobbyAudioManager.instance.stopLobbyMusic();
+          LobbyAudioManager.instance.stopRoomMusic();
+        },
+        child: Scaffold(
+          backgroundColor: const Color(0xFF04060E),
+          resizeToAvoidBottomInset: false,
+          body: SizedBox.expand(
+            child: room == null
+                ? _buildMainMenu(context, gameState)
+                : _buildWaitingLobby(context, gameState, room),
+          ),
         ),
       ),
     );
@@ -185,100 +203,108 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
 
   Widget _buildMainMenu(BuildContext context, LupusGameState gameState) {
     final media = MediaQuery.of(context);
-    return SizedBox.expand(
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
+    final locale = widget.localeProvider ?? LocaleProvider.instance;
 
-          Positioned.fill(
-            child: LupusAssets.buildLobbyBackground(),
-          ),
-
-          Positioned(
-            top: media.padding.top > 0 ? media.padding.top : 24,
-            left: 0,
-            right: 0,
-            height: 140,
-            child: Center(
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onDoubleTap: () => _openAdminTrigger(context),
-                onLongPress: () => _openAdminTrigger(context),
-                child: const SizedBox(width: 170, height: 140),
+    return ListenableBuilder(
+      listenable: locale,
+      builder: (context, _) {
+        return SizedBox.expand(
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Positioned.fill(
+                child: LupusAssets.buildLobbyBackground(),
               ),
-            ),
-          ),
 
-          Positioned(
-            bottom: media.viewInsets.bottom > 0
-                ? media.viewInsets.bottom + 12.0
-                : math.max(
-                    (media.padding.bottom > 0 ? media.padding.bottom : 16.0) + 16.0,
-                    media.size.height * 0.275,
+              Positioned(
+                top: media.padding.top > 0 ? media.padding.top : 24,
+                left: 0,
+                right: 0,
+                height: 140,
+                child: Center(
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onDoubleTap: () => _openAdminTrigger(context),
+                    onLongPress: () => _openAdminTrigger(context),
+                    child: const SizedBox(width: 170, height: 140),
                   ),
-            left: 0,
-            right: 0,
-            child: SafeArea(
-              top: false,
-              bottom: false,
-              child: Center(
-                child: _buildActionButtonsColumn(context, gameState),
-              ),
-            ),
-          ),
-
-          if (gameState.errorMessage != null)
-            Positioned(
-              left: 18,
-              right: 18,
-              top: (media.padding.top > 0 ? media.padding.top : 24) + 65,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                decoration: BoxDecoration(
-                  color: LupusColors.bloodRed.withValues(alpha: 0.90),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: Colors.white30),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Colors.black87,
-                      blurRadius: 12,
-                      offset: Offset(0, 4),
-                    ),
-                  ],
                 ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.error_outline_rounded, color: Colors.white, size: 20),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        gameState.errorMessage!,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                        ),
+              ),
+
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOutCubic,
+                bottom: media.viewInsets.bottom > 0
+                    ? media.viewInsets.bottom + 14.0
+                    : math.max(
+                        (media.padding.bottom > 0 ? media.padding.bottom : 16.0) + 16.0,
+                        media.size.height * 0.275,
                       ),
-                    ),
-                    IconButton(
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      icon: const Icon(Icons.close_rounded, color: Colors.white70, size: 18),
-                      onPressed: () => ref.read(gameNotifierProvider.notifier).clearError(),
-                    ),
-                  ],
+                left: 0,
+                right: 0,
+                child: SafeArea(
+                  top: false,
+                  bottom: false,
+                  child: Center(
+                    child: _buildActionButtonsColumn(context, gameState),
+                  ),
                 ),
               ),
-            ),
 
-          Positioned(
-            top: (media.padding.top > 0 ? media.padding.top : 24) + 6,
-            left: 18,
-            right: 18,
-            child: _buildTopBar(context, gameState),
+              if (gameState.errorMessage != null)
+                Positioned(
+                  left: 18,
+                  right: 18,
+                  top: (media.padding.top > 0 ? media.padding.top : 24) + 65,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: LupusColors.bloodRed.withValues(alpha: 0.90),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: Colors.white30),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black87,
+                          blurRadius: 12,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.error_outline_rounded, color: Colors.white, size: 20),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            gameState.errorMessage!,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          icon: const Icon(Icons.close_rounded, color: Colors.white70, size: 18),
+                          onPressed: () => ref.read(gameNotifierProvider.notifier).clearError(),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+              Positioned(
+                top: (media.padding.top > 0 ? media.padding.top : 24) + 6,
+                left: 18,
+                right: 18,
+                child: _buildTopBar(context, gameState),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -578,6 +604,7 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
     return LobbyActionButtons(
       gameState: gameState,
       codeController: _codeController,
+      localeProvider: widget.localeProvider ?? LocaleProvider.instance,
       onJoin: _handleJoinOrAdmin,
       onCreate: () async {
         await LobbyAudioManager.instance.fadeOutAndStopLobbyMusic();
@@ -1432,6 +1459,7 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
 class LobbyActionButtons extends StatefulWidget {
   final LupusGameState gameState;
   final TextEditingController codeController;
+  final LocaleProvider? localeProvider;
   final VoidCallback onJoin;
   final VoidCallback onCreate;
 
@@ -1439,6 +1467,7 @@ class LobbyActionButtons extends StatefulWidget {
     super.key,
     required this.gameState,
     required this.codeController,
+    this.localeProvider,
     required this.onJoin,
     required this.onCreate,
   });
@@ -1449,6 +1478,7 @@ class LobbyActionButtons extends StatefulWidget {
 
 class _LobbyActionButtonsState extends State<LobbyActionButtons> {
   late final FocusNode _codeFocusNode;
+  late final LocaleProvider _localeProvider;
 
   @override
   void initState() {
@@ -1456,6 +1486,8 @@ class _LobbyActionButtonsState extends State<LobbyActionButtons> {
     _codeFocusNode = FocusNode();
     _codeFocusNode.addListener(_onStateChanged);
     widget.codeController.addListener(_onStateChanged);
+    _localeProvider = widget.localeProvider ?? LocaleProvider.instance;
+    _localeProvider.addListener(_onStateChanged);
   }
 
   void _onStateChanged() {
@@ -1469,156 +1501,227 @@ class _LobbyActionButtonsState extends State<LobbyActionButtons> {
     _codeFocusNode.removeListener(_onStateChanged);
     widget.codeController.removeListener(_onStateChanged);
     _codeFocusNode.dispose();
+    _localeProvider.removeListener(_onStateChanged);
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final isEditingCode = _codeFocusNode.hasFocus || widget.codeController.text.isNotEmpty;
-
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 520),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14.0),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Expanded(
-                child: AspectRatio(
-                  aspectRatio: 460 / 294,
-                  child: _LobbyPressableButton(
-                    onTap: widget.gameState.isLoading ? null : widget.onCreate,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      fit: StackFit.expand,
-                      children: [
-                        Image.asset(
-                          LupusAssets.btnCreateRoomAsset,
-                          fit: BoxFit.contain,
-                        ),
-                        if (widget.gameState.isLoading)
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.black45,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: const Center(
-                              child: SizedBox(
-                                width: 22,
-                                height: 22,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.2,
-                                  color: Color(0xFFE9D5FF),
+    return ListenableBuilder(
+      listenable: _localeProvider,
+      builder: (context, _) {
+        return Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 520),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14.0),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(
+                    child: AspectRatio(
+                      aspectRatio: 460 / 294,
+                      child: _LobbyPressableButton(
+                        onTap: widget.gameState.isLoading ? null : widget.onCreate,
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final fontSize = math.max(10.0, constraints.maxWidth * 0.115);
+                            return Stack(
+                              alignment: Alignment.center,
+                              fit: StackFit.expand,
+                              children: [
+                                Image.asset(
+                                  LupusAssets.btnCreateRoomBlankAsset,
+                                  fit: BoxFit.contain,
                                 ),
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: AspectRatio(
-                  aspectRatio: 460 / 294,
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () {
-                      if (!_codeFocusNode.hasFocus) {
-                        _codeFocusNode.requestFocus();
-                      }
-                    },
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        final fontSize = math.max(11.0, constraints.maxWidth * 0.115);
-                        return Stack(
-                          alignment: Alignment.center,
-                          fit: StackFit.expand,
-                          children: [
-                            Image.asset(
-                              isEditingCode
-                                  ? LupusAssets.btnCodeRoomBlankAsset
-                                  : LupusAssets.btnCodeRoomAsset,
-                              fit: BoxFit.contain,
-                            ),
-                            Positioned(
-                              left: constraints.maxWidth * 0.12,
-                              right: constraints.maxWidth * 0.12,
-                              top: constraints.maxHeight * 0.38,
-                              bottom: constraints.maxHeight * 0.18,
-                              child: Center(
-                                child: TextField(
-                                  controller: widget.codeController,
-                                  focusNode: _codeFocusNode,
-                                  textAlign: TextAlign.center,
-                                  textCapitalization: TextCapitalization.characters,
-                                  textInputAction: TextInputAction.go,
-                                  maxLength: 8,
-                                  cursorColor: const Color(0xFFE9D5FF),
-                                  cursorWidth: 2.0,
-                                  inputFormatters: [
-                                    FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')),
-                                    LengthLimitingTextInputFormatter(8),
-                                    _UpperCaseTextFormatter(),
-                                  ],
-                                  style: TextStyle(
-                                    color: const Color(0xFFF3E8FF),
-                                    fontWeight: FontWeight.w900,
-                                    fontSize: fontSize,
-                                    letterSpacing: 1.5,
-                                    fontFamily: 'serif',
-                                    shadows: const [
-                                      Shadow(color: Color(0xFFC084FC), blurRadius: 8),
-                                      Shadow(color: Color(0xFF9333EA), blurRadius: 16),
-                                      Shadow(color: Colors.black, blurRadius: 3, offset: Offset(0, 1)),
-                                    ],
-                                  ),
-                                  decoration: InputDecoration(
-                                    hintText: (isEditingCode && widget.codeController.text.isEmpty)
-                                        ? 'CODE SALON'
-                                        : null,
-                                    hintStyle: TextStyle(
-                                      color: const Color(0xFFE9D5FF).withValues(alpha: 0.55),
-                                      fontWeight: FontWeight.w900,
-                                      fontSize: fontSize,
-                                      letterSpacing: 1.5,
-                                      fontFamily: 'serif',
+                                Positioned(
+                                  left: constraints.maxWidth * 0.10,
+                                  right: constraints.maxWidth * 0.10,
+                                  top: constraints.maxHeight * 0.38,
+                                  bottom: constraints.maxHeight * 0.18,
+                                  child: Center(
+                                    child: FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      child: Text(
+                                        context.tr('create_room').toUpperCase(),
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color: const Color(0xFFF3E8FF),
+                                          fontWeight: FontWeight.w900,
+                                          fontSize: fontSize,
+                                          letterSpacing: 1.2,
+                                          fontFamily: 'serif',
+                                          shadows: const [
+                                            Shadow(color: Color(0xFFC084FC), blurRadius: 8),
+                                            Shadow(color: Color(0xFF9333EA), blurRadius: 16),
+                                            Shadow(color: Colors.black, blurRadius: 3, offset: Offset(0, 1.2)),
+                                          ],
+                                        ),
+                                      ),
                                     ),
-                                    border: InputBorder.none,
-                                    counterText: '',
-                                    isDense: true,
-                                    contentPadding: EdgeInsets.zero,
                                   ),
-                                  onSubmitted: (_) => widget.onJoin(),
                                 ),
-                              ),
-                            ),
-                          ],
-                        );
-                      },
+                                if (widget.gameState.isLoading)
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.black45,
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: const Center(
+                                      child: SizedBox(
+                                        width: 22,
+                                        height: 22,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2.2,
+                                          color: Color(0xFFE9D5FF),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            );
+                          },
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: AspectRatio(
-                  aspectRatio: 460 / 294,
-                  child: _LobbyPressableButton(
-                    onTap: widget.gameState.isLoading ? null : widget.onJoin,
-                    child: Image.asset(
-                      LupusAssets.btnJoinRoomAsset,
-                      fit: BoxFit.contain,
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: AspectRatio(
+                      aspectRatio: 460 / 294,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () {
+                          if (!_codeFocusNode.hasFocus) {
+                            _codeFocusNode.requestFocus();
+                          }
+                        },
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final fontSize = math.max(10.0, constraints.maxWidth * 0.115);
+                            final hintText = context.tr('enter_room_code').toUpperCase();
+                            return Stack(
+                              alignment: Alignment.center,
+                              fit: StackFit.expand,
+                              children: [
+                                Image.asset(
+                                  LupusAssets.btnCodeRoomBlankAsset,
+                                  fit: BoxFit.contain,
+                                ),
+                                Positioned(
+                                  left: constraints.maxWidth * 0.10,
+                                  right: constraints.maxWidth * 0.10,
+                                  top: constraints.maxHeight * 0.38,
+                                  bottom: constraints.maxHeight * 0.18,
+                                  child: Center(
+                                    child: TextField(
+                                      controller: widget.codeController,
+                                      focusNode: _codeFocusNode,
+                                      textAlign: TextAlign.center,
+                                      textCapitalization: TextCapitalization.characters,
+                                      textInputAction: TextInputAction.go,
+                                      maxLength: 8,
+                                      cursorColor: const Color(0xFFE9D5FF),
+                                      cursorWidth: 2.0,
+                                      inputFormatters: [
+                                        FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')),
+                                        LengthLimitingTextInputFormatter(8),
+                                        _UpperCaseTextFormatter(),
+                                      ],
+                                      style: TextStyle(
+                                        color: const Color(0xFFF3E8FF),
+                                        fontWeight: FontWeight.w900,
+                                        fontSize: fontSize,
+                                        letterSpacing: 1.2,
+                                        fontFamily: 'serif',
+                                        shadows: const [
+                                          Shadow(color: Color(0xFFC084FC), blurRadius: 8),
+                                          Shadow(color: Color(0xFF9333EA), blurRadius: 16),
+                                          Shadow(color: Colors.black, blurRadius: 3, offset: Offset(0, 1.2)),
+                                        ],
+                                      ),
+                                      decoration: InputDecoration(
+                                        hintText: widget.codeController.text.isEmpty ? hintText : null,
+                                        hintStyle: TextStyle(
+                                          color: const Color(0xFFE9D5FF).withValues(alpha: 0.55),
+                                          fontWeight: FontWeight.w900,
+                                          fontSize: fontSize,
+                                          letterSpacing: 1.2,
+                                          fontFamily: 'serif',
+                                        ),
+                                        border: InputBorder.none,
+                                        counterText: '',
+                                        isDense: true,
+                                        contentPadding: EdgeInsets.zero,
+                                      ),
+                                      onSubmitted: (_) => widget.onJoin(),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: AspectRatio(
+                      aspectRatio: 460 / 294,
+                      child: _LobbyPressableButton(
+                        onTap: widget.gameState.isLoading ? null : widget.onJoin,
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final fontSize = math.max(10.0, constraints.maxWidth * 0.115);
+                            return Stack(
+                              alignment: Alignment.center,
+                              fit: StackFit.expand,
+                              children: [
+                                Image.asset(
+                                  LupusAssets.btnJoinRoomBlankAsset,
+                                  fit: BoxFit.contain,
+                                ),
+                                Positioned(
+                                  left: constraints.maxWidth * 0.10,
+                                  right: constraints.maxWidth * 0.10,
+                                  top: constraints.maxHeight * 0.38,
+                                  bottom: constraints.maxHeight * 0.18,
+                                  child: Center(
+                                    child: FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      child: Text(
+                                        context.tr('join').toUpperCase(),
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color: const Color(0xFFF3E8FF),
+                                          fontWeight: FontWeight.w900,
+                                          fontSize: fontSize,
+                                          letterSpacing: 1.2,
+                                          fontFamily: 'serif',
+                                          shadows: const [
+                                            Shadow(color: Color(0xFFC084FC), blurRadius: 8),
+                                            Shadow(color: Color(0xFF9333EA), blurRadius: 16),
+                                            Shadow(color: Colors.black, blurRadius: 3, offset: Offset(0, 1.2)),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

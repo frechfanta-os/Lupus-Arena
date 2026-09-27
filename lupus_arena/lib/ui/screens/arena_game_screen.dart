@@ -144,6 +144,7 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.hidden ||
         state == AppLifecycleState.detached) {
       LupusAudioManager.instance.pauseRoomMusic();
     } else if (state == AppLifecycleState.resumed) {

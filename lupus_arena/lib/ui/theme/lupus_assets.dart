@@ -29,9 +29,11 @@ class LupusAssets {
   static const String cardBackFallbackAsset = 'assets/cards/Fond.jpg';
   static const String tableNuitMockupAsset = 'assets/images/lobby_screen.jpg';
   static const String btnCreateRoomAsset = 'assets/images/btn_create_room.png';
+  static const String btnCreateRoomBlankAsset = 'assets/images/btn_create_room_blank.png';
   static const String btnCodeRoomAsset = 'assets/images/btn_code_room.png';
   static const String btnCodeRoomBlankAsset = 'assets/images/btn_code_room_blank.png';
   static const String btnJoinRoomAsset = 'assets/images/btn_join_room.png';
+  static const String btnJoinRoomBlankAsset = 'assets/images/btn_join_room_blank.png';
 
   static Widget buildLobbyBackground({
     BoxFit fit = BoxFit.cover,
