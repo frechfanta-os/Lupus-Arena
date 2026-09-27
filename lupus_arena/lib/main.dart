@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:splashscreen_ghdinteractivestudio/splashscreen_ghdinteractivestudio.dart';
 
 import 'firebase_options.dart';
 import 'services/locale_provider.dart';
@@ -58,21 +59,28 @@ void main() async {
   );
 }
 
-class LupusArenaApp extends StatelessWidget {
+class LupusArenaApp extends StatefulWidget {
   final LocaleProvider localeProvider;
 
   const LupusArenaApp({super.key, required this.localeProvider});
 
   @override
+  State<LupusArenaApp> createState() => _LupusArenaAppState();
+}
+
+class _LupusArenaAppState extends State<LupusArenaApp> {
+  bool _splashFinished = false;
+
+  @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: localeProvider,
+      animation: widget.localeProvider,
       builder: (context, _) {
         return MaterialApp(
           title: 'Lupus Arena',
           debugShowCheckedModeBanner: false,
           theme: LupusTheme.darkTheme,
-          locale: localeProvider.locale,
+          locale: widget.localeProvider.locale,
           supportedLocales: const [
             Locale('fr'),
             Locale('ar'),
@@ -84,13 +92,52 @@ class LupusArenaApp extends StatelessWidget {
             GlobalCupertinoLocalizations.delegate,
           ],
           builder: (context, child) {
-
             return Directionality(
               textDirection: TextDirection.ltr,
               child: child ?? const SizedBox.shrink(),
             );
           },
-          home: LobbyScreen(localeProvider: localeProvider),
+          home: _splashFinished
+              ? LobbyScreen(localeProvider: widget.localeProvider)
+              : AppSplashScreen(
+                  appName: 'Lupus Arena',
+                  appNameFontFamily: 'serif',
+                  appNameStyle: const TextStyle(
+                    fontFamily: 'serif',
+                    fontSize: 34,
+                    fontWeight: FontWeight.w900,
+                    fontStyle: FontStyle.normal,
+                    letterSpacing: 1.5,
+                    color: Color(0xFFF3E8FF),
+                    shadows: [
+                      Shadow(color: Color(0xFFC084FC), blurRadius: 12),
+                      Shadow(color: Color(0xFF9333EA), blurRadius: 24),
+                    ],
+                  ),
+                  appLogo: ClipRRect(
+                    borderRadius: BorderRadius.circular(18),
+                    child: Image.asset(
+                      'assets/images/lupus_seal.png',
+                      width: 76,
+                      height: 76,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                  companyName: 'ghdinteractivestudio',
+                  companyPrefix: 'from',
+                  companyNameGradient: AppSplashScreen.arcaneGradient,
+                  themeMode: ThemeMode.dark,
+                  backgroundColor: const Color(0xFF0B0E17),
+                  duration: const Duration(milliseconds: 2200),
+                  skipOnTap: true,
+                  onFinish: () {
+                    if (mounted) {
+                      setState(() {
+                        _splashFinished = true;
+                      });
+                    }
+                  },
+                ),
         );
       },
     );

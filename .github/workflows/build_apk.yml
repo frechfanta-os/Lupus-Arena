@@ -123,9 +123,14 @@ jobs:
           tag_name: ${{ env.APP_VERSION }}
           name: "Lupus Arena ${{ env.APP_VERSION }}"
           body: |
-            ### 🐺 Lupus Arena - ${{ env.APP_VERSION }} (Consultation Cartes Deck · Épuration Émojis Filtres · Agora RTC · Audio Lifecycle)
+            ### 🐺 Lupus Arena - ${{ env.APP_VERSION }} (Splash Screen Officiel ghdinteractivestudio · Consultation Cartes Deck · Agora RTC)
 
             #### 🌟 Nouveautés & Correctifs de cette Release
+
+            **🎬 Écran de Démarrage Officiel Immersif (`splashscreen_ghdinteractivestudio`)**
+            - Intégration du package officiel avec animation fluide d'entrée, mouvement cinétique de respiration organique et transition de sortie en fondu vers le lobby.
+            - Logo officiel du sceau des loups et typographie serif avec signature "from ghdinteractivestudio" en dégradé arcanique.
+            - Possibilité de passer l'animation au toucher (`skipOnTap`) et enchaînement automatique avec la musique d'ambiance du lobby.
 
             **🃏 Consultation & Lecture des Cartes dans la Composition du Deck**
             - Clic sur n'importe quelle carte dans la composition du deck pour ouvrir une fenêtre modale immersive avec l'illustration grand format, le camp, l'icône et la description complète et lisible des règles et pouvoirs du rôle.

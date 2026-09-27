@@ -1,7 +1,7 @@
 name: lupus_arena
 description: "Lupus Arena Flutter App"
 publish_to: 'none'
-version: 2.5.19+87
+version: 2.5.20+88
 
 environment:
   sdk: ^3.13.2
@@ -27,6 +27,10 @@ dependencies:
   http: ^1.2.2
   cupertino_icons: ^1.0.8
   share_plus: ^12.0.2
+  splashscreen_ghdinteractivestudio:
+    git:
+      url: https://github.com/Anisghd-lab/Splashscreen-ghdinteractivestudio.git
+      ref: main
 
 dev_dependencies:
   flutter_test:
