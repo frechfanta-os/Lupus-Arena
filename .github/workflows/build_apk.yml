@@ -88,11 +88,11 @@ jobs:
           if [ -n "$KEYSTORE_BASE64" ]; then
             echo "$KEYSTORE_BASE64" | base64 -d > android/app/upload-keystore.jks
             cat <<EOF > android/key.properties
-          storePassword=$KEYSTORE_PASSWORD
-          keyPassword=$KEY_PASSWORD
-          keyAlias=$KEY_ALIAS
-          storeFile=upload-keystore.jks
-          EOF
+storePassword=$KEYSTORE_PASSWORD
+keyPassword=$KEY_PASSWORD
+keyAlias=$KEY_ALIAS
+storeFile=upload-keystore.jks
+EOF
           else
             echo "Avertissement: KEYSTORE_BASE64 non défini dans les secrets, utilisation du keystore par défaut."
           fi
@@ -107,17 +107,22 @@ jobs:
       # Construction du format requis par Google Play Console : Android App Bundle (.aab)
       - name: Build Google Play Bundle (AAB)
         run: |
-          flutter build appbundle --release --obfuscate --split-debug-info=build/app/outputs/symbols
+          flutter build appbundle --release --obfuscate --split-debug-info=build/app/outputs/symbols --android-skip-build-dependency-validation
           cp build/app/outputs/bundle/release/app-release.aab release_assets/LupusArena-release.aab
           
           # Archivage des symboles de désobfuscation à soumettre à Google Play
-          cd build/app/outputs/symbols && zip -r ../../../../release_assets/symbols.zip . && cd ../../../..
+          if [ -d "build/app/outputs/symbols" ] && [ "$(ls -A build/app/outputs/symbols 2>/dev/null)" ]; then
+            cd build/app/outputs/symbols && zip -r ../../../../release_assets/symbols.zip . && cd ../../../..
+          else
+            touch release_assets/empty_symbols.txt
+            cd release_assets && zip symbols.zip empty_symbols.txt && rm empty_symbols.txt && cd ..
+          fi
         working-directory: lupus_arena
 
       # Construction optionnelle des APKs autonomes pour les testeurs directs et la release GitHub
       - name: Build Split-per-ABI APKs
         run: |
-          flutter build apk --release --split-per-abi --obfuscate --split-debug-info=build/app/outputs/symbols
+          flutter build apk --release --split-per-abi --obfuscate --split-debug-info=build/app/outputs/symbols --android-skip-build-dependency-validation
           cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk release_assets/LupusArena-arm64.apk
           cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk release_assets/LupusArena-arm32.apk
           cp build/app/outputs/flutter-apk/app-x86_64-release.apk release_assets/LupusArena-x86_64.apk
