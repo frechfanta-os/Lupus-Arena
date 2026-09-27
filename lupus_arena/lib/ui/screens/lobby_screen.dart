@@ -79,13 +79,13 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
     // Démarrage de la surveillance globale des permissions en arrière-plan
     LupusPermissionService().startBackgroundPermissionMonitor();
 
-    // Démarrage de la musique d'ambiance STRICTEMENT sur l'accueil (Menu principal / room == null)
+    // Démarrage de la musique d'ambiance selon le contexte (Lobby si pas de salle, Room si salle active)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         if (ref.read(gameNotifierProvider).room == null) {
           LupusAudioManager.instance.playLobbyMusic();
         } else {
-          LupusAudioManager.instance.stopLobbyMusic();
+          LupusAudioManager.instance.playRoomMusic();
         }
       }
     });
@@ -115,10 +115,12 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
         state == AppLifecycleState.inactive ||
         state == AppLifecycleState.detached) {
       LobbyAudioManager.instance.pauseLobbyMusic();
+      LobbyAudioManager.instance.pauseRoomMusic();
     } else if (state == AppLifecycleState.resumed) {
-      // Reprend UNIQUEMENT si on est encore dans le lobby et pas dans une salle active
       if (ref.read(gameNotifierProvider).room == null) {
         LobbyAudioManager.instance.resumeLobbyMusic();
+      } else {
+        LobbyAudioManager.instance.resumeRoomMusic();
       }
     }
   }
@@ -127,6 +129,7 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     LobbyAudioManager.instance.stopLobbyMusic();
+    LobbyAudioManager.instance.stopRoomMusic();
     _nameController.dispose();
     _codeController.dispose();
     super.dispose();
@@ -138,7 +141,7 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
       if (next.room == null) {
         LobbyAudioManager.instance.playLobbyMusic();
       } else {
-        LobbyAudioManager.instance.stopLobbyMusic();
+        LobbyAudioManager.instance.playRoomMusic();
       }
     });
 
@@ -607,7 +610,7 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
       codeController: _codeController,
       onJoin: _handleJoinOrAdmin,
       onCreate: () async {
-        await LobbyAudioManager.instance.stopLobbyMusic();
+        await LobbyAudioManager.instance.fadeOutAndStopLobbyMusic();
         await ref.read(gameNotifierProvider.notifier).createRoom();
       },
     );
@@ -615,8 +618,10 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
 
   /// Écran d'attente du Salon quand une partie a été créée ou rejointe
   Widget _buildWaitingLobby(BuildContext context, LupusGameState gameState, GameRoom room) {
-    // Coupe immédiatement la musique dès l'entrée dans le salon d'attente
-    LupusAudioManager.instance.stopLobbyMusic();
+    // Lance la musique d'ambiance de la Room si elle n'est pas déjà en cours
+    if (!LupusAudioManager.instance.isRoomPlaying) {
+      LupusAudioManager.instance.playRoomMusic();
+    }
 
     return SizedBox.expand(
       child: Stack(
@@ -707,19 +712,26 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
                                   ),
                                 ),
                               ),
-                              TextButton.icon(
-                                style: TextButton.styleFrom(
-                                  foregroundColor: Colors.white70,
-                                  backgroundColor: Colors.white.withValues(alpha: 0.08),
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                ),
-                                onPressed: () => ref.read(gameNotifierProvider.notifier).leaveRoom(),
-                                icon: const Icon(Icons.logout_rounded, size: 16, color: LupusColors.bloodRed),
-                                label: Text(
-                                  context.tr('leave_room'),
-                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
-                                ),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const MusicMuteButton(isCompact: true, size: 32),
+                                  const SizedBox(width: 8),
+                                  TextButton.icon(
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: Colors.white70,
+                                      backgroundColor: Colors.white.withValues(alpha: 0.08),
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                    ),
+                                    onPressed: () => ref.read(gameNotifierProvider.notifier).leaveRoom(),
+                                    icon: const Icon(Icons.logout_rounded, size: 16, color: LupusColors.bloodRed),
+                                    label: Text(
+                                      context.tr('leave_room'),
+                                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
@@ -1425,7 +1437,7 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
       );
       return;
     }
-    await LobbyAudioManager.instance.stopLobbyMusic();
+    await LobbyAudioManager.instance.fadeOutAndStopLobbyMusic();
     if (mounted) {
       ref.read(gameNotifierProvider.notifier).joinRoom(inputCode);
     }

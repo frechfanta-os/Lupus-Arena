@@ -123,7 +123,7 @@ jobs:
           tag_name: ${{ env.APP_VERSION }}
           name: "Lupus Arena ${{ env.APP_VERSION }}"
           body: |
-            ### 🐺 Lupus Arena - ${{ env.APP_VERSION }} (Deck Officiel · Gestion Audio & Mute · Partage Multilingue · Élimination des Drapeaux)
+            ### 🐺 Lupus Arena - ${{ env.APP_VERSION }} (Correctif Audio Majeur · Gestion Audio & Mute · Deck Officiel · Partage Multilingue)
 
             #### 🌟 Nouveautés & Améliorations de cette Release
 
@@ -133,12 +133,13 @@ jobs:
             - Mappages stricts et gestion robuste de toutes les cartes (Servante Dévouée, Chevalier à l'Épée Rouillée, Grand Méchant Loup, etc.).
             - Dos de carte officiel harmonisé (`assets/cards/Fond.jpg`).
 
-            **🎵 Gestion Sonore & Coexistence Parfaite avec Agora RTC**
+            **🔊 Correctif Majeur Son & Lecture Audio (Lobby & Room)**
+            - Résolution du problème de lecture audio : Correction du préfixe `AudioCache` (`assets/`), extraction sécurisée des pistes audio dans le cache applicatif interne (`getTemporaryDirectory()`) garantissant la lecture native par MediaPlayer sans aucune restriction Scoped Storage ni permission manquante.
+            - Ajout des permissions Android : `READ_EXTERNAL_STORAGE` et `READ_MEDIA_AUDIO` avec `requestLegacyExternalStorage="true"`.
+            - Routage Audio & Agora RTC : Désactivation du forçage `isSpeakerphoneOn` sur le lecteur multimédia pour préserver le routage audio naturel et le mixage sans coupure avec le chat vocal Agora.
             - Pistes dédiées en boucle continue :
               • Lobby : *Aldeas de Niebla* avec fondu (*fade-out*) à l'entrée dans la Room.
-              • Room (en jeu) : *Village at Night* avec volume subtil (18%) préservant les échanges vocaux.
-            - Coexistence RTC avancée : `AndroidAudioFocus.none` et `mixWithOthers` pour ne jamais couper ni interférer avec le chat vocal.
-            - Suppression de tout retour micro : activation forcée de l'AEC (*Acoustic Echo Cancellation*), AGC et NS sur Agora.
+              • Room (attente et en jeu) : *Village at Night* avec volume subtil (18%) préservant les échanges vocaux.
             - Bouton Mute Musique dédié (`MusicMuteButton`), 100% indépendant d'Agora (ne coupe jamais le micro ni les voix des joueurs).
 
             **🖼️ Nouveau Fond d'Écran du Lobby**

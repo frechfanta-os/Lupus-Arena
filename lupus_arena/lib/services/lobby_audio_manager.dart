@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:io';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
 
 /// Gestionnaire audio centralisé de Lupus Arena (Lobby & Room).
 ///
@@ -15,7 +17,11 @@ import 'package:flutter/foundation.dart';
 class LobbyAudioManager {
   static final LobbyAudioManager instance = LobbyAudioManager._internal();
   factory LobbyAudioManager() => instance;
-  LobbyAudioManager._internal();
+  LobbyAudioManager._internal() {
+    try {
+      AudioCache.instance.prefix = '';
+    } catch (_) {}
+  }
 
   // --- CHEMINS SOURCES OBLIGATOIRES (CHEMINS STRICTS) ---
   static const String lobbySourcePath = 'Tous les fichiers/Download/Aldeas de Niebla.mp3';
@@ -54,7 +60,7 @@ class LobbyAudioManager {
   double get roomVolume => _roomVolume;
   double get volume => _lobbyVolume; // Rétrocompatibilité
 
-  /// Résout la source audio : tente le chemin direct sur l'appareil (/sdcard/Download/...)
+  /// Résout la source audio : teste l'existence et la lisibilité du fichier sur l'appareil (/sdcard/Download/...)
   /// et bascule gracieusement sur l'asset local si le fichier n'est pas accessible.
   static Source resolveAudioSource(String strictPath, String fallbackAsset) {
     final fileName = strictPath.split('/').last;
@@ -68,9 +74,55 @@ class LobbyAudioManager {
       try {
         final file = File(path);
         if (file.existsSync()) {
+          // Vérification réelle de la permission de lecture (évite EACCES / Scoped Storage crash)
+          final raf = file.openSync(mode: FileMode.read);
+          raf.closeSync();
           return DeviceFileSource(file.path);
         }
       } catch (_) {}
+    }
+
+    return AssetSource(fallbackAsset);
+  }
+
+  /// Résolution hautement résiliente :
+  /// 1. Tente le fichier externe (/sdcard/Download/...) s'il est physiquement lisible.
+  /// 2. Si absent ou inaccessible (Scoped storage), extrait le fichier asset packagé
+  ///    dans le cache interne privé de l'application (`getTemporaryDirectory`),
+  ///    ce qui garantit une lecture locale native par MediaPlayer sans aucune permission requise.
+  /// 3. Fallback direct sur AssetSource si l'extraction échoue.
+  static Future<Source> resolvePlayableSource(String strictPath, String fallbackAsset) async {
+    final fileName = strictPath.split('/').last;
+    final candidatePaths = [
+      '/sdcard/Download/$fileName',
+      '/storage/emulated/0/Download/$fileName',
+      strictPath,
+    ];
+
+    for (final path in candidatePaths) {
+      try {
+        final file = File(path);
+        if (file.existsSync()) {
+          final raf = file.openSync(mode: FileMode.read);
+          raf.closeSync();
+          return DeviceFileSource(file.path);
+        }
+      } catch (_) {}
+    }
+
+    // Extraction sécurisée vers le cache interne de l'application
+    try {
+      final tempDir = await getTemporaryDirectory();
+      final targetFile = File('${tempDir.path}/lupus_audio/$fileName');
+      if (targetFile.existsSync() && targetFile.lengthSync() > 1000) {
+        return DeviceFileSource(targetFile.path);
+      }
+      final data = await rootBundle.load(fallbackAsset);
+      await targetFile.parent.create(recursive: true);
+      await targetFile.writeAsBytes(data.buffer.asUint8List(), flush: true);
+      return DeviceFileSource(targetFile.path);
+    } catch (e) {
+      debugPrint('[LobbyAudioManager] Extraction asset cache: $e');
     }
 
     return AssetSource(fallbackAsset);
@@ -80,7 +132,7 @@ class LobbyAudioManager {
   AudioContext _buildAgoraCoexistenceContext() {
     return AudioContext(
       android: const AudioContextAndroid(
-        isSpeakerphoneOn: true,
+        isSpeakerphoneOn: false,
         stayAwake: false,
         contentType: AndroidContentType.music,
         usageType: AndroidUsageType.media,
@@ -99,15 +151,23 @@ class LobbyAudioManager {
   Future<void> _initLobbyPlayer() async {
     if (_lobbyPlayer == null) {
       final player = AudioPlayer();
+      player.audioCache.prefix = '';
       try {
         await player.setAudioContext(_buildAgoraCoexistenceContext());
-        await player.setReleaseMode(ReleaseMode.loop);
-        await player.setVolume(isMusicMuted ? 0.0 : _lobbyVolume);
-        _lobbyPlayer = player;
       } catch (e) {
-        debugPrint('[LobbyAudioManager] Configuration _lobbyPlayer: $e');
-        _lobbyPlayer = player;
+        debugPrint('[LobbyAudioManager] Contexte audio _lobbyPlayer: $e');
       }
+      try {
+        await player.setReleaseMode(ReleaseMode.loop);
+      } catch (e) {
+        debugPrint('[LobbyAudioManager] setReleaseMode _lobbyPlayer: $e');
+      }
+      try {
+        await player.setVolume(isMusicMuted ? 0.0 : _lobbyVolume);
+      } catch (e) {
+        debugPrint('[LobbyAudioManager] setVolume _lobbyPlayer: $e');
+      }
+      _lobbyPlayer = player;
     }
   }
 
@@ -115,15 +175,23 @@ class LobbyAudioManager {
   Future<void> _initRoomPlayer() async {
     if (_roomPlayer == null) {
       final player = AudioPlayer();
+      player.audioCache.prefix = '';
       try {
         await player.setAudioContext(_buildAgoraCoexistenceContext());
-        await player.setReleaseMode(ReleaseMode.loop);
-        await player.setVolume(isMusicMuted ? 0.0 : _roomVolume);
-        _roomPlayer = player;
       } catch (e) {
-        debugPrint('[LobbyAudioManager] Configuration _roomPlayer: $e');
-        _roomPlayer = player;
+        debugPrint('[LobbyAudioManager] Contexte audio _roomPlayer: $e');
       }
+      try {
+        await player.setReleaseMode(ReleaseMode.loop);
+      } catch (e) {
+        debugPrint('[LobbyAudioManager] setReleaseMode _roomPlayer: $e');
+      }
+      try {
+        await player.setVolume(isMusicMuted ? 0.0 : _roomVolume);
+      } catch (e) {
+        debugPrint('[LobbyAudioManager] setVolume _roomPlayer: $e');
+      }
+      _roomPlayer = player;
     }
   }
 
@@ -147,6 +215,7 @@ class LobbyAudioManager {
         await _lobbyPlayer!.stop();
       }
       if (!_isLobbyExplicitlyStopped && _lobbyPlayer != null) {
+        _lobbyPlayer!.audioCache.prefix = '';
         await _lobbyPlayer!.setReleaseMode(ReleaseMode.loop);
         await _lobbyPlayer!.setVolume(isMusicMuted ? 0.0 : _lobbyVolume);
         if (resetPosition) {
@@ -154,16 +223,26 @@ class LobbyAudioManager {
             await _lobbyPlayer!.seek(Duration.zero);
           } catch (_) {}
         }
-        final source = resolveAudioSource(lobbySourcePath, lobbyAssetFallback);
+        Source source;
+        try {
+          source = await resolvePlayableSource(lobbySourcePath, lobbyAssetFallback);
+        } catch (_) {
+          source = resolveAudioSource(lobbySourcePath, lobbyAssetFallback);
+        }
         await _lobbyPlayer!.play(source);
         debugPrint('[LobbyAudioManager] 🎵 Musique Lobby ($lobbySourcePath) lancée en boucle.');
       }
     } catch (e) {
       debugPrint('[LobbyAudioManager] Erreur playLobbyMusic: $e');
-      // Tentative de secours sur l'asset
+      // Tentative de secours direct sur l'asset
       try {
-        await _lobbyPlayer?.play(AssetSource(lobbyAssetFallback));
-      } catch (_) {}
+        if (_lobbyPlayer != null) {
+          _lobbyPlayer!.audioCache.prefix = '';
+          await _lobbyPlayer!.play(AssetSource(lobbyAssetFallback));
+        }
+      } catch (e2) {
+        debugPrint('[LobbyAudioManager] Erreur fallback asset Lobby: $e2');
+      }
     }
   }
 
@@ -245,6 +324,7 @@ class LobbyAudioManager {
         await _roomPlayer!.stop();
       }
       if (!_isRoomExplicitlyStopped && _roomPlayer != null) {
+        _roomPlayer!.audioCache.prefix = '';
         await _roomPlayer!.setReleaseMode(ReleaseMode.loop);
         await _roomPlayer!.setVolume(isMusicMuted ? 0.0 : _roomVolume);
         if (resetPosition) {
@@ -252,16 +332,26 @@ class LobbyAudioManager {
             await _roomPlayer!.seek(Duration.zero);
           } catch (_) {}
         }
-        final source = resolveAudioSource(roomSourcePath, roomAssetFallback);
+        Source source;
+        try {
+          source = await resolvePlayableSource(roomSourcePath, roomAssetFallback);
+        } catch (_) {
+          source = resolveAudioSource(roomSourcePath, roomAssetFallback);
+        }
         await _roomPlayer!.play(source);
         debugPrint('[LobbyAudioManager] 🌙 Musique Room ($roomSourcePath) lancée en boucle (Vol: ${(_roomVolume * 100).toInt()}%).');
       }
     } catch (e) {
       debugPrint('[LobbyAudioManager] Erreur playRoomMusic: $e');
-      // Tentative de secours sur l'asset
+      // Tentative de secours direct sur l'asset
       try {
-        await _roomPlayer?.play(AssetSource(roomAssetFallback));
-      } catch (_) {}
+        if (_roomPlayer != null) {
+          _roomPlayer!.audioCache.prefix = '';
+          await _roomPlayer!.play(AssetSource(roomAssetFallback));
+        }
+      } catch (e2) {
+        debugPrint('[LobbyAudioManager] Erreur fallback asset Room: $e2');
+      }
     }
   }
 

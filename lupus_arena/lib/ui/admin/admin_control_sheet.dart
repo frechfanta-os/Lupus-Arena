@@ -375,7 +375,7 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
               ),
               const SizedBox(height: 10),
               DropdownButtonFormField<String>(
-                value: _selectedWolfVictimId ?? (alivePlayers.isNotEmpty ? alivePlayers.first.id : null),
+                initialValue: _selectedWolfVictimId ?? (alivePlayers.isNotEmpty ? alivePlayers.first.id : null),
                 dropdownColor: const Color(0xFF1E1405),
                 decoration: InputDecoration(
                   labelText: context.tr('admin_choose_wolf_victim'),
@@ -452,7 +452,7 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
               ),
               const SizedBox(height: 10),
               DropdownButtonFormField<String>(
-                value: _selectedSeerTargetId ?? (alivePlayers.isNotEmpty ? alivePlayers.first.id : null),
+                initialValue: _selectedSeerTargetId ?? (alivePlayers.isNotEmpty ? alivePlayers.first.id : null),
                 dropdownColor: const Color(0xFF1E1405),
                 decoration: InputDecoration(
                   labelText: context.tr('admin_choose_seer_target'),
@@ -539,7 +539,7 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
-                value: _selectedPoisonTargetId ?? (alivePlayers.isNotEmpty ? alivePlayers.first.id : null),
+                initialValue: _selectedPoisonTargetId ?? (alivePlayers.isNotEmpty ? alivePlayers.first.id : null),
                 dropdownColor: const Color(0xFF1E1405),
                 decoration: InputDecoration(
                   labelText: context.tr('admin_choose_poison_target'),
@@ -603,7 +603,7 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
               ),
               const SizedBox(height: 10),
               DropdownButtonFormField<String>(
-                value: _selectedGuardTargetId ?? (alivePlayers.isNotEmpty ? alivePlayers.first.id : null),
+                initialValue: _selectedGuardTargetId ?? (alivePlayers.isNotEmpty ? alivePlayers.first.id : null),
                 dropdownColor: const Color(0xFF1E1405),
                 decoration: InputDecoration(
                   labelText: context.tr('admin_choose_protect_target'),
@@ -670,7 +670,7 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
                 children: [
                   Expanded(
                     child: DropdownButtonFormField<String>(
-                      value: _selectedCupid1Id ?? (alivePlayers.isNotEmpty ? alivePlayers.first.id : null),
+                      initialValue: _selectedCupid1Id ?? (alivePlayers.isNotEmpty ? alivePlayers.first.id : null),
                       dropdownColor: const Color(0xFF1E1405),
                       decoration: InputDecoration(
                         labelText: context.tr('admin_lover_1'),
@@ -690,7 +690,7 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: DropdownButtonFormField<String>(
-                      value: _selectedCupid2Id ?? (alivePlayers.length > 1 ? alivePlayers[1].id : null),
+                      initialValue: _selectedCupid2Id ?? (alivePlayers.length > 1 ? alivePlayers[1].id : null),
                       dropdownColor: const Color(0xFF1E1405),
                       decoration: InputDecoration(
                         labelText: context.tr('admin_lover_2'),
@@ -758,7 +758,7 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
               ),
               const SizedBox(height: 10),
               DropdownButtonFormField<String>(
-                value: _selectedHunterTargetId ?? (alivePlayers.isNotEmpty ? alivePlayers.first.id : null),
+                initialValue: _selectedHunterTargetId ?? (alivePlayers.isNotEmpty ? alivePlayers.first.id : null),
                 dropdownColor: const Color(0xFF1E1405),
                 decoration: InputDecoration(
                   labelText: context.tr('admin_choose_hunter_target'),
