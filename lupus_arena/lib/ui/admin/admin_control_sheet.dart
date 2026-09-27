@@ -2783,7 +2783,7 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
                                     child: Row(
                                       children: [
                                         _buildPresetButton(
-                                          label: '⚖️ Équilibré Standard',
+                                          label: 'Équilibré Standard',
                                           onTap: () {
                                             setModalState(() {
                                               applyBalancedPreset(_lobbyPlayerCount!);
@@ -2792,7 +2792,7 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
                                         ),
                                         const SizedBox(width: 6),
                                         _buildPresetButton(
-                                          label: '🐺 Meute Sanglante',
+                                          label: 'Meute Sanglante',
                                           onTap: () {
                                             setModalState(() {
                                               _lobbyRoleCounts = {
@@ -2814,7 +2814,7 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
                                         ),
                                         const SizedBox(width: 6),
                                         _buildPresetButton(
-                                          label: '✨ Chaos Arcanique',
+                                          label: 'Chaos Arcanique',
                                           onTap: () {
                                             setModalState(() {
                                               _lobbyRoleCounts = {
@@ -2891,10 +2891,7 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
                                               shape: BoxShape.circle,
                                             ),
                                             child: Center(
-                                              child: Text(
-                                                role.isEvil ? '🐺' : (role == GameRole.seer ? '🔮' : (role == GameRole.witch ? '🧪' : '👤')),
-                                                style: const TextStyle(fontSize: 10),
-                                              ),
+                                              child: Icon(role.icon, size: 11, color: role.accentColor),
                                             ),
                                           ),
                                           const SizedBox(width: 8),

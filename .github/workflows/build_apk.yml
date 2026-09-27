@@ -123,26 +123,29 @@ jobs:
           tag_name: ${{ env.APP_VERSION }}
           name: "Lupus Arena ${{ env.APP_VERSION }}"
           body: |
-            ### 🐺 Lupus Arena - ${{ env.APP_VERSION }} (Suppression Définitive Update · En-tête Pseudo Compact · Agora RTC · Audio Lifecycle · i18n)
+            ### 🐺 Lupus Arena - ${{ env.APP_VERSION }} (Consultation Cartes Deck · Épuration Émojis Filtres · Agora RTC · Audio Lifecycle)
 
             #### 🌟 Nouveautés & Correctifs de cette Release
 
+            **🃏 Consultation & Lecture des Cartes dans la Composition du Deck**
+            - Clic sur n'importe quelle carte dans la composition du deck pour ouvrir une fenêtre modale immersive avec l'illustration grand format, le camp, l'icône et la description complète et lisible des règles et pouvoirs du rôle.
+            - Icône indicatrice discrète invitant à la consultation sur chaque carte.
+
+            **🧹 Épuration des Émojis dans la Composition du Deck**
+            - Retrait des émojis superflus relatifs aux loups, au village et aux solitaires dans les filtres de rôles (Français, Arabe, Anglais).
+            - Nettoyage des émojis dans la composition des rôles de l'administration.
+
             **👤 En-tête du Lobby Compact & Pseudo Préservé**
             - Capsule de profil compacte et harmonieuse : nom d'utilisateur de taille réduite et élégante avec limitation stricte du débordement.
-            - Icône crayon d'édition discrète et mini-sceau officiel proportionné.
 
             **🚫 Élimination Totale & Définitive de la Fonctionnalité d'Update**
             - Suppression définitive de toute détection, dialogue, bouton et icône de mise à jour in-app.
-            - Codebase assainie et réorganisée, sans aucun appel réseau intempestif.
 
-            **🎙️ Chat Vocal Agora RTC 100% Opérationnel**
-            - Certificat Agora RTC rétabli avec tokens sécurisés et reprise automatique d'erreur.
-
-            **🎵 Gestion Robuste du Cycle de Vie Audio**
-            - Coupure instantanée de la musique lors de la mise en arrière-plan, sortie ou verrouillage.
+            **🎙️ Chat Vocal Agora RTC 100% Opérationnel & Audio Lifecycle**
+            - Chat vocal haute fidélité et coupure instantanée de la musique lors de la mise en arrière-plan.
 
             **⌨️ Clavier Virtuel & Rendu Multilingue Fluide**
-            - Positionnement parfait au-dessus du clavier et réactivité instantanée aux changements de langue.
+            - Boutons du lobby idéalement positionnés 12dp au-dessus du clavier virtuel.
 
             ---
             #### 📲 Binaires Téléchargeables

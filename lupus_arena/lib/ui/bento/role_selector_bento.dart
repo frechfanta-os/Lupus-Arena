@@ -307,71 +307,84 @@ class _RoleSelectorBentoState extends ConsumerState<RoleSelectorBento> {
       ),
       child: Row(
         children: [
-
-          RoleCardImage(
-            role: role,
-            width: 38,
-            height: 48,
-            borderRadius: BorderRadius.circular(6),
-          ),
-          const SizedBox(width: 10),
-
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        role.getDisplayName(context),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w800,
-                          color: isSelected ? Colors.white : LupusColors.textSecondary,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                      decoration: BoxDecoration(
-                        color: teamColor.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(4),
-                        border: Border.all(color: teamColor.withValues(alpha: 0.4), width: 0.6),
-                      ),
-                      child: Text(
-                        teamLabel,
-                        style: TextStyle(
-                          fontSize: 8.5,
-                          fontWeight: FontWeight.w800,
-                          color: teamColor,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  role.getDescription(context),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 9.5,
-                    color: LupusColors.textMuted.withValues(alpha: 0.8),
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => _showRoleDetailDialog(context, role),
+              child: Row(
+                children: [
+                  RoleCardImage(
+                    role: role,
+                    width: 38,
+                    height: 48,
+                    borderRadius: BorderRadius.circular(6),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                role.getDisplayName(context),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w800,
+                                  color: isSelected ? Colors.white : LupusColors.textSecondary,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                              decoration: BoxDecoration(
+                                color: teamColor.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(color: teamColor.withValues(alpha: 0.4), width: 0.6),
+                              ),
+                              child: Text(
+                                teamLabel,
+                                style: TextStyle(
+                                  fontSize: 8.5,
+                                  fontWeight: FontWeight.w800,
+                                  color: teamColor,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          role.getDescription(context),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 9.5,
+                            color: LupusColors.textMuted.withValues(alpha: 0.8),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.info_outline_rounded,
+                    size: 15,
+                    color: isSelected ? teamColor.withValues(alpha: 0.7) : Colors.white24,
+                  ),
+                  const SizedBox(width: 8),
+                ],
+              ),
             ),
           ),
-
           if (isHost) ...[
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-
                 _buildQuantityButton(
                   icon: Icons.remove_rounded,
                   enabled: quantity > 0,
@@ -379,7 +392,6 @@ class _RoleSelectorBentoState extends ConsumerState<RoleSelectorBento> {
                       .read(gameNotifierProvider.notifier)
                       .updateRolePool(role.id, -1),
                 ),
-
                 Container(
                   constraints: const BoxConstraints(minWidth: 26),
                   alignment: Alignment.center,
@@ -393,7 +405,6 @@ class _RoleSelectorBentoState extends ConsumerState<RoleSelectorBento> {
                     ),
                   ),
                 ),
-
                 _buildQuantityButton(
                   icon: Icons.add_rounded,
                   enabled: isMultiple || quantity < 1,
@@ -404,24 +415,27 @@ class _RoleSelectorBentoState extends ConsumerState<RoleSelectorBento> {
               ],
             ),
           ] else ...[
-
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: quantity > 0
-                    ? teamColor.withValues(alpha: 0.25)
-                    : LupusColors.surface,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: quantity > 0 ? teamColor.withValues(alpha: 0.6) : LupusColors.border,
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => _showRoleDetailDialog(context, role),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: quantity > 0
+                      ? teamColor.withValues(alpha: 0.25)
+                      : LupusColors.surface,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: quantity > 0 ? teamColor.withValues(alpha: 0.6) : LupusColors.border,
+                  ),
                 ),
-              ),
-              child: Text(
-                'x$quantity',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w900,
-                  color: quantity > 0 ? Colors.white : LupusColors.textMuted,
+                child: Text(
+                  'x$quantity',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                    color: quantity > 0 ? Colors.white : LupusColors.textMuted,
+                  ),
                 ),
               ),
             ),
@@ -478,5 +492,154 @@ class _RoleSelectorBentoState extends ConsumerState<RoleSelectorBento> {
       default:
         return GameRole.playableRoles;
     }
+  }
+
+  void _showRoleDetailDialog(BuildContext context, GameRole role) {
+    final teamColor = role.isEvil
+        ? LupusColors.bloodRed
+        : (role.defaultTeam == Team.village
+            ? const Color(0xFF38BDF8)
+            : LupusColors.arcaneViolet);
+
+    final teamLabel = role.isEvil
+        ? context.tr('role_team_wolf')
+        : (role.defaultTeam == Team.village
+            ? context.tr('role_team_village')
+            : context.tr('role_team_solo'));
+
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.85),
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 340),
+          decoration: BoxDecoration(
+            color: const Color(0xFF0F1424),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: teamColor.withValues(alpha: 0.6),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: teamColor.withValues(alpha: 0.25),
+                blurRadius: 20,
+                spreadRadius: 2,
+              ),
+              const BoxShadow(
+                color: Colors.black87,
+                blurRadius: 16,
+                offset: Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: teamColor.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(role.icon, color: teamColor, size: 18),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            role.getDisplayName(context),
+                            style: const TextStyle(
+                              fontFamily: 'serif',
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: teamColor.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(color: teamColor.withValues(alpha: 0.5), width: 0.6),
+                            ),
+                            child: Text(
+                              teamLabel.toUpperCase(),
+                              style: TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0.8,
+                                color: teamColor,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close_rounded, color: Colors.white60, size: 20),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      onPressed: () => Navigator.of(ctx).pop(),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(color: Colors.white12, height: 1),
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+                  physics: const BouncingScrollPhysics(),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      RoleCardImage(
+                        role: role,
+                        width: 180,
+                        height: 250,
+                        fit: BoxFit.contain,
+                        borderRadius: BorderRadius.circular(12),
+                        showGlow: true,
+                      ),
+                      const SizedBox(height: 14),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF161C30),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.white10),
+                        ),
+                        child: Text(
+                          role.getDescription(context),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Color(0xFFE2E8F0),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            height: 1.45,
+                            letterSpacing: 0.2,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
