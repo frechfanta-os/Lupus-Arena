@@ -211,8 +211,11 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
 
           Positioned(
             bottom: media.viewInsets.bottom > 0
-                ? media.viewInsets.bottom + 16.0
-                : math.max(110.0, (media.padding.bottom > 0 ? media.padding.bottom : 16.0) + 85.0),
+                ? media.viewInsets.bottom + 12.0
+                : math.max(
+                    (media.padding.bottom > 0 ? media.padding.bottom : 16.0) + 16.0,
+                    media.size.height * 0.275,
+                  ),
             left: 0,
             right: 0,
             child: SafeArea(
@@ -1426,7 +1429,7 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
   }
 }
 
-class LobbyActionButtons extends StatelessWidget {
+class LobbyActionButtons extends StatefulWidget {
   final LupusGameState gameState;
   final TextEditingController codeController;
   final VoidCallback onJoin;
@@ -1441,227 +1444,233 @@ class LobbyActionButtons extends StatelessWidget {
   });
 
   @override
+  State<LobbyActionButtons> createState() => _LobbyActionButtonsState();
+}
+
+class _LobbyActionButtonsState extends State<LobbyActionButtons> {
+  late final FocusNode _codeFocusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _codeFocusNode = FocusNode();
+    _codeFocusNode.addListener(_onStateChanged);
+    widget.codeController.addListener(_onStateChanged);
+  }
+
+  void _onStateChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  @override
+  void dispose() {
+    _codeFocusNode.removeListener(_onStateChanged);
+    widget.codeController.removeListener(_onStateChanged);
+    _codeFocusNode.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    const double buttonHeight = 42.0;
-    const double buttonWidth = 144.0;
-    final borderRadius = BorderRadius.circular(10);
+    final isEditingCode = _codeFocusNode.hasFocus || widget.codeController.text.isNotEmpty;
 
     return Center(
-      child: SizedBox(
-        width: buttonWidth,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-
-            Container(
-              height: buttonHeight,
-              decoration: BoxDecoration(
-                borderRadius: borderRadius,
-                gradient: const LinearGradient(
-                  colors: [
-                    Color(0xFF5A1E8A),
-                    Color(0xFF2E0D4E),
-                    Color(0xFF16062A),
-                  ],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
-                border: Border.all(
-                  color: const Color(0xFFE5C158).withValues(alpha: 0.85),
-                  width: 1.2,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF8B25C7).withValues(alpha: 0.38),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
-                  ),
-                  BoxShadow(
-                    color: const Color(0xFFD4AF37).withValues(alpha: 0.22),
-                    blurRadius: 4,
-                  ),
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.6),
-                    blurRadius: 7,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  borderRadius: borderRadius,
-                  onTap: gameState.isLoading ? null : onCreate,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: Center(
-                      child: gameState.isLoading
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2.0,
-                                color: Color(0xFFFFD54F),
-                              ),
-                            )
-                          : FittedBox(
-                              fit: BoxFit.scaleDown,
-                              child: Text(
-                                context.tr('create_room').toUpperCase(),
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 0.8,
-                                  shadows: [
-                                    Shadow(
-                                      color: Colors.black,
-                                      blurRadius: 4,
-                                      offset: Offset(0, 1),
-                                    ),
-                                  ],
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 520),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14.0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: AspectRatio(
+                  aspectRatio: 460 / 294,
+                  child: _LobbyPressableButton(
+                    onTap: widget.gameState.isLoading ? null : widget.onCreate,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      fit: StackFit.expand,
+                      children: [
+                        Image.asset(
+                          LupusAssets.btnCreateRoomAsset,
+                          fit: BoxFit.contain,
+                        ),
+                        if (widget.gameState.isLoading)
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.black45,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Center(
+                              child: SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.2,
+                                  color: Color(0xFFE9D5FF),
                                 ),
                               ),
                             ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 10),
-
-            Container(
-              height: buttonHeight,
-              decoration: BoxDecoration(
-                borderRadius: borderRadius,
-                gradient: const LinearGradient(
-                  colors: [
-                    Color(0xFF1E2330),
-                    Color(0xFF121622),
-                    Color(0xFF0A0D15),
-                  ],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
-                border: Border.all(
-                  color: const Color(0xFF64748B).withValues(alpha: 0.55),
-                  width: 1.1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.65),
-                    blurRadius: 7,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Center(
-                child: TextField(
-                  controller: codeController,
-                  textAlign: TextAlign.center,
-                  textCapitalization: TextCapitalization.characters,
-                  maxLength: 8,
-                  cursorColor: const Color(0xFFFFD700),
-                  style: const TextStyle(
-                    color: Color(0xFFF1F5F9),
-                    fontSize: 12.0,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.4,
-                    shadows: [
-                      Shadow(
-                        color: Colors.black,
-                        blurRadius: 4,
-                        offset: Offset(0, 1),
-                      ),
-                    ],
-                  ),
-                  decoration: InputDecoration(
-                    hintText: context.tr('enter_room_code').toUpperCase(),
-                    hintStyle: const TextStyle(
-                      color: Color(0xFF788296),
-                      fontSize: 9.5,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.6,
-                    ),
-                    counterText: '',
-                    border: InputBorder.none,
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                  ),
-                  onSubmitted: (_) => onJoin(),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 10),
-
-            Container(
-              height: buttonHeight,
-              decoration: BoxDecoration(
-                borderRadius: borderRadius,
-                gradient: const LinearGradient(
-                  colors: [
-                    Color(0xFF14532D),
-                    Color(0xFF072E1B),
-                    Color(0xFF03190E),
-                  ],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
-                border: Border.all(
-                  color: const Color(0xFF34D399).withValues(alpha: 0.80),
-                  width: 1.2,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF10B981).withValues(alpha: 0.35),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
-                  ),
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.6),
-                    blurRadius: 7,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  borderRadius: borderRadius,
-                  onTap: gameState.isLoading ? null : onJoin,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: Center(
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(
-                          context.tr('join').toUpperCase(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.8,
-                            shadows: [
-                              Shadow(
-                                color: Colors.black,
-                                blurRadius: 4,
-                                offset: Offset(0, 1),
-                              ),
-                            ],
                           ),
-                        ),
-                      ),
+                      ],
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
+              const SizedBox(width: 8),
+              Expanded(
+                child: AspectRatio(
+                  aspectRatio: 460 / 294,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () {
+                      if (!_codeFocusNode.hasFocus) {
+                        _codeFocusNode.requestFocus();
+                      }
+                    },
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final fontSize = math.max(11.0, constraints.maxWidth * 0.115);
+                        return Stack(
+                          alignment: Alignment.center,
+                          fit: StackFit.expand,
+                          children: [
+                            Image.asset(
+                              isEditingCode
+                                  ? LupusAssets.btnCodeRoomBlankAsset
+                                  : LupusAssets.btnCodeRoomAsset,
+                              fit: BoxFit.contain,
+                            ),
+                            Positioned(
+                              left: constraints.maxWidth * 0.12,
+                              right: constraints.maxWidth * 0.12,
+                              top: constraints.maxHeight * 0.38,
+                              bottom: constraints.maxHeight * 0.18,
+                              child: Center(
+                                child: TextField(
+                                  controller: widget.codeController,
+                                  focusNode: _codeFocusNode,
+                                  textAlign: TextAlign.center,
+                                  textCapitalization: TextCapitalization.characters,
+                                  textInputAction: TextInputAction.go,
+                                  maxLength: 8,
+                                  cursorColor: const Color(0xFFE9D5FF),
+                                  cursorWidth: 2.0,
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')),
+                                    LengthLimitingTextInputFormatter(8),
+                                    _UpperCaseTextFormatter(),
+                                  ],
+                                  style: TextStyle(
+                                    color: const Color(0xFFF3E8FF),
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: fontSize,
+                                    letterSpacing: 1.5,
+                                    fontFamily: 'serif',
+                                    shadows: const [
+                                      Shadow(color: Color(0xFFC084FC), blurRadius: 8),
+                                      Shadow(color: Color(0xFF9333EA), blurRadius: 16),
+                                      Shadow(color: Colors.black, blurRadius: 3, offset: Offset(0, 1)),
+                                    ],
+                                  ),
+                                  decoration: InputDecoration(
+                                    hintText: (isEditingCode && widget.codeController.text.isEmpty)
+                                        ? 'CODE SALON'
+                                        : null,
+                                    hintStyle: TextStyle(
+                                      color: const Color(0xFFE9D5FF).withValues(alpha: 0.55),
+                                      fontWeight: FontWeight.w900,
+                                      fontSize: fontSize,
+                                      letterSpacing: 1.5,
+                                      fontFamily: 'serif',
+                                    ),
+                                    border: InputBorder.none,
+                                    counterText: '',
+                                    isDense: true,
+                                    contentPadding: EdgeInsets.zero,
+                                  ),
+                                  onSubmitted: (_) => widget.onJoin(),
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: AspectRatio(
+                  aspectRatio: 460 / 294,
+                  child: _LobbyPressableButton(
+                    onTap: widget.gameState.isLoading ? null : widget.onJoin,
+                    child: Image.asset(
+                      LupusAssets.btnJoinRoomAsset,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
+    );
+  }
+}
+
+class _LobbyPressableButton extends StatefulWidget {
+  final Widget child;
+  final VoidCallback? onTap;
+
+  const _LobbyPressableButton({
+    required this.child,
+    this.onTap,
+  });
+
+  @override
+  State<_LobbyPressableButton> createState() => _LobbyPressableButtonState();
+}
+
+class _LobbyPressableButtonState extends State<_LobbyPressableButton> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTapDown: widget.onTap == null ? null : (_) => setState(() => _isPressed = true),
+      onTapUp: widget.onTap == null ? null : (_) => setState(() => _isPressed = false),
+      onTapCancel: widget.onTap == null ? null : () => setState(() => _isPressed = false),
+      onTap: () {
+        if (widget.onTap != null) {
+          HapticFeedback.lightImpact();
+          widget.onTap!();
+        }
+      },
+      child: AnimatedScale(
+        scale: _isPressed ? 0.93 : 1.0,
+        duration: const Duration(milliseconds: 90),
+        curve: Curves.easeOutCubic,
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+class _UpperCaseTextFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    return TextEditingValue(
+      text: newValue.text.toUpperCase(),
+      selection: newValue.selection,
     );
   }
 }
