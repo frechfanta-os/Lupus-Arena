@@ -6,6 +6,7 @@ import '../../AgoraVoiceService.dart';
 import '../../GameNotifier.dart';
 import '../../models/game_room.dart';
 import '../../models/player_model.dart';
+import '../../services/app_translations.dart';
 import '../bento/bento_card.dart';
 import '../bento/role_card_image.dart';
 import '../theme/lupus_theme.dart';
@@ -131,8 +132,8 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
 
     if (w == 'werewolves' || w == 'wolves') {
       return VictoryThemeConfig(
-        title: 'VICTOIRE DE LA MEUTE !',
-        subtitle: 'Les loups ont dévoré Le Village dans un bain de sang.',
+        title: context.tr('victory_werewolves_alt'),
+        subtitle: context.tr('victory_werewolves_alt_desc'),
         icon: Icons.pets_rounded,
         primaryColor: const Color(0xFFDC2626),
         secondaryColor: const Color(0xFF7F1D1D),
@@ -151,8 +152,8 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
       );
     } else if (w == 'lovers') {
       return VictoryThemeConfig(
-        title: 'VICTOIRE DES AMOUREUX !',
-        subtitle: 'Leur passion triomphe de la mort et transcende toutes les allégeances.',
+        title: context.tr('victory_lovers'),
+        subtitle: context.tr('victory_lovers_alt_desc'),
         icon: Icons.favorite_rounded,
         primaryColor: const Color(0xFFF43F5E),
         secondaryColor: const Color(0xFF881337),
@@ -166,8 +167,8 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
       );
     } else if (w == 'piedpiper' || w == 'piper') {
       return VictoryThemeConfig(
-        title: 'VICTOIRE DU JOUEUR DE FLÛTE !',
-        subtitle: 'La mélodie mystique a subjugué la totalité des survivants.',
+        title: context.tr('victory_piper_alt'),
+        subtitle: context.tr('victory_piper_alt_desc'),
         icon: Icons.music_note_rounded,
         primaryColor: const Color(0xFFA855F7),
         secondaryColor: const Color(0xFF581C87),
@@ -181,8 +182,8 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
       );
     } else if (w == 'whitewerewolf') {
       return VictoryThemeConfig(
-        title: 'VICTOIRE DU LOUP BLANC !',
-        subtitle: 'L\'unique bête solitaire a massacré meute et village sans pitié.',
+        title: context.tr('victory_white_wolf'),
+        subtitle: context.tr('victory_white_wolf_desc'),
         icon: Icons.nightlight_round,
         primaryColor: const Color(0xFFE2E8F0),
         secondaryColor: const Color(0xFF64748B),
@@ -201,8 +202,8 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
       );
     } else if (w == 'angel') {
       return VictoryThemeConfig(
-        title: 'VICTOIRE DE L\'ANGE !',
-        subtitle: 'Son martyre immaculé dès l\'aube lui ouvre les cieux divins.',
+        title: context.tr('victory_angel_alt'),
+        subtitle: context.tr('victory_angel_alt_desc'),
         icon: Icons.auto_awesome_rounded,
         primaryColor: const Color(0xFFF59E0B),
         secondaryColor: const Color(0xFFB45309),
@@ -216,8 +217,8 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
       );
     } else if (w == 'pyromaniac' || w == 'pyro') {
       return VictoryThemeConfig(
-        title: 'VICTOIRE DU PYROMANE !',
-        subtitle: 'Le village entier n\'est plus qu\'un tas de cendres fumantes.',
+        title: context.tr('victory_pyro'),
+        subtitle: context.tr('victory_pyro_desc'),
         icon: Icons.local_fire_department_rounded,
         primaryColor: const Color(0xFFF97316),
         secondaryColor: const Color(0xFF9A3412),
@@ -231,8 +232,8 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
       );
     } else if (w == 'abominablesectarian' || w == 'sectleader') {
       return VictoryThemeConfig(
-        title: 'VICTOIRE DE LA SECTE !',
-        subtitle: 'Les hérétiques ont été purgés sous le signe de l\'Abominable Sectaire.',
+        title: context.tr('victory_sect'),
+        subtitle: context.tr('victory_sect_desc'),
         icon: Icons.all_inclusive_rounded,
         primaryColor: const Color(0xFF10B981),
         secondaryColor: const Color(0xFF064E3B),
@@ -246,8 +247,8 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
       );
     } else if (w == 'draw') {
       return VictoryThemeConfig(
-        title: 'ÉGALITÉ FUNESTE !',
-        subtitle: 'Aucun survivant n\'a réchappé au massacre. Le silence règne sur les ruines.',
+        title: context.tr('victory_draw'),
+        subtitle: context.tr('victory_draw_desc'),
         icon: Icons.balance_rounded,
         primaryColor: const Color(0xFF94A3B8),
         secondaryColor: const Color(0xFF334155),
@@ -262,8 +263,8 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
     } else {
 
       return VictoryThemeConfig(
-        title: 'VICTOIRE DU VILLAGE !',
-        subtitle: 'Les ténèbres ont été repoussées. Les villageois célèbrent la paix retrouvée.',
+        title: context.tr('victory_village_alt'),
+        subtitle: context.tr('victory_village_alt_desc'),
         icon: Icons.shield_rounded,
         primaryColor: const Color(0xFF06B6D4),
         secondaryColor: const Color(0xFF0E7490),
@@ -434,16 +435,16 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
             ),
           ),
 
-          const Row(
+          Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.record_voice_over_rounded,
                 color: Color(0xFF10B981),
                 size: 16,
               ),
-              SizedBox(width: 6),
+              const SizedBox(width: 6),
               Text(
-                'DÉBRIEFING VOCAL LIBRE',
+                context.tr('debriefing_voice_free'),
                 style: TextStyle(
                   fontSize: 11.5,
                   fontWeight: FontWeight.w800,
@@ -590,9 +591,9 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
                 size: 20,
               ),
               const SizedBox(width: 8),
-              const Text(
-                'TABLEAU D\'HONNEUR & RÔLES VÉRITABLES',
-                style: TextStyle(
+              Text(
+                context.tr('honor_board_title'),
+                style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 0.8,
@@ -601,7 +602,7 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
               ),
               const Spacer(),
               Text(
-                '${players.length} Joueurs',
+                context.tr('players_count', {'count': players.length}),
                 style: const TextStyle(
                   fontSize: 11,
                   color: LupusColors.textSecondary,
@@ -746,7 +747,7 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
                 const SizedBox(height: 3),
 
                 Text(
-                  originalRole.displayName,
+                  originalRole.getDisplayName(context),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
@@ -764,8 +765,8 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
                       color: const Color(0x3364748B),
                       borderRadius: BorderRadius.circular(4),
                     ),
-                    child: const Text(
-                      'Rôle déchu ➔ Villageois',
+                    child: Text(
+                      context.tr('fallen_role_villager'),
                       style: TextStyle(
                         fontSize: 8,
                         color: Color(0xFF94A3B8),
@@ -790,7 +791,7 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      player.isAlive ? 'Survivant' : 'Éliminé(e)',
+                      player.isAlive ? context.tr('survivor') : context.tr('eliminated'),
                       style: TextStyle(
                         fontSize: 9.5,
                         fontWeight: FontWeight.w600,
@@ -860,8 +861,8 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
               ),
               label: Text(
                 isMeReady
-                    ? 'PRÊT POUR LA REVANCHE ! ($readyCount/$totalPlayers)'
-                    : 'REJOUER ($readyCount/$totalPlayers)',
+                    ? context.tr('rematch_ready_status', {'ready': readyCount, 'total': totalPlayers})
+                    : context.tr('replay_status_btn', {'ready': readyCount, 'total': totalPlayers}),
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w900,
@@ -904,8 +905,8 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
               onPressed: () {
                 ref.read(gameNotifierProvider.notifier).leaveRoom();
               },
-              child: const Text(
-                'Quitter l\'Arène / Retour au Menu',
+              child: Text(
+                context.tr('quit_arena_menu'),
                 style: TextStyle(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w700,

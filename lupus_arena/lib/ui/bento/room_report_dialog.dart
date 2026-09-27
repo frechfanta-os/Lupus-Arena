@@ -93,7 +93,7 @@ class RoomReportDialog extends StatelessWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          'Code Room : ${room.roomCode}',
+                          context.tr('room_code_label', {'code': room.roomCode}),
                           style: const TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
@@ -168,7 +168,7 @@ class RoomReportDialog extends StatelessWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Le mute local s\'applique immédiatement uniquement pour vous.',
+                      context.tr('local_mute_info'),
                       style: TextStyle(
                         fontSize: 10.5,
                         color: LupusColors.textSecondary.withValues(alpha: 0.8),
@@ -271,8 +271,8 @@ class _PlayerModerationCard extends StatelessWidget {
                     final isLocallyMuted = mutedUids.contains(player.agoraUid);
                     return Text(
                       isLocallyMuted
-                          ? 'Audio coupé localement'
-                          : 'Audio actif',
+                          ? context.tr('audio_locally_muted')
+                          : context.tr('audio_active'),
                       style: TextStyle(
                         fontSize: 10.5,
                         fontWeight: FontWeight.w600,
@@ -312,8 +312,8 @@ class _PlayerModerationCard extends StatelessWidget {
                       backgroundColor: LupusColors.surfaceLight,
                       content: Text(
                         nextMuted
-                            ? '${player.name} est rendu muet pour vous.'
-                            : 'Audio rétabli pour ${player.name}.',
+                            ? context.tr('player_locally_muted_msg', {'name': player.name})
+                            : context.tr('player_locally_unmuted_msg', {'name': player.name}),
                         style: const TextStyle(color: Colors.white, fontSize: 12),
                       ),
                     ),
@@ -423,7 +423,7 @@ class _ReportPlayerModalState extends State<_ReportPlayerModal> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: LupusColors.bloodRed,
-          content: Text('Erreur lors de l\'envoi du signalement : $e'),
+          content: Text(context.tr('report_send_error', {'error': e.toString()})),
         ),
       );
     }
@@ -471,7 +471,7 @@ class _ReportPlayerModalState extends State<_ReportPlayerModal> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Signaler ${widget.player.name}',
+                  context.tr('report_title_player', {'name': widget.player.name}),
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
@@ -483,7 +483,7 @@ class _ReportPlayerModalState extends State<_ReportPlayerModal> {
           ),
           const SizedBox(height: 12),
           Text(
-            'Sélectionnez le motif principal du signalement :',
+            context.tr('report_select_reason'),
             style: TextStyle(
               fontSize: 12,
               color: LupusColors.textSecondary.withValues(alpha: 0.9),
@@ -548,7 +548,7 @@ class _ReportPlayerModalState extends State<_ReportPlayerModal> {
             maxLength: 250,
             style: const TextStyle(fontSize: 12, color: Colors.white),
             decoration: InputDecoration(
-              hintText: 'Précisions facultatives...',
+              hintText: context.tr('report_optional_details'),
               hintStyle: const TextStyle(fontSize: 12, color: LupusColors.textMuted),
               filled: true,
               fillColor: LupusColors.surface,
@@ -588,9 +588,9 @@ class _ReportPlayerModalState extends State<_ReportPlayerModal> {
                       valueColor: AlwaysStoppedAnimation(Colors.white),
                     ),
                   )
-                : const Text(
-                    'Envoyer le signalement & Muter localement',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+                : Text(
+                    context.tr('report_send_button'),
+                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
                   ),
           ),
         ],

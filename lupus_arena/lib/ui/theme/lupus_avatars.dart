@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/app_translations.dart';
 
 class LupusAvatarItem {
   final int id;
@@ -18,6 +19,9 @@ class LupusAvatarItem {
     required this.borderColor,
     required this.glowColor,
   });
+
+  String getName([BuildContext? context]) =>
+      AppTranslations.getText(context, 'avatar_$id');
 }
 
 class LupusAvatars {

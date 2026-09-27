@@ -67,7 +67,7 @@ class BentoEventLog extends StatelessWidget {
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              log,
+                              context.translateLog(log),
                               style: TextStyle(
                                 fontSize: 12,
                                 height: 1.3,

@@ -121,12 +121,12 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
                       child: const Text('👑', style: TextStyle(fontSize: 14)),
                     ),
                     const SizedBox(width: 8),
-                    const Expanded(
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '👑 DEV-MOD • MAÎTRE DU JEU',
+                            context.tr('admin_dev_mode_title'),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
@@ -138,7 +138,7 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
                             ),
                           ),
                           Text(
-                            'DEV-MOD • Mutations Directes Firebase',
+                            context.tr('admin_dev_mode_subtitle'),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
@@ -168,7 +168,7 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
       {'icon': '👁️', 'label': 'Dev View'},
       {'icon': '🎮', 'label': 'Sandbox'},
       {'icon': '⏳', 'label': 'Phases'},
-      {'icon': '👥', 'label': 'Joueurs'},
+      {'icon': '👥', 'label': context.tr('admin_tab_players')},
       {'icon': '🎙️', 'label': 'Audio'},
     ];
 
@@ -267,17 +267,17 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Row(
+              Row(
                 children: [
-                  Icon(Icons.wb_sunny_rounded, color: LupusColors.arcaneGold, size: 24),
-                  SizedBox(width: 10),
+                  const Icon(Icons.wb_sunny_rounded, color: LupusColors.arcaneGold, size: 24),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'RÉSOLUTION INSTANTANÉE DU CYCLE',
-                          style: TextStyle(
+                          context.tr('admin_cycle_resolution'),
+                          style: const TextStyle(
                             fontFamily: 'serif',
                             fontSize: 13,
                             fontWeight: FontWeight.w900,
@@ -286,8 +286,8 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
                           ),
                         ),
                         Text(
-                          'Calcule les morts, protections et amours sans aucun timer réseau',
-                          style: TextStyle(fontSize: 10.5, color: LupusColors.textSecondary),
+                          context.tr('admin_instant_dawn_desc'),
+                          style: const TextStyle(fontSize: 10.5, color: LupusColors.textSecondary),
                         ),
                       ],
                     ),
@@ -308,8 +308,8 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
                   _showToast('🌅 Aube résolue instantanément !');
                 },
                 icon: const Icon(Icons.flash_on_rounded, size: 20),
-                label: const Text(
-                  '🌅 RÉSOUDRE L\'AUBE / LEVER DU JOUR',
+                label: Text(
+                  context.tr('admin_instant_dawn'),
                   style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 0.9, fontSize: 12.5),
                 ),
               ),
@@ -319,8 +319,8 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
 
         const SizedBox(height: 14),
 
-        const Text(
-          'DÉCLENCHEURS DIRECTS DES POUVOIRS (DEV-MODE)',
+        Text(
+          context.tr('admin_direct_triggers'),
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w800,
@@ -493,8 +493,8 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
                 children: [
                   const Text('🧪', style: TextStyle(fontSize: 18)),
                   const SizedBox(width: 8),
-                  const Text(
-                    'POTIONS DE LA SORCIÈRE',
+                  Text(
+                    context.tr('admin_witch_potions'),
                     style: TextStyle(
                       fontWeight: FontWeight.w900,
                       fontSize: 12,
@@ -784,8 +784,8 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
 
         const SizedBox(height: 14),
 
-        const Text(
-          'ROSTER DU PLATEAU • CONTRÔLE INDIVIDUEL (12 JOUEURS)',
+        Text(
+          context.tr('admin_board_roster'),
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w800,
@@ -942,13 +942,13 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(color: LupusColors.arcaneGold, width: 0.8),
                         ),
-                        child: const Row(
+                        child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.refresh_rounded, size: 12, color: LupusColors.arcaneGold),
-                            SizedBox(width: 4),
+                            const Icon(Icons.refresh_rounded, size: 12, color: LupusColors.arcaneGold),
+                            const SizedBox(width: 4),
                             Text(
-                              'Réinitialiser',
+                              context.tr('admin_reset_btn'),
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w800,
@@ -1227,7 +1227,7 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
                       if (player.roleInitial == GameRole.witch) ...[
                         const SizedBox(height: 2),
                         Text(
-                          '🧪 Vie: ${player.potionsVie} | ☠️ Mort: ${player.potionsMort}',
+                          context.tr('admin_potions_status', {'life': player.potionsVie, 'death': player.potionsMort}),
                           style: const TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
@@ -1600,12 +1600,12 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Row(
+                    Row(
                       children: [
-                        Text('🎙️', style: TextStyle(fontSize: 14)),
-                        SizedBox(width: 6),
+                        const Text('🎙️', style: TextStyle(fontSize: 14)),
+                        const SizedBox(width: 6),
                         Text(
-                          'DÉBAT EN DIRECT (RONDE DE PAROLE)',
+                          context.tr('admin_live_debate_round'),
                           style: TextStyle(
                             fontSize: 10.5,
                             fontWeight: FontWeight.w900,
@@ -1717,8 +1717,8 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
             _showToast('Résolution matinale des morts déclenchée');
           },
           icon: const Text('🌅', style: TextStyle(fontSize: 16)),
-          label: const Text(
-            'FORCER LA RÉSOLUTION MATINALE',
+          label: Text(
+            context.tr('admin_force_morning'),
             style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 0.8),
           ),
         ),
@@ -1804,8 +1804,8 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'CONTRÔLE TOTAL DES JOUEURS',
+        Text(
+          context.tr('admin_total_player_control'),
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w800,
@@ -1854,7 +1854,7 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
                           ),
                           if (player.roleInitial == GameRole.witch)
                             Text(
-                              '🧪 Vie: ${player.potionsVie} | ☠️ Mort: ${player.potionsMort}',
+                              context.tr('admin_potions_status', {'life': player.potionsVie, 'death': player.potionsMort}),
                               style: const TextStyle(
                                 fontSize: 9.5,
                                 fontWeight: FontWeight.w700,
@@ -1888,14 +1888,14 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
                               border: Border.all(
                                   color: const Color(0xFFFF3333), width: 0.8),
                             ),
-                            child: const Row(
+                            child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.mic_off_rounded,
+                                const Icon(Icons.mic_off_rounded,
                                     size: 10, color: Color(0xFFFF3333)),
-                                SizedBox(width: 3),
+                                const SizedBox(width: 3),
                                 Text(
-                                  'BÂILLONNÉ',
+                                  context.tr('admin_gagged'),
                                   style: TextStyle(
                                     fontSize: 8.5,
                                     fontWeight: FontWeight.w900,
@@ -2076,13 +2076,13 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
                                   .withValues(alpha: 0.3),
                             ),
                           ),
-                          child: const Row(
+                          child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Text('🎭', style: TextStyle(fontSize: 12)),
-                              SizedBox(width: 4),
+                              const Text('🎭', style: TextStyle(fontSize: 12)),
+                              const SizedBox(width: 4),
                               Text(
-                                'Changer Rôle...',
+                                context.tr('admin_change_role_btn'),
                                 style: TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w700,
@@ -2209,8 +2209,8 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'ESPIONNAGE & CONTRÔLE AUDIO AGORA',
+        Text(
+          context.tr('admin_audio_espionage'),
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w800,
@@ -2232,12 +2232,12 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Row(
+                  Row(
                     children: [
-                      Text('🐺', style: TextStyle(fontSize: 20)),
-                      SizedBox(width: 8),
+                      const Text('🐺', style: TextStyle(fontSize: 20)),
+                      const SizedBox(width: 8),
                       Text(
-                        'Écoute Omnisciente de Nuit',
+                        context.tr('admin_night_omniscience'),
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w800,
@@ -2259,8 +2259,8 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
                 ],
               ),
               const SizedBox(height: 6),
-              const Text(
-                'Permet au Maître du Jeu de rejoindre le canal vocal secret des Loups-Garous la nuit sans être loup pour surveiller les échanges.',
+              Text(
+                context.tr('admin_night_omniscience_desc'),
                 style: TextStyle(
                   fontSize: 11,
                   color: LupusColors.textMuted,
@@ -2284,8 +2284,8 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
             _showToast('Silence imposé à tous les orateurs');
           },
           icon: const Icon(Icons.mic_off_rounded, size: 18),
-          label: const Text(
-            'IMPOSER LE SILENCE GÉNÉRAL',
+          label: Text(
+            context.tr('admin_general_silence'),
             style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: 0.8),
           ),
         ),
@@ -2331,7 +2331,7 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
         child: Column(
           children: [
             Text(
-              'ATTRIBUER UN RÔLE À ${player.name.toUpperCase()}',
+              context.tr('admin_assign_role_title', {'name': player.name.toUpperCase()}),
               style: const TextStyle(
                 fontFamily: 'serif',
                 fontSize: 14,

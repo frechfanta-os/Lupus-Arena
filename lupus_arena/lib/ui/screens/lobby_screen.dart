@@ -349,7 +349,7 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
               }
               Navigator.of(ctx).pop();
             },
-            child: const Text('OK', style: TextStyle(fontWeight: FontWeight.bold)),
+            child: Text(context.tr('ok_btn'), style: const TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -359,7 +359,7 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
   Widget _buildTopBar(BuildContext context, LupusGameState gameState) {
     final displayName = gameState.currentUserName.isNotEmpty
         ? gameState.currentUserName
-        : 'Loup-Garou';
+        : context.tr('role_simple_werewolf');
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -804,32 +804,32 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
                         border: Border.all(color: LupusColors.arcaneGold, width: 1.5),
                         boxShadow: LupusTheme.glowGold(opacity: 0.35),
                       ),
-                      child: const Row(
+                      child: Row(
                         children: [
-                          Text('👑', style: TextStyle(fontSize: 20)),
-                          SizedBox(width: 12),
+                          const Text('👑', style: TextStyle(fontSize: 20)),
+                          const SizedBox(width: 12),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  '👑 DEV-MOD MAÎTRE DU JEU ACTIF',
-                                  style: TextStyle(
+                                  context.tr('dev_mode_active_banner'),
+                                  style: const TextStyle(
                                     color: LupusColors.arcaneGold,
                                     fontWeight: FontWeight.w900,
                                     fontSize: 13,
                                     letterSpacing: 1.1,
                                   ),
                                 ),
-                                SizedBox(height: 2),
+                                const SizedBox(height: 2),
                                 Text(
-                                  'Toucher pour ouvrir le panneau DEV-MOD',
-                                  style: TextStyle(color: LupusColors.textSecondary, fontSize: 11),
+                                  context.tr('dev_mode_tap_to_open'),
+                                  style: const TextStyle(color: LupusColors.textSecondary, fontSize: 11),
                                 ),
                               ],
                             ),
                           ),
-                          Icon(Icons.arrow_forward_ios_rounded,
+                          const Icon(Icons.arrow_forward_ios_rounded,
                               color: LupusColors.arcaneGold, size: 16),
                         ],
                       ),
@@ -927,7 +927,10 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'GUERRIERS RASSEMBLÉS (${room.playerList.length}/12)',
+                            context.tr('warriors_assembled_count', {
+                              'current': room.playerList.length,
+                              'total': 12,
+                            }),
                             style: const TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w800,
@@ -945,8 +948,11 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
                             ),
                             child: Text(
                               room.playerList.length == 12
-                                  ? '12/12 Prêt à lancer'
-                                  : '${room.playerList.length}/12 Guerriers',
+                                  ? context.tr('ready_to_launch_12')
+                                  : context.tr('warriors_count', {
+                                      'current': room.playerList.length,
+                                      'total': 12,
+                                    }),
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w700,
@@ -1037,7 +1043,7 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
-                                      'En attente de 12 guerriers connectés ($totalPlayers/12)',
+                                      context.tr('waiting_12_warriors', {'current': totalPlayers, 'total': 12}),
                                       style: const TextStyle(
                                         color: LupusColors.bloodRed,
                                         fontSize: 11.5,
@@ -1064,7 +1070,7 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
-                                      'Le salon dépasse la limite de 12 guerriers ($totalPlayers/12)',
+                                      context.tr('lobby_exceeds_12', {'current': totalPlayers, 'total': 12}),
                                       style: const TextStyle(
                                         color: LupusColors.bloodRed,
                                         fontSize: 11.5,
@@ -1091,7 +1097,7 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
-                                      'Le total des cartes de rôles ($totalRoles) doit être exactement de 12 cartes',
+                                      context.tr('deck_must_be_12_cards', {'current': totalRoles}),
                                       style: const TextStyle(
                                         color: LupusColors.sunAmber,
                                         fontSize: 11.5,
@@ -1248,9 +1254,9 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
-                const Text(
-                  'CHOISISSEZ VOTRE INCARNATION',
-                  style: TextStyle(
+                Text(
+                  context.tr('choose_your_avatar'),
+                  style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w900,
                     fontSize: 14.5,
@@ -1258,9 +1264,9 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
                   ),
                 ),
                 const SizedBox(height: 4),
-                const Text(
-                  'Sélectionnez votre avatar Dark Fantasy pour l\'arène',
-                  style: TextStyle(
+                Text(
+                  context.tr('choose_your_avatar_desc'),
+                  style: const TextStyle(
                     color: Color(0xFF94A3B8),
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
@@ -1337,7 +1343,7 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
                                 ),
                                 const SizedBox(height: 6),
                                 Text(
-                                  avatarItem.name,
+                                  avatarItem.getName(context),
                                   textAlign: TextAlign.center,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,

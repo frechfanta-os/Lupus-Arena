@@ -114,7 +114,7 @@ class BentoPhaseCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      phase.titleFr,
+                      phase.getTitle(context),
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
@@ -124,7 +124,7 @@ class BentoPhaseCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      phase.descriptionFr,
+                      phase.getDescription(context),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(

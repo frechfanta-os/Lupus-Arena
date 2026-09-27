@@ -3518,14 +3518,14 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: const Color(0xFFDC2626).withValues(alpha: 0.6)),
             ),
-            child: const Row(
+            child: Row(
               children: [
-                Text('🐾', style: TextStyle(fontSize: 14)),
-                SizedBox(width: 6),
+                const Text('🐾', style: TextStyle(fontSize: 14)),
+                const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    'Odeur de loup détectée ! Au moins un loup se cache dans le groupe flairé.',
-                    style: TextStyle(fontSize: 10.5, color: Color(0xFFFF8B8B), fontWeight: FontWeight.w700),
+                    context.tr('fox_wolf_detected'),
+                    style: const TextStyle(fontSize: 10.5, color: Color(0xFFFF8B8B), fontWeight: FontWeight.w700),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),

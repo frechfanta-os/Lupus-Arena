@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../GameNotifier.dart';
+import '../../services/app_translations.dart';
 import '../theme/lupus_theme.dart';
 import 'admin_control_sheet.dart';
 
@@ -61,7 +62,7 @@ class _AdminSecretDialogState extends ConsumerState<AdminSecretDialog> {
       AdminControlSheet.show(context);
     } else {
       setState(() {
-        _errorMessage = 'Code administrateur invalide';
+        _errorMessage = context.tr('admin_pin_invalid');
         _enteredPin = '';
       });
     }
@@ -108,10 +109,10 @@ class _AdminSecretDialogState extends ConsumerState<AdminSecretDialog> {
             ),
             const SizedBox(height: 12),
 
-            const Text(
-              'ACCÈS MAÎTRE DU JEU',
+            Text(
+              context.tr('admin_pin_title'),
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 fontFamily: 'serif',
                 fontSize: 16,
                 fontWeight: FontWeight.w900,
@@ -120,10 +121,10 @@ class _AdminSecretDialogState extends ConsumerState<AdminSecretDialog> {
               ),
             ),
             const SizedBox(height: 4),
-            const Text(
-              'Saisissez le code d\'autorisation secret (8 chiffres)',
+            Text(
+              context.tr('admin_pin_subtitle'),
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 11,
                 color: LupusColors.textSecondary,
               ),
@@ -175,9 +176,9 @@ class _AdminSecretDialogState extends ConsumerState<AdminSecretDialog> {
 
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text(
-                'Annuler',
-                style: TextStyle(
+              child: Text(
+                context.tr('cancel'),
+                style: const TextStyle(
                   color: LupusColors.textMuted,
                   fontSize: 12,
                 ),

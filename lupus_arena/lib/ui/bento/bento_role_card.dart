@@ -108,7 +108,7 @@ class _BentoRoleCardState extends State<BentoRoleCard> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        role.displayName,
+                        role.getDisplayName(context),
                         style: TextStyle(
                           fontFamily: 'serif',
                           fontSize: 17,
@@ -142,7 +142,7 @@ class _BentoRoleCardState extends State<BentoRoleCard> {
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        role.description,
+                        role.getDescription(context),
                         maxLines: 3,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(

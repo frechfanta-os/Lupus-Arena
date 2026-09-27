@@ -322,7 +322,7 @@ class _AppUpdateDialogState extends State<AppUpdateDialog> {
                         Align(
                           alignment: Alignment.centerRight,
                           child: Text(
-                            '${(_receivedBytes / (1024 * 1024)).toStringAsFixed(1)} Mo / ${(_totalBytes / (1024 * 1024)).toStringAsFixed(1)} Mo',
+                            '${(_receivedBytes / (1024 * 1024)).toStringAsFixed(1)} ${context.tr('unit_mb')} / ${(_totalBytes / (1024 * 1024)).toStringAsFixed(1)} ${context.tr('unit_mb')}',
                             style: const TextStyle(
                               fontSize: 10,
                               color: LupusColors.textMuted,

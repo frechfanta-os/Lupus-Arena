@@ -588,28 +588,28 @@ class _MysticRadialTableState extends State<MysticRadialTable>
 
                 if (roleText == null) {
                   if (canSeeTargetDefender) {
-                    roleText = '🛡️ Protégé par le Salvateur';
+                    roleText = context.tr('status_protected_defender');
                     roleColor = const Color(0xFF3A86FF);
                   } else if (canSeeTargetWitchHealed) {
-                    roleText = '🧪 Sauvé par la potion de vie';
+                    roleText = context.tr('status_saved_witch');
                     roleColor = const Color(0xFF06D6A0);
                   } else if (canSeeTargetWitchPoisoned) {
-                    roleText = '☠️ Empoisonné par la potion de mort';
+                    roleText = context.tr('status_poisoned_witch');
                     roleColor = const Color(0xFF9D4EDD);
                   } else if (canSeeTargetWitchVictim) {
-                    roleText = '🩸 Victime désignée de la meute';
+                    roleText = context.tr('status_wolf_victim');
                     roleColor = const Color(0xFFFF2A4B);
                   } else if (canSeeTargetCrow) {
-                    roleText = '🦅 Maudit par le Corbeau (+2 voix)';
+                    roleText = context.tr('status_crow_cursed');
                     roleColor = const Color(0xFF94A3B8);
                   } else if (canSeeTargetWildModel) {
-                    roleText = '🌱 Modèle de l\'Enfant Sauvage';
+                    roleText = context.tr('status_wild_child_model');
                     roleColor = const Color(0xFF52B788);
                   } else if (canSeeTargetContamination) {
-                    roleText = '🗡️ Contaminé par l\'Épée Rouillée';
+                    roleText = context.tr('status_rusty_contaminated');
                     roleColor = const Color(0xFFE5989B);
                   } else if (canSeeTargetBearGrowl) {
-                    roleText = '🐻 L\'ours a grogné ce matin !';
+                    roleText = context.tr('status_bear_growled');
                     roleColor = const Color(0xFFDDA15E);
                   }
                 }
