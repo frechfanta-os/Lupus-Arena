@@ -123,22 +123,26 @@ jobs:
           tag_name: ${{ env.APP_VERSION }}
           name: "Lupus Arena ${{ env.APP_VERSION }}"
           body: |
-            ### 🐺 Lupus Arena - ${{ env.APP_VERSION }} (Suppression Définitive du Bouton & Détecteur d'Update · Agora RTC · Audio Lifecycle · i18n)
+            ### 🐺 Lupus Arena - ${{ env.APP_VERSION }} (Suppression Définitive Update · En-tête Pseudo Compact · Agora RTC · Audio Lifecycle · i18n)
 
             #### 🌟 Nouveautés & Correctifs de cette Release
 
-            **🚫 Suppression Définitive du Bouton et Détecteur d'Update**
-            - Retrait complet du badge et bouton d'update in-app dans le menu principal ainsi que de la détection et du téléchargement automatique en arrière-plan.
-            - Interface du lobby épurée et recentrée sur les contrôles audio et linguistiques.
+            **👤 En-tête du Lobby Compact & Pseudo Préservé**
+            - Capsule de profil compacte et harmonieuse : nom d'utilisateur de taille réduite et élégante avec limitation stricte du débordement.
+            - Icône crayon d'édition discrète et mini-sceau officiel proportionné.
 
-            **🎙️ Chat Vocal Agora RTC 100% Fonctionnel**
-            - Authentification RTC rétablie avec génération automatique de jetons sécurisés HMAC-SHA256.
+            **🚫 Élimination Totale & Définitive de la Fonctionnalité d'Update**
+            - Suppression définitive de toute détection, dialogue, bouton et icône de mise à jour in-app.
+            - Codebase assainie et réorganisée, sans aucun appel réseau intempestif.
 
-            **🎵 Gestion du Cycle de Vie Audio**
-            - Coupure instantanée de la musique lors de la mise en arrière-plan, verrouillage ou sortie de l'application.
+            **🎙️ Chat Vocal Agora RTC 100% Opérationnel**
+            - Certificat Agora RTC rétabli avec tokens sécurisés et reprise automatique d'erreur.
 
-            **⌨️ Clavier Virtuel & Rendu i18n Réactif**
-            - Barre d'action surélevée sans déformer l'illustration du loup-garou et rafraîchissement dynamique des libellés de boutons dans toutes les langues.
+            **🎵 Gestion Robuste du Cycle de Vie Audio**
+            - Coupure instantanée de la musique lors de la mise en arrière-plan, sortie ou verrouillage.
+
+            **⌨️ Clavier Virtuel & Rendu Multilingue Fluide**
+            - Positionnement parfait au-dessus du clavier et réactivité instantanée aux changements de langue.
 
             ---
             #### 📲 Binaires Téléchargeables

@@ -2305,7 +2305,7 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
               LupusPermissionDialog.showForce(context);
             }
           },
-          icon: const Icon(Icons.security_update_good, size: 18),
+          icon: const Icon(Icons.verified_user_rounded, size: 18),
           label: const Text(
             'RE-TESTER LE DIALOGUE PERMISSIONS DU 1ER LANCEMENT',
             style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: 0.8),

@@ -209,10 +209,10 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
               ),
 
               AnimatedPositioned(
-                duration: const Duration(milliseconds: 180),
+                duration: const Duration(milliseconds: 120),
                 curve: Curves.easeOutCubic,
                 bottom: media.viewInsets.bottom > 0
-                    ? media.viewInsets.bottom + 14.0
+                    ? media.viewInsets.bottom + 12.0
                     : math.max(
                         (media.padding.bottom > 0 ? media.padding.bottom : 16.0) + 16.0,
                         media.size.height * 0.275,
@@ -375,7 +375,7 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
           behavior: HitTestBehavior.opaque,
           onTap: () => _showNameEditDialog(context, gameState.currentUserName),
           child: Container(
-            padding: const EdgeInsets.only(left: 4, right: 10, top: 3.5, bottom: 3.5),
+            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
             decoration: BoxDecoration(
               color: const Color(0xCC12182E),
               borderRadius: BorderRadius.circular(10),
@@ -394,45 +394,50 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-
                 GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onTap: () => _showAvatarSelector(context),
                   child: ClipOval(
                     child: Image.asset(
                       LupusAssets.wolfSealAsset,
-                      width: 28,
-                      height: 28,
+                      width: 24,
+                      height: 24,
                       fit: BoxFit.contain,
                       errorBuilder: (context, error, stackTrace) => Image.network(
                         LupusAssets.wolfSealUrl,
-                        width: 28,
-                        height: 28,
+                        width: 24,
+                        height: 24,
                         fit: BoxFit.contain,
                         errorBuilder: (c, e, s) => const Icon(
                           Icons.pets_rounded,
                           color: LupusColors.arcaneGold,
-                          size: 18,
+                          size: 16,
                         ),
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 7),
-
+                const SizedBox(width: 6),
                 ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 120),
+                  constraints: const BoxConstraints(maxWidth: 105),
                   child: Text(
                     displayName,
+                    maxLines: 1,
                     style: const TextStyle(
                       fontFamily: 'serif',
                       color: LupusColors.arcaneGold,
-                      fontSize: 11.0,
+                      fontSize: 10.5,
                       fontWeight: FontWeight.w800,
-                      letterSpacing: 0.8,
+                      letterSpacing: 0.6,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
+                ),
+                const SizedBox(width: 4),
+                Icon(
+                  Icons.edit_rounded,
+                  color: LupusColors.arcaneGold.withValues(alpha: 0.75),
+                  size: 11,
                 ),
               ],
             ),
