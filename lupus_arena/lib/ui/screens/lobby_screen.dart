@@ -14,8 +14,6 @@ import '../bento/bento_voice_controls.dart';
 import '../bento/medieval_fantasy_button.dart';
 import '../bento/role_selector_bento.dart';
 import '../bento/lupus_permission_dialog.dart';
-import '../bento/app_update_dialog.dart';
-import '../../services/update_service.dart';
 import '../theme/lupus_assets.dart';
 import '../theme/lupus_avatars.dart';
 import '../theme/lupus_theme.dart';
@@ -42,8 +40,6 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _codeController = TextEditingController();
   bool _isNavigatingToArena = false;
-  AppUpdateInfo? _availableUpdate;
-  bool _isCheckingUpdate = false;
 
   @override
   void initState() {
@@ -74,8 +70,6 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
       LupusPermissionDialog.showIfNeeded(context);
     });
 
-    _checkForUpdateInBackground();
-
     LupusPermissionService().startBackgroundPermissionMonitor();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -87,23 +81,6 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
         }
       }
     });
-  }
-
-  Future<void> _checkForUpdateInBackground() async {
-    if (_isCheckingUpdate) return;
-    _isCheckingUpdate = true;
-    try {
-      final update = await UpdateService().checkForUpdate();
-      if (mounted && update != null) {
-        setState(() {
-          _availableUpdate = update;
-        });
-      }
-    } catch (_) {
-
-    } finally {
-      _isCheckingUpdate = false;
-    }
   }
 
   @override
@@ -496,69 +473,6 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
                           fontWeight: FontWeight.w900,
                           fontSize: 10,
                           letterSpacing: 0.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 6),
-            ],
-
-            if (_availableUpdate != null) ...[
-              GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => AppUpdateDialog.show(context, _availableUpdate!),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: const Color(0xCC0D1F1A),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: const Color(0xFF34D399).withValues(alpha: 0.7),
-                      width: 0.9,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF10B981).withValues(alpha: 0.25),
-                        blurRadius: 6,
-                        offset: const Offset(0, 1),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.system_update_rounded,
-                        color: Color(0xFF34D399),
-                        size: 12,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        'v${_availableUpdate!.version}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.3,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF10B981),
-                          borderRadius: BorderRadius.circular(5),
-                        ),
-                        child: const Text(
-                          'NEW',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 7,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 0.5,
-                          ),
                         ),
                       ),
                     ],

@@ -123,23 +123,22 @@ jobs:
           tag_name: ${{ env.APP_VERSION }}
           name: "Lupus Arena ${{ env.APP_VERSION }}"
           body: |
-            ### 🐺 Lupus Arena - ${{ env.APP_VERSION }} (Correctif Agora Voice RTC · Cycle de Vie Audio · Clavier & Fond Fixe · i18n Réactif FR/AR/EN)
+            ### 🐺 Lupus Arena - ${{ env.APP_VERSION }} (Suppression Définitive du Bouton & Détecteur d'Update · Agora RTC · Audio Lifecycle · i18n)
 
             #### 🌟 Nouveautés & Correctifs de cette Release
 
-            **🎙️ Rétablissement Complet du Chat Vocal Agora RTC**
-            - Correction de la configuration d'authentification RTC : restauration du certificat d'application et du générateur de jeton 006 HMAC-SHA256 (`AgoraTokenBuilder`).
-            - Résolution définitive du blocage "ERREUR AUDIO AGORA" et amélioration de la reprise manuelle (`retryJoin`) pour rejoindre instantanément les canaux vocaux (`lupus_$roomCode`).
+            **🚫 Suppression Définitive du Bouton et Détecteur d'Update**
+            - Retrait complet du badge et bouton d'update in-app dans le menu principal ainsi que de la détection et du téléchargement automatique en arrière-plan.
+            - Interface du lobby épurée et recentrée sur les contrôles audio et linguistiques.
 
-            **🎵 Gestion Intelligente du Cycle de Vie Audio (Sortie d'application & Veille)**
-            - La musique de jeu et d'ambiance se coupe automatiquement et proprement lorsque l'application passe en arrière-plan, est minimisée (`hidden`, `paused`, `inactive`) ou quittée via le bouton retour (`PopScope`).
-            - Reprise automatique et fluide de la piste appropriée au retour au premier plan (`resumed`).
+            **🎙️ Chat Vocal Agora RTC 100% Fonctionnel**
+            - Authentification RTC rétablie avec génération automatique de jetons sécurisés HMAC-SHA256.
 
-            **⌨️ Disposition Optimale du Clavier Virtuel**
-            - Alignement dynamique et élégant de la barre d'action juste au-dessus du clavier lors de la saisie du code salon, sans déformation du fond d'écran (`resizeToAvoidBottomInset: false`).
+            **🎵 Gestion du Cycle de Vie Audio**
+            - Coupure instantanée de la musique lors de la mise en arrière-plan, verrouillage ou sortie de l'application.
 
-            **🌐 Réactivité Immédiate de la Localisation**
-            - Rendu dynamique des libellés de boutons dans toutes les langues supportées (Français, Arabe, Anglais) avec rafraîchissement instantané lors du changement de langue.
+            **⌨️ Clavier Virtuel & Rendu i18n Réactif**
+            - Barre d'action surélevée sans déformer l'illustration du loup-garou et rafraîchissement dynamique des libellés de boutons dans toutes les langues.
 
             ---
             #### 📲 Binaires Téléchargeables
