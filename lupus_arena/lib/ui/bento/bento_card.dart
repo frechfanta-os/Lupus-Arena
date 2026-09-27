@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/lupus_theme.dart';
 
-/// Carte de base au style Bento UI avec bordure subtile, fond dégradé
-/// et support d'effets lumineux (glow) pour les états actifs.
 class BentoCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry padding;

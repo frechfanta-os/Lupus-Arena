@@ -2,9 +2,6 @@ import 'package:flutter/material.dart';
 import '../../services/locale_provider.dart';
 import '../theme/lupus_theme.dart';
 
-/// Boîte de dialogue de sélection de langue proposant le Français, l'Arabe et l'Anglais
-/// avec codes textuels officiels (sans drapeaux) et design Dark Gothic néon.
-/// Utilisable tant au premier démarrage (non dismissible) que depuis le lobby (dismissible).
 class LanguageDialog extends StatelessWidget {
   final bool dismissible;
   final Function(String langCode) onSelect;
@@ -15,7 +12,6 @@ class LanguageDialog extends StatelessWidget {
     required this.onSelect,
   });
 
-  /// Affiche la boîte de dialogue si c'est le tout premier démarrage de l'application
   static Future<void> showFirstLaunchIfNeeded(
     BuildContext context,
     LocaleProvider localeProvider,
@@ -36,7 +32,6 @@ class LanguageDialog extends StatelessWidget {
     }
   }
 
-  /// Ouvre la boîte de dialogue pour changer la langue en cours d'utilisation
   static Future<void> show(
     BuildContext context,
     LocaleProvider localeProvider,
@@ -84,7 +79,7 @@ class LanguageDialog extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Icône d'en-tête
+
               Container(
                 width: 52,
                 height: 52,
@@ -106,7 +101,6 @@ class LanguageDialog extends StatelessWidget {
               ),
               const SizedBox(height: 14),
 
-              // Titre trilingue
               const Text(
                 'Langue / اللغة / Language',
                 textAlign: TextAlign.center,
@@ -129,7 +123,6 @@ class LanguageDialog extends StatelessWidget {
               ),
               const SizedBox(height: 18),
 
-              // Options de langue
               _buildLangTile(
                 context,
                 label: 'Français',

@@ -12,8 +12,6 @@ import '../bento/lupus_permission_dialog.dart';
 import '../bento/role_card_image.dart';
 import '../theme/lupus_theme.dart';
 
-/// Feuille de contrôle Maître du Jeu (DEV-MOD / Debug Panel) stylisée Dark Medieval Modern
-/// Permet de visualiser tous les secrets de la partie et de forcer les états en direct sur Firebase.
 class AdminControlSheet extends ConsumerStatefulWidget {
   const AdminControlSheet({super.key});
 
@@ -31,9 +29,8 @@ class AdminControlSheet extends ConsumerStatefulWidget {
 }
 
 class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
-  int _selectedTab = 0; // 0: Dev View, 1: Sandbox, 2: Phases, 3: Joueurs, 4: Audio
+  int _selectedTab = 0;
 
-  // Variables de sélection pour les actions rapides Sandbox
   String? _selectedWolfVictimId;
   String? _selectedSeerTargetId;
   String? _selectedPoisonTargetId;
@@ -43,7 +40,6 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
   String? _selectedHunterTargetId;
   GameRole? _inspectedSeerResult;
 
-  // Variables pour le configurateur Dev-Mode Sandbox
   int? _lobbyPlayerCount;
   Map<GameRole, int>? _lobbyRoleCounts;
 
@@ -71,14 +67,12 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
       ),
       child: Column(
         children: [
-          // Poignée et En-tête DEV-MOD
+
           _buildHeader(context, room),
 
-          // Barre d'onglets Bento
           _buildTabs(),
           const SizedBox(height: 8),
 
-          // Contenu selon l'onglet sélectionné
           Expanded(
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
@@ -96,7 +90,7 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
       child: Column(
         children: [
-          // Poignée de glissement dorée
+
           Container(
             width: 44,
             height: 4,
@@ -250,9 +244,6 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
     }
   }
 
-  // ==========================================
-  // --- 2. SIMULATION SANDBOX & POUVOIRS FORCÉS ---
-  // ==========================================
   Widget _buildSandboxTab(GameRoom room) {
     final notifier = ref.read(gameNotifierProvider.notifier);
     final alivePlayers = room.alivePlayers;
@@ -260,7 +251,7 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // 1. Bouton Maître : Lever du jour immédiat
+
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
@@ -328,7 +319,6 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
 
         const SizedBox(height: 14),
 
-        // 2. Actions forcées des rôles de Nuit
         const Text(
           'DÉCLENCHEURS DIRECTS DES POUVOIRS (DEV-MODE)',
           style: TextStyle(
@@ -340,7 +330,6 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
         ),
         const SizedBox(height: 8),
 
-        // Carte : Meute des Loups-Garous
         BentoCard(
           borderColor: LupusColors.bloodRed.withValues(alpha: 0.6),
           child: Column(
@@ -417,7 +406,6 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
 
         const SizedBox(height: 10),
 
-        // Carte : Voyante (Sonde Immédiate)
         BentoCard(
           borderColor: LupusColors.arcanePurple.withValues(alpha: 0.6),
           child: Column(
@@ -496,7 +484,6 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
 
         const SizedBox(height: 10),
 
-        // Carte : Sorcière (Potions)
         BentoCard(
           borderColor: LupusColors.poisonGreen.withValues(alpha: 0.6),
           child: Column(
@@ -581,7 +568,6 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
 
         const SizedBox(height: 10),
 
-        // Carte : Salvateur / Garde (Bouclier)
         BentoCard(
           borderColor: LupusColors.sunAmber.withValues(alpha: 0.6),
           child: Column(
@@ -645,7 +631,6 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
 
         const SizedBox(height: 10),
 
-        // Carte : Cupidon (Amoureux)
         BentoCard(
           borderColor: const Color(0xFFEC4899),
           child: Column(
@@ -736,7 +721,6 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
 
         const SizedBox(height: 10),
 
-        // Carte : Chasseur (Riposte)
         BentoCard(
           borderColor: const Color(0xFFF97316),
           child: Column(
@@ -800,7 +784,6 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
 
         const SizedBox(height: 14),
 
-        // 3. Gestion individuelle directe des 12 Joueurs / Bots
         const Text(
           'ROSTER DU PLATEAU • CONTRÔLE INDIVIDUEL (12 JOUEURS)',
           style: TextStyle(
@@ -868,7 +851,7 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
                     ],
                   ),
                 ),
-                // Actions directes
+
                 IconButton(
                   icon: Icon(
                     player.isAlive ? Icons.dangerous_rounded : Icons.favorite_rounded,
@@ -899,9 +882,6 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
     );
   }
 
-  // ==========================================
-  // --- 1. VISION TOTALE DES RÔLES & INCARNATION (DEV VIEW) ---
-  // ==========================================
   Widget _buildDevView(GameRoom room, LupusGameState gameState) {
     final notifier = ref.read(gameNotifierProvider.notifier);
     final effectivePlayer = room.players[gameState.effectiveUserId];
@@ -910,7 +890,7 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // PANNEAU D'INCARNATION DYNAMIQUE DEV-MODE
+
         Container(
           margin: const EdgeInsets.only(bottom: 14),
           padding: const EdgeInsets.all(12),
@@ -994,7 +974,6 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
               ),
               const SizedBox(height: 10),
 
-              // Sélecteur horizontal de joueurs à incarner
               SizedBox(
                 height: 72,
                 child: ListView.separated(
@@ -1116,7 +1095,6 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
           ),
         ),
 
-        // Carte d'état de la Double Action des Loups (si Nuit en cours)
         if (room.phase == GamePhase.nightWerewolves || room.phase.isNight) ...[
           _buildNightWerewolfStatusCard(room),
           const SizedBox(height: 12),
@@ -1170,7 +1148,7 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
             ),
             child: Row(
               children: [
-                // Illustration officielle de la carte (assets/cards/)
+
                 RoleCardImage(
                   role: player.role,
                   width: 44,
@@ -1180,7 +1158,6 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
                 ),
                 const SizedBox(width: 12),
 
-                // Informations du joueur
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1286,11 +1263,10 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
 
                 const SizedBox(width: 8),
 
-                // Colonne Actions (Incarner + Statut)
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    // Statut de vie
+
                     Container(
                       padding:
                           const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -1318,7 +1294,7 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
                       ),
                     ),
                     const SizedBox(height: 6),
-                    // Bouton Incarner
+
                     InkWell(
                       onTap: () {
                         if (isPlayerIncarnated && isImpersonating) {
@@ -1484,9 +1460,6 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
     );
   }
 
-  // ==========================================
-  // --- 2. FORÇAGE DES PHASES DE JEU ---
-  // ==========================================
   Widget _buildPhasesForcing(GameRoom room) {
     final notifier = ref.read(gameNotifierProvider.notifier);
 
@@ -1556,7 +1529,7 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Phase actuelle
+
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
@@ -1610,7 +1583,6 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
         ),
         const SizedBox(height: 14),
 
-        // Section dédiée Dev-Mode : GESTION DU DÉBAT DU VILLAGE (si phase active)
         if (room.phase == GamePhase.dayDebate) ...[
           Container(
             padding: const EdgeInsets.all(12),
@@ -1732,7 +1704,6 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
           const SizedBox(height: 14),
         ],
 
-        // Bouton spécial : Résolution Matinale
         ElevatedButton.icon(
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFFEAB308),
@@ -1764,7 +1735,6 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
         ),
         const SizedBox(height: 8),
 
-        // Grille de phases rapides
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -1828,9 +1798,6 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
     );
   }
 
-  // ==========================================
-  // --- 3. GESTION MANUELLE DES JOUEURS ---
-  // ==========================================
   Widget _buildPlayerManagement(GameRoom room) {
     final notifier = ref.read(gameNotifierProvider.notifier);
 
@@ -1955,10 +1922,9 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
                 ),
                 const SizedBox(height: 10),
 
-                // Barre d'actions rapides par joueur
                 Row(
                   children: [
-                    // Tuer / Ressusciter
+
                     Expanded(
                       child: OutlinedButton(
                         style: OutlinedButton.styleFrom(
@@ -1989,7 +1955,6 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
                     ),
                     const SizedBox(width: 6),
 
-                    // Donner la parole
                     Expanded(
                       child: OutlinedButton(
                         style: OutlinedButton.styleFrom(
@@ -2022,7 +1987,6 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
                     ),
                     const SizedBox(width: 6),
 
-                    // Nommer Maire
                     Expanded(
                       child: OutlinedButton(
                         style: OutlinedButton.styleFrom(
@@ -2048,10 +2012,9 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
                 ),
                 const SizedBox(height: 6),
 
-                // Ligne Silence & Rôle
                 Row(
                   children: [
-                    // Réduire au silence / Rétablir parole
+
                     Expanded(
                       child: InkWell(
                         onTap: () {
@@ -2099,7 +2062,6 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
                     ),
                     const SizedBox(width: 6),
 
-                    // Changer de rôle
                     Expanded(
                       child: InkWell(
                         onTap: () => _showRoleSelector(player),
@@ -2135,12 +2097,11 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
                   ],
                 ),
 
-                // Contrôles Dev-Mode Nuit des Loups (Double action : Dévorer + Silence)
                 if ((room.phase == GamePhase.nightWerewolves || room.phase.isNight) && player.isAlive) ...[
                   const SizedBox(height: 6),
                   Row(
                     children: [
-                      // Fixer comme Proie
+
                       Expanded(
                         child: InkWell(
                           onTap: () {
@@ -2187,7 +2148,6 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
                       ),
                       const SizedBox(width: 6),
 
-                      // Fixer comme Cible de Silence (autorise aussi les loups et soi-même pour le bluff)
                       Expanded(
                         child: InkWell(
                           onTap: () {
@@ -2243,9 +2203,6 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
     );
   }
 
-  // ==========================================
-  // --- 4. CONTRÔLE AUDIO AGORA ---
-  // ==========================================
   Widget _buildAudioControl(GameRoom room, LupusGameState gameState) {
     final notifier = ref.read(gameNotifierProvider.notifier);
 
@@ -2263,7 +2220,6 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
         ),
         const SizedBox(height: 10),
 
-        // Carte Écoute Omnisciente Meute
         BentoCard(
           borderColor: gameState.isOmniscientVoice
               ? LupusColors.arcaneCrimson
@@ -2315,7 +2271,6 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
         ),
         const SizedBox(height: 12),
 
-        // Couper la parole générale
         ElevatedButton.icon(
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF991B1B),
@@ -2336,7 +2291,6 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
         ),
         const SizedBox(height: 10),
 
-        // Re-tester le dialogue de permissions du premier lancement
         OutlinedButton.icon(
           style: OutlinedButton.styleFrom(
             foregroundColor: LupusColors.arcanePurple,
@@ -2446,7 +2400,7 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
       ),
       child: Column(
         children: [
-          // Poignée dorée
+
           Padding(
             padding: const EdgeInsets.only(top: 12, bottom: 8),
             child: Container(
@@ -2459,7 +2413,6 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
             ),
           ),
 
-          // En-tête DEV-MOD
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
@@ -2526,7 +2479,7 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
           Expanded(
             child: StatefulBuilder(
               builder: (context, setModalState) {
-                // Initialisation par défaut si nécessaire
+
                 _lobbyPlayerCount ??= 12;
                 if (_lobbyRoleCounts == null) {
                   _lobbyRoleCounts = {};
@@ -2568,7 +2521,7 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Carte 1 : CONFIGURATEUR DEV-MODE (SANDBOX AVEC BOTS & RÈGLES RÉELLES)
+
                       BentoCard(
                         borderColor: LupusColors.arcaneGold,
                         gradient: const LinearGradient(
@@ -2624,7 +2577,6 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
                             ),
                             const SizedBox(height: 14),
 
-                            // Sélecteur de Nombre de Participants (6 à 18)
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
@@ -2673,7 +2625,6 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
                                   ),
                                   const SizedBox(height: 10),
 
-                                  // Stepper et boutons rapides
                                   Row(
                                     children: [
                                       IconButton(
@@ -2729,7 +2680,6 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
                                     ],
                                   ),
 
-                                  // Raccourcis rapides
                                   Wrap(
                                     spacing: 6,
                                     runSpacing: 6,
@@ -2772,7 +2722,6 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
 
                             const SizedBox(height: 12),
 
-                            // Configuration & Personnalisation du Deck de Rôles
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
@@ -2828,7 +2777,6 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
                                   ),
                                   const SizedBox(height: 8),
 
-                                  // Presets rapides
                                   SingleChildScrollView(
                                     scrollDirection: Axis.horizontal,
                                     physics: const BouncingScrollPhysics(),
@@ -2892,16 +2840,15 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
 
                                   const SizedBox(height: 10),
 
-                                  // Liste complète de toutes les cartes et rôles configurables
                                   ...[
-                                    // Meute des Loups
+
                                     GameRole.simpleWerewolf,
                                     GameRole.bigBadWolf,
                                     GameRole.whiteWerewolf,
                                     GameRole.blackWolf,
                                     GameRole.vileFatherOfWolves,
                                     GameRole.wolfCub,
-                                    // Villageois à Pouvoirs
+
                                     GameRole.seer,
                                     GameRole.witch,
                                     GameRole.hunter,
@@ -2920,7 +2867,7 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
                                     GameRole.knightRustySword,
                                     GameRole.servantMaid,
                                     GameRole.actor,
-                                    // Rôles Spéciaux & Solitaires
+
                                     GameRole.wildChild,
                                     GameRole.pyromaniac,
                                     GameRole.raven,
@@ -2928,7 +2875,7 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
                                     GameRole.piedPiper,
                                     GameRole.sectLeader,
                                     GameRole.thiefOfHearts,
-                                    // Villageois Simple
+
                                     GameRole.simpleVillager,
                                   ].map((role) {
                                     final currentCount = _lobbyRoleCounts![role] ?? 0;
@@ -3009,7 +2956,6 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
 
                             const SizedBox(height: 12),
 
-                            // Note sur la conformité de production
                             Container(
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
@@ -3033,7 +2979,6 @@ class _AdminControlSheetState extends ConsumerState<AdminControlSheet> {
 
                             const SizedBox(height: 14),
 
-                            // Bouton de lancement Dev-Mode
                             SizedBox(
                               width: double.infinity,
                               child: ElevatedButton.icon(

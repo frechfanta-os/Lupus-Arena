@@ -110,7 +110,7 @@ void main() {
       expect(containerFinder, findsOneWidget);
 
       final Size size = tester.getSize(containerFinder);
-      // Conteneur strict : largeur <= 92 px et hauteur <= 138 px
+
       expect(size.width, lessThanOrEqualTo(95.0));
       expect(size.height, lessThanOrEqualTo(140.0));
     });

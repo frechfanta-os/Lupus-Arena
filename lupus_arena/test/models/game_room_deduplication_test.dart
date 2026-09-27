@@ -34,9 +34,8 @@ void main() {
         'players': rawPlayersMap,
       });
 
-      // Doit contenir strictement 2 joueurs uniques et conserver la session la plus récente / en ligne
       expect(room.players.length, equals(2));
-      
+
       final anis = room.players['user_123'] ?? room.players.values.firstWhere((p) => p.id == 'user_123');
       expect(anis.isOnline, isTrue);
       expect(anis.isHost, isTrue);

@@ -7,8 +7,6 @@ import 'bento_card.dart';
 
 import 'server_countdown_timer.dart';
 
-/// Panneau Bento complet à deux fioles (Vie & Mort) réservé à la Sorcière.
-/// Permet de sauver la victime des loups, d'empoisonner un suspect, ou de passer la nuit.
 class BentoWitchPanel extends StatefulWidget {
   final GameRoom room;
   final String currentUserId;
@@ -68,7 +66,7 @@ class _BentoWitchPanelState extends State<BentoWitchPanel> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // En-tête : Antre de la Sorcière & Minuteur
+
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -105,7 +103,7 @@ class _BentoWitchPanelState extends State<BentoWitchPanel> {
                   ),
                 ],
               ),
-              // Minuteur dynamique réactif basé sur le temps serveur
+
               ServerCountdownBuilder(
                 phaseEndsAt: widget.room.phaseEndsAt,
                 fallbackSeconds: widget.room.timerSeconds > 0 ? widget.room.timerSeconds : 25,
@@ -144,11 +142,10 @@ class _BentoWitchPanelState extends State<BentoWitchPanel> {
 
           const SizedBox(height: 16),
 
-          // Les Deux Fioles Bento (Vie vs Mort)
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 1. FIOLE DE VIE (SAUVETAGE)
+
               Expanded(
                 child: Container(
                   padding: const EdgeInsets.all(12),
@@ -183,7 +180,7 @@ class _BentoWitchPanelState extends State<BentoWitchPanel> {
                         ],
                       ),
                       const SizedBox(height: 8),
-                      // Statut de la victime
+
                       if (room.witchHealed) ...[
                         Container(
                           padding: const EdgeInsets.all(8),
@@ -253,7 +250,6 @@ class _BentoWitchPanelState extends State<BentoWitchPanel> {
 
               const SizedBox(width: 10),
 
-              // 2. FIOLE DE MORT (EMPOISONNEMENT)
               Expanded(
                 child: Container(
                   padding: const EdgeInsets.all(12),
@@ -352,7 +348,6 @@ class _BentoWitchPanelState extends State<BentoWitchPanel> {
 
           const SizedBox(height: 14),
 
-          // 3. Bouton Neutre / Validation Globale
           SizedBox(
             height: 46,
             child: ElevatedButton.icon(

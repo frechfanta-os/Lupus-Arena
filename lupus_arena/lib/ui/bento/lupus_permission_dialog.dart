@@ -8,14 +8,11 @@ import '../theme/lupus_assets.dart';
 import '../theme/lupus_theme.dart';
 import 'bento_card.dart';
 
-/// Modal d'accueil Dark Fantasy demandant les autorisations indispensables
-/// lors du tout premier lancement du jeu (Microphone Agora, Notifications, Audio/Bluetooth).
 class LupusPermissionDialog extends StatefulWidget {
   final VoidCallback? onCompleted;
 
   const LupusPermissionDialog({super.key, this.onCompleted});
 
-  /// Affiche automatiquement la boîte de dialogue si c'est la première utilisation (uniquement sur mobile natif)
   static Future<void> showIfNeeded(BuildContext context) async {
     if (kIsWeb) return;
     try {
@@ -34,7 +31,6 @@ class LupusPermissionDialog extends StatefulWidget {
     }
   }
 
-  /// Force l'affichage pour re-configurer les permissions
   static Future<void> showForce(BuildContext context) async {
     await showDialog<void>(
       context: context,
@@ -96,7 +92,6 @@ class _LupusPermissionDialogState extends State<LupusPermissionDialog> {
           _isRequesting = false;
         });
 
-        // Fermer automatiquement après un court délai de confirmation visuelle
         await Future.delayed(const Duration(milliseconds: 900));
         if (mounted) {
           widget.onCompleted?.call();
@@ -135,7 +130,7 @@ class _LupusPermissionDialogState extends State<LupusPermissionDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Médaillon d'en-tête
+
               Center(
                 child: Container(
                   width: 64,
@@ -155,7 +150,6 @@ class _LupusPermissionDialogState extends State<LupusPermissionDialog> {
               ),
               const SizedBox(height: 14),
 
-              // Titre gothique
               Text(
                 context.tr('perm_welcome_title'),
                 textAlign: TextAlign.center,
@@ -179,7 +173,6 @@ class _LupusPermissionDialogState extends State<LupusPermissionDialog> {
               ),
               const SizedBox(height: 20),
 
-              // 1. Microphone (Agora RTC)
               _buildPermissionTile(
                 icon: Icons.mic_rounded,
                 iconColor: LupusColors.voiceActive,
@@ -190,7 +183,6 @@ class _LupusPermissionDialogState extends State<LupusPermissionDialog> {
               ),
               const SizedBox(height: 10),
 
-              // 2. Audio / Bluetooth
               if (!kIsWeb) ...[
                 _buildPermissionTile(
                   icon: Icons.headset_rounded,
@@ -203,7 +195,6 @@ class _LupusPermissionDialogState extends State<LupusPermissionDialog> {
                 const SizedBox(height: 10),
               ],
 
-              // 3. Notifications
               _buildPermissionTile(
                 icon: Icons.notifications_active_rounded,
                 iconColor: LupusColors.arcaneGold,
@@ -215,7 +206,6 @@ class _LupusPermissionDialogState extends State<LupusPermissionDialog> {
 
               const SizedBox(height: 24),
 
-              // Bouton principal d'action
               SizedBox(
                 height: 48,
                 child: ElevatedButton.icon(
@@ -257,7 +247,6 @@ class _LupusPermissionDialogState extends State<LupusPermissionDialog> {
 
               const SizedBox(height: 10),
 
-              // Bouton passer / plus tard
               Center(
                 child: TextButton(
                   onPressed: _skip,

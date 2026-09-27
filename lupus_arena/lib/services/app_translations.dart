@@ -8,12 +8,10 @@ extension TranslationExtension on BuildContext {
       AppTranslations.translateLog(this, log);
 }
 
-/// Dictionnaire global exhaustif et centralisé pour Lupus Arena.
-/// Supporte le Français (fr), l'Arabe (ar) et l'Anglais (en).
 class AppTranslations {
   static const Map<String, Map<String, String>> _strings = {
     'fr': {
-      // --- APP & NAVIGATION ---
+
       'app_title': 'Lupus Arena',
       'app_subtitle': 'L\'ARÈNE MYSTIQUE DES LOUPS-GAROUS',
       'app_tagline': 'Rassemblement des guerriers... Préparez vos micros pour l\'arène !',
@@ -35,7 +33,6 @@ class AppTranslations {
       'english': 'English',
       'me': 'Moi',
 
-      // --- LOBBY & SALONS ---
       'create_room': 'Créer un salon',
       'join_room': 'Rejoindre un salon',
       'join': 'Rejoindre',
@@ -70,6 +67,17 @@ class AppTranslations {
       'share_room_subject': 'Rejoins ma partie Lupus Arena !',
       'share_room_message':
           '🌕 La pleine lune se lève sur Lupus Arena...\n\nRejoins vite la meute ! 🐺\n\n🗝️ Code de la room : {ROOM_CODE}',
+      'report_and_moderation': 'Signalement & Modération',
+      'local_mute': 'Rendre muet pour moi',
+      'local_unmute': 'Rétablir le son',
+      'report_player': 'Signaler',
+      'report_reason_hate': 'Propos injurieux ou haineux',
+      'report_reason_toxic': 'Comportement toxique ou perturbation',
+      'report_reason_cheat': 'Triche ou anti-jeu',
+      'report_reason_spam': 'Spam sonore ou micro abusif',
+      'report_reason_other': 'Autre motif',
+      'report_sent_success': 'Signalement envoyé. Merci de veiller à la sécurité du village.',
+      'no_other_players': 'Aucun autre joueur dans la salle',
       'enter_valid_name': 'Veuillez saisir un pseudo valide.',
       'enter_valid_code': 'Veuillez saisir un code valide.',
       'room_not_found': 'Salon introuvable. Vérifiez le code.',
@@ -81,7 +89,6 @@ class AppTranslations {
       'need_more_players': 'Il faut au moins 4 joueurs pour lancer la partie.',
       'deck_mismatch': 'Le nombre de cartes doit être exactement égal au nombre de joueurs.',
 
-      // --- CAMPS ET STATUTS ---
       'camp_werewolves': 'CAMP DES LOUPS',
       'camp_werewolves_badge': 'CAMP DES LOUPS-GAROUS 🐺',
       'camp_village': 'CAMP DU VILLAGE',
@@ -100,7 +107,6 @@ class AppTranslations {
       'night': 'NUIT',
       'day': 'JOUR',
 
-      // --- RÔLES DU JEU (NOMS) ---
       'role_simple_villager': 'Simple Villageois',
       'role_seer': 'Voyante',
       'role_witch': 'Sorcière',
@@ -136,7 +142,6 @@ class AppTranslations {
       'role_thief_of_hearts': 'Voleur d\'Âmes',
       'role_mayor': 'Maire',
 
-      // --- RÔLES DU JEU (DESCRIPTIONS) ---
       'role_desc_simple_villager': 'Ne possède aucun pouvoir particulier. Utilise sa déduction lors des débats de jour.',
       'role_desc_seer': 'Chaque nuit, découvre l\'identité secrète d\'un joueur de son choix.',
       'role_desc_witch': 'Possède deux potions uniques : une pour sauver la victime des loups, une pour empoisonner un suspect.',
@@ -172,7 +177,6 @@ class AppTranslations {
       'role_desc_thief_of_hearts': 'S\'infiltre dans un couple et prend la place de l\'un des deux amants.',
       'role_desc_mayor': 'Élu par le village. Sa voix pèse double lors de tous les scrutins.',
 
-      // --- PHASES DU JEU (TITRES & DESCRIPTIONS) ---
       'phase_lobby_title': 'Salon d\'attente',
       'phase_lobby_desc': 'Rassemblement des guerriers... Préparez vos micros pour l\'arène !',
       'phase_night_thief_title': 'Nuit - Le Voleur choisit sa carte',
@@ -234,7 +238,6 @@ class AppTranslations {
       'phase_game_over_title': 'Fin de Partie',
       'phase_game_over_desc': 'L\'arène s\'apaise. Découvrez les identités et les vainqueurs !',
 
-      // --- ACTIONS & BENTO ---
       'target': 'CIBLE',
       'choose_target': 'Choisissez votre cible',
       'no_target': 'Aucune cible',
@@ -286,7 +289,6 @@ class AppTranslations {
       'werewolf_hunt': 'CHASSE DES LOUPS',
       'eliminate_target': 'Éliminer cette cible',
 
-      // --- VOICE & AGORA ---
       'free_voice_chat': 'Discussion libre',
       'minute_collective': 'MINUTE VOCALE COLLECTIVE',
       'minute_collective_desc': 'Canal ouvert à tous (morts et vivants)',
@@ -313,7 +315,6 @@ class AppTranslations {
       'pack_channel_connecting': 'CONNEXION MEUTE...',
       'pack_channel_desc': 'Salon secret des loups • Insonorisé pour le village',
 
-      // --- FIN DE PARTIE & VICTOIRE ---
       'victory_village': 'VICTOIRE DES VILLAGEOIS !',
       'victory_werewolves': 'VICTOIRE DES LOUPS-GAROUS !',
       'victory_lovers': 'VICTOIRE DES AMOUREUX !',
@@ -327,7 +328,6 @@ class AppTranslations {
       'victory_angel_desc': 'Sacrifié au bûcher dès l\'aube, son âme pure monte vers les cieux.',
       'game_over_peace': 'L\'arène s\'apaise. Découvrez les identités et les vainqueurs !',
 
-      // --- CHRONIQUES & HISTORIQUE ---
       'chronicles_title': 'CHRONIQUES DU VILLAGE',
       'no_events': 'Aucun événement pour l\'instant.',
       'filter_all': 'Tous',
@@ -336,7 +336,6 @@ class AppTranslations {
       'filter_debate': 'Débat',
       'filter_powers': 'Pouvoirs',
 
-      // --- AUTORISATIONS ---
       'permissions_title': 'AUTORISATIONS INDISPENSABLES',
       'permissions_desc': 'Pour vivre l\'expérience immersive de Lupus Arena avec le chat vocal Agora en temps réel, veuillez autoriser l\'accès :',
       'perm_mic': 'Microphone (Agora RTC)',
@@ -346,7 +345,6 @@ class AppTranslations {
       'permissions_granted': 'ACCÈS AUTORISÉ',
       'skip_for_now': 'Passer pour l\'instant',
 
-      // --- ADMIN & DEV-MODE ---
       'god_mode': 'MODE DEV',
       'dev_mode': 'MODE DEV',
       'admin_sheet_title': 'PUPITRE DU MAÎTRE DU JEU',
@@ -355,7 +353,6 @@ class AppTranslations {
       'admin_pin_subtitle': 'Saisissez le code PIN secret à 8 chiffres',
       'admin_pin_invalid': 'Code administrateur invalide',
 
-      // --- NOUVELLES ACTIONS & PANNEAUX BENTO ---
       'ready_status': 'Prêt ({ready}/{total})',
       'replay_status': 'Rejouer ({ready}/{total})',
       'return_to_lobby': 'REVENIR AU SALON',
@@ -467,7 +464,6 @@ class AppTranslations {
       'update_install_now': 'INSTALLER MAINTENANT',
       'update_permission_hint': 'Veuillez autoriser "Installer des applications inconnues" dans les paramètres puis appuyer sur Installer.',
 
-      // --- ÉCRAN DE JEU & POUVOIRS DE NUIT (TRADUCTIONS DYNAMIQUES) ---
       'lobby': 'Salon d\'attente',
       'unknown': 'Inconnu',
       'my_role': 'MON RÔLE',
@@ -491,7 +487,7 @@ class AppTranslations {
       'phase_cupid_title': 'Les Flèches de Cupidon',
       'phase_cupid_subtitle': "Cupidon unit deux destins d'un amour éternel",
       'phase_werewolves_title': 'La Nuit Tombe',
-      'phase_werewolves_subtitle': 'sur le village endormi de Thiercelieux',
+      'phase_werewolves_subtitle': 'sur le village endormi de Le Village',
       'phase_black_wolf_title': 'Le Silence du Loup Noir',
       'phase_witch_title': 'Les Chaudrons de la Sorcière',
       'phase_witch_subtitle': 'Une potion de vie, une fiole de mort',
@@ -624,7 +620,7 @@ class AppTranslations {
       'log_pyre_voting_opened': '⚖️ Ouverture immédiate du scrutin du bûcher (15s).',
       'log_speech_yielded': '🎙️ {p1} a cédé sa parole. La parole passe à {p2}.',
       'log_raven_curse_votes': '🦅 Malédiction du Corbeau : 2 voix d\'office accablent {name} !',
-      'log_elder_curse': '📜 Malédiction de l\'Ancien : Condamné par le village, l\'Ancien maudit Thiercelieux ! Tous les villageois perdent leurs pouvoirs.',
+      'log_elder_curse': '📜 Malédiction de l\'Ancien : Condamné par le village, l\'Ancien maudit Le Village ! Tous les villageois perdent leurs pouvoirs.',
       'log_stuttering_judge': '⚖️ Le Juge Bègue a exigé un second vote consécutif ! Le village retourne immédiatement aux urnes.',
       'log_fox_sniffed_wolf': '🦊 Le Renard a flairé une odeur suspecte ! Au moins un loup se cache dans le groupe observé.',
       'log_fox_sniffed_nothing': '🦊 Le Renard n\'a rien senti d\'anormal... Son flair s\'éteint à tout jamais.',
@@ -654,7 +650,6 @@ class AppTranslations {
       'log_night_falls_salvateur': 'La première nuit tombe... Salvateur, réveillez-vous !',
       'log_night_awakening': 'Éveil nocturne : {role}.',
 
-      // --- ADMIN & CONTRÔLE DÉVELOPPEUR ---
       'admin_choose_wolf_victim': 'Choisir la victime de la meute',
       'admin_force_wolf_victim': 'FORCER LA VICTIME DES LOUPS',
       'admin_choose_seer_target': 'Choisir le joueur à sonder',
@@ -674,7 +669,7 @@ class AppTranslations {
     },
 
     'ar': {
-      // --- APP & NAVIGATION ---
+
       'app_title': 'لوبوس أرينا',
       'app_subtitle': 'الساحة الغامضة لمستذئبي الليل',
       'app_tagline': 'تجمع المحاربين... جهزوا مكبرات الصوت للساحة!',
@@ -696,7 +691,6 @@ class AppTranslations {
       'english': 'English',
       'me': 'أنا',
 
-      // --- LOBBY & SALONS ---
       'create_room': 'إنشاء غرفة',
       'join_room': 'الانضمام إلى غرفة',
       'join': 'انضمام',
@@ -731,6 +725,17 @@ class AppTranslations {
       'share_room_subject': 'انضم إلى مباراتي في Lupus Arena!',
       'share_room_message':
           '🌕 يكتمل القمر فوق Lupus Arena...\n\nانضم بسرعة إلى القطيع! 🐺\n\n🗝️ رمز الغرفة : {ROOM_CODE}',
+      'report_and_moderation': 'الإبلاغ والإشراف',
+      'local_mute': 'كتم الصوت بالنسبة لي',
+      'local_unmute': 'إلغاء كتم الصوت',
+      'report_player': 'إبلاغ',
+      'report_reason_hate': 'كلام مسيء أو كراهية',
+      'report_reason_toxic': 'سلوك سام أو تخريبي',
+      'report_reason_cheat': 'غش أو تلاعب',
+      'report_reason_spam': 'إزعاج صوتي أو إساءة استخدام الميكروفون',
+      'report_reason_other': 'سبب آخر',
+      'report_sent_success': 'تم إرسال البلاغ. شكراً لمساهمتك في أمان المجتمع.',
+      'no_other_players': 'لا يوجد لاعبون آخرون في الغرفة',
       'enter_valid_name': 'يرجى إدخال اسم مستعار صالح.',
       'enter_valid_code': 'يرجى إدخال رمز صالح.',
       'room_not_found': 'الغرفة غير موجودة. تحقق من الرمز.',
@@ -742,7 +747,6 @@ class AppTranslations {
       'need_more_players': 'يلزم 4 لاعبين على الأقل لبدء اللعبة.',
       'deck_mismatch': 'يجب أن يكون عدد البطاقات مساوياً تماماً لعدد اللاعبين.',
 
-      // --- CAMPS ET STATUTS ---
       'camp_werewolves': 'معسكر الذئاب',
       'camp_werewolves_badge': 'معسكر المستذئبين 🐺',
       'camp_village': 'معسكر القرية',
@@ -761,7 +765,6 @@ class AppTranslations {
       'night': 'الليل',
       'day': 'النهار',
 
-      // --- RÔLES DU JEU (NOMS) ---
       'role_simple_villager': 'قروي بسيط',
       'role_seer': 'العرافة',
       'role_witch': 'الساحرة',
@@ -797,7 +800,6 @@ class AppTranslations {
       'role_thief_of_hearts': 'سارق القلوب',
       'role_mayor': 'القائد',
 
-      // --- RÔLES DU JEU (DESCRIPTIONS) ---
       'role_desc_simple_villager': 'لا يملك أي قدرة خاصة. يعتمد على فطنته وتحليله أثناء نقاشات النهار.',
       'role_desc_seer': 'في كل ليلة، تكتشف الهوية السرية للاعب تختاره من القرية.',
       'role_desc_witch': 'تمتلك جرعتين فريدتين: واحدة لإنقاذ ضحية الذئاب، والأخرى لتسميم مشتبه به.',
@@ -833,7 +835,6 @@ class AppTranslations {
       'role_desc_thief_of_hearts': 'يتسلل بين العاشقين ويأخذ مكان أحدهما في الرابطة.',
       'role_desc_mayor': 'منتخب من القرية. يزن صوته الضعف في جميع جولات التصويت.',
 
-      // --- PHASES DU JEU (TITRES & DESCRIPTIONS) ---
       'phase_lobby_title': 'غرفة الانتظار',
       'phase_lobby_desc': 'تجمع المحاربين... جهزوا مكبرات الصوت للساحة!',
       'phase_night_thief_title': 'الليل - السارق يختار بطاقته',
@@ -895,7 +896,6 @@ class AppTranslations {
       'phase_game_over_title': 'نهاية اللعبة',
       'phase_game_over_desc': 'تهدأ الساحة. اكتشفوا الهويات والفائزين!',
 
-      // --- ACTIONS & BENTO ---
       'target': 'الهدف',
       'choose_target': 'اختر هدفك',
       'no_target': 'لا يوجد هدف',
@@ -947,7 +947,6 @@ class AppTranslations {
       'werewolf_hunt': 'صيد المستذئبين',
       'eliminate_target': 'القضاء على هذا الهدف',
 
-      // --- VOICE & AGORA ---
       'free_voice_chat': 'محادثة صوتية حرة',
       'minute_collective': 'دقيقة صوتية جماعية',
       'minute_collective_desc': 'القناة مفتوحة للجميع (الأحياء والأموات)',
@@ -974,7 +973,6 @@ class AppTranslations {
       'pack_channel_connecting': 'جاري الاتصال بالقطيع...',
       'pack_channel_desc': 'غرفة الذئاب السرية • معزولة عن القرية',
 
-      // --- FIN DE PARTIE & VICTOIRE ---
       'victory_village': 'نصر القرويين!',
       'victory_werewolves': 'نصر المستذئبين!',
       'victory_lovers': 'نصر العشاق!',
@@ -988,7 +986,6 @@ class AppTranslations {
       'victory_angel_desc': 'أُعدم عند الفجر، وصعدت روحه الطاهرة منتصرة إلى السماء.',
       'game_over_peace': 'تهدأ الساحة. اكتشفوا الهويات والفائزين!',
 
-      // --- CHRONIQUES & HISTORIQUE ---
       'chronicles_title': 'سجلات القرية',
       'no_events': 'لا توجد أحداث حتى الآن.',
       'filter_all': 'الكل',
@@ -997,7 +994,6 @@ class AppTranslations {
       'filter_debate': 'النقاش',
       'filter_powers': 'القدرات',
 
-      // --- AUTORISATIONS ---
       'permissions_title': 'الأذونات الضرورية',
       'permissions_desc': 'لتجربة لوبوس أرينا الغامرة مع المحادثة الصوتية المباشرة، يرجى منح الأذونات التالية:',
       'perm_mic': 'الميكروفون (Agora RTC)',
@@ -1007,7 +1003,6 @@ class AppTranslations {
       'permissions_granted': 'تم منح الإذن',
       'skip_for_now': 'تخطي الآن',
 
-      // --- ADMIN & DEV-MODE ---
       'god_mode': 'MODE DEV',
       'dev_mode': 'MODE DEV',
       'admin_sheet_title': 'لوحة تحكم سيد اللعبة',
@@ -1016,7 +1011,6 @@ class AppTranslations {
       'admin_pin_subtitle': 'أدخل رمز PIN السري المكون من 8 أرقام',
       'admin_pin_invalid': 'رمز المسؤول غير صالح',
 
-      // --- NOUVELLES ACTIONS & PANNEAUX BENTO ---
       'ready_status': 'جاهز ({ready}/{total})',
       'replay_status': 'إعادة اللعب ({ready}/{total})',
       'return_to_lobby': 'العودة إلى الردهة',
@@ -1128,7 +1122,6 @@ class AppTranslations {
       'update_install_now': 'تثبيت الآن',
       'update_permission_hint': 'يرجى تفعيل "تثبيت التطبيقات غير المعروفة" في الإعدادات ثم الضغط على تثبيت.',
 
-      // --- ÉCRAN DE JEU & POUVOIRS DE NUIT (TRADUCTIONS DYNAMIQUES) ---
       'lobby': 'غرفة الانتظار',
       'unknown': 'مجهول',
       'my_role': 'دوري',
@@ -1315,7 +1308,6 @@ class AppTranslations {
       'log_night_falls_salvateur': 'حلول الليلة الأولى... استيقظ أيها الحارس!',
       'log_night_awakening': 'استيقاظ ليلي : {role}.',
 
-      // --- ADMIN & CONTRÔLE DÉVELOPPEUR ---
       'admin_choose_wolf_victim': 'اختر ضحية الذئاب',
       'admin_force_wolf_victim': 'فرض ضحية الذئاب',
       'admin_choose_seer_target': 'اختر اللاعب للاستكشاف',
@@ -1335,7 +1327,7 @@ class AppTranslations {
     },
 
     'en': {
-      // --- APP & NAVIGATION ---
+
       'app_title': 'Lupus Arena',
       'app_subtitle': 'THE MYSTIC WEREWOLF ARENA',
       'app_tagline': 'Warriors gathering... Prepare your mics for the arena!',
@@ -1357,7 +1349,6 @@ class AppTranslations {
       'english': 'English',
       'me': 'Me',
 
-      // --- LOBBY & SALONS ---
       'create_room': 'Create Room',
       'join_room': 'Join Room',
       'join': 'Join',
@@ -1392,6 +1383,17 @@ class AppTranslations {
       'share_room_subject': 'Join my Lupus Arena game!',
       'share_room_message':
           '🌕 The full moon rises over Lupus Arena...\n\nJoin the pack quickly! 🐺\n\n🗝️ Room code: {ROOM_CODE}',
+      'report_and_moderation': 'Report & Moderation',
+      'local_mute': 'Mute for me',
+      'local_unmute': 'Unmute for me',
+      'report_player': 'Report',
+      'report_reason_hate': 'Abusive or hate speech',
+      'report_reason_toxic': 'Toxic behavior or disruption',
+      'report_reason_cheat': 'Cheating or griefing',
+      'report_reason_spam': 'Audio spam or mic abuse',
+      'report_reason_other': 'Other reason',
+      'report_sent_success': 'Report submitted. Thank you for keeping the game safe.',
+      'no_other_players': 'No other players in the room',
       'enter_valid_name': 'Please enter a valid nickname.',
       'enter_valid_code': 'Please enter a valid code.',
       'room_not_found': 'Room not found. Check code.',
@@ -1403,7 +1405,6 @@ class AppTranslations {
       'need_more_players': 'At least 4 players are required to start.',
       'deck_mismatch': 'The number of cards must exactly match the number of players.',
 
-      // --- CAMPS ET STATUTS ---
       'camp_werewolves': 'WEREWOLVES TEAM',
       'camp_werewolves_badge': 'WEREWOLVES TEAM 🐺',
       'camp_village': 'VILLAGE TEAM',
@@ -1422,7 +1423,6 @@ class AppTranslations {
       'night': 'NIGHT',
       'day': 'DAY',
 
-      // --- RÔLES DU JEU (NOMS) ---
       'role_simple_villager': 'Villager',
       'role_seer': 'Seer',
       'role_witch': 'Witch',
@@ -1458,7 +1458,6 @@ class AppTranslations {
       'role_thief_of_hearts': 'Thief of Hearts',
       'role_mayor': 'Captain',
 
-      // --- RÔLES DU JEU (DESCRIPTIONS) ---
       'role_desc_simple_villager': 'Possesses no special powers. Uses deduction and persuasion during day debates.',
       'role_desc_seer': 'Each night, discovers the secret identity of a player of her choice.',
       'role_desc_witch': 'Possesses two unique potions: one to save the wolves\' victim, one to poison a suspect.',
@@ -1494,7 +1493,6 @@ class AppTranslations {
       'role_desc_thief_of_hearts': 'Infiltrates a lovers couple and takes the place of one of them.',
       'role_desc_mayor': 'Elected by the village. His vote counts double in all ballots.',
 
-      // --- PHASES DU JEU (TITRES & DESCRIPTIONS) ---
       'phase_lobby_title': 'Waiting Lobby',
       'phase_lobby_desc': 'Warriors gathering... Prepare your mics for the arena!',
       'phase_night_thief_title': 'Night - Thief chooses card',
@@ -1556,7 +1554,6 @@ class AppTranslations {
       'phase_game_over_title': 'Game Over',
       'phase_game_over_desc': 'The arena settles. Discover identities and victors!',
 
-      // --- ACTIONS & BENTO ---
       'target': 'TARGET',
       'choose_target': 'Choose your target',
       'no_target': 'No target',
@@ -1608,7 +1605,6 @@ class AppTranslations {
       'werewolf_hunt': 'WEREWOLF HUNT',
       'eliminate_target': 'Eliminate this target',
 
-      // --- VOICE & AGORA ---
       'free_voice_chat': 'Free Voice Chat',
       'minute_collective': 'COLLECTIVE VOICE MINUTE',
       'minute_collective_desc': 'Channel open to all (alive and dead)',
@@ -1635,7 +1631,6 @@ class AppTranslations {
       'pack_channel_connecting': 'CONNECTING TO PACK...',
       'pack_channel_desc': 'Secret wolves room • Soundproof to village',
 
-      // --- FIN DE PARTIE & VICTOIRE ---
       'victory_village': 'VILLAGERS VICTORY!',
       'victory_werewolves': 'WEREWOLVES VICTORY!',
       'victory_lovers': 'LOVERS VICTORY!',
@@ -1649,7 +1644,6 @@ class AppTranslations {
       'victory_angel_desc': 'Sacrificed at dawn, his pure soul ascends victorious to the heavens.',
       'game_over_peace': 'The arena settles. Discover identities and victors!',
 
-      // --- CHRONIQUES & HISTORIQUE ---
       'chronicles_title': 'VILLAGE CHRONICLES',
       'no_events': 'No events yet.',
       'filter_all': 'All',
@@ -1658,7 +1652,6 @@ class AppTranslations {
       'filter_debate': 'Debate',
       'filter_powers': 'Powers',
 
-      // --- AUTORISATIONS ---
       'permissions_title': 'REQUIRED PERMISSIONS',
       'permissions_desc': 'To experience Lupus Arena with live Agora voice chat, please allow access to:',
       'perm_mic': 'Microphone (Agora RTC)',
@@ -1668,7 +1661,6 @@ class AppTranslations {
       'permissions_granted': 'ACCESS GRANTED',
       'skip_for_now': 'Skip for now',
 
-      // --- ADMIN & DEV-MODE ---
       'god_mode': 'MODE DEV',
       'dev_mode': 'DEV-MODE',
       'admin_sheet_title': 'GAME MASTER CONSOLE',
@@ -1677,7 +1669,6 @@ class AppTranslations {
       'admin_pin_subtitle': 'Enter the 8-digit secret PIN',
       'admin_pin_invalid': 'Invalid administrator PIN',
 
-      // --- NOUVELLES ACTIONS & PANNEAUX BENTO ---
       'ready_status': 'Ready ({ready}/{total})',
       'replay_status': 'Replay ({ready}/{total})',
       'return_to_lobby': 'RETURN TO LOBBY',
@@ -1789,7 +1780,6 @@ class AppTranslations {
       'update_install_now': 'INSTALL NOW',
       'update_permission_hint': 'Please enable "Install unknown apps" in settings then tap Install.',
 
-      // --- ÉCRAN DE JEU & POUVOIRS DE NUIT (TRADUCTIONS DYNAMIQUES) ---
       'lobby': 'Waiting Lobby',
       'unknown': 'Unknown',
       'my_role': 'MY ROLE',
@@ -1976,7 +1966,6 @@ class AppTranslations {
       'log_night_falls_salvateur': 'The first night falls... Defender, wake up!',
       'log_night_awakening': 'Night awakening: {role}.',
 
-      // --- ADMIN & CONTRÔLE DÉVELOPPEUR ---
       'admin_choose_wolf_victim': 'Choose pack victim',
       'admin_force_wolf_victim': 'FORCE PACK VICTIM',
       'admin_choose_seer_target': 'Choose player to probe',
@@ -1996,7 +1985,6 @@ class AppTranslations {
     },
   };
 
-  /// Récupère la chaîne de caractères traduite selon le BuildContext ou la locale active
   static String getText(
     BuildContext? context,
     String key, [
@@ -2038,29 +2026,24 @@ class AppTranslations {
     return result;
   }
 
-  /// Méthode d'accès statique sans contexte
   static String tr(String key, [dynamic params]) =>
       getText(null, key, params);
 
-  /// Renvoie le nom traduit d'un rôle
   static String getRoleName(String roleId, [BuildContext? context]) {
     final key = 'role_$roleId';
     return getText(context, key);
   }
 
-  /// Renvoie la description traduite d'un rôle
   static String getRoleDesc(String roleId, [BuildContext? context]) {
     final key = 'role_desc_$roleId';
     return getText(context, key);
   }
 
-  /// Renvoie le titre traduit d'une phase
   static String getPhaseTitle(String phaseName, [BuildContext? context]) {
     final key = 'phase_${_toSnakeCase(phaseName)}_title';
     return getText(context, key);
   }
 
-  /// Renvoie la description traduite d'une phase
   static String getPhaseDesc(String phaseName, [BuildContext? context]) {
     final key = 'phase_${_toSnakeCase(phaseName)}_desc';
     return getText(context, key);
@@ -2073,7 +2056,6 @@ class AppTranslations {
     ).replaceFirst(RegExp(r'^_'), '');
   }
 
-  /// Traduit un nom de rôle donné en français brut ou identifiant
   static String translateRoleName(BuildContext? context, String rawRole) {
     final clean = rawRole.trim();
     if (clean.isEmpty) return clean;
@@ -2139,11 +2121,9 @@ class AppTranslations {
     return clean;
   }
 
-  /// Traduit dynamiquement une entrée de chronique ou log de jeu
   static String translateLog(BuildContext? context, String log) {
     if (log.isEmpty) return log;
 
-    // Direct key translation if logged as a key
     if (_strings['fr']?.containsKey(log) == true) {
       return getText(context, log);
     }
@@ -2204,7 +2184,7 @@ class AppTranslations {
     m = RegExp(r"^🦅 Malédiction du Corbeau : 2 voix d'office accablent (.*?)\s*!$").firstMatch(log);
     if (m != null) return getText(context, 'log_raven_curse_votes', {'name': m.group(1)});
 
-    m = RegExp(r"^📜 Malédiction de l'Ancien : Condamné par le village, l'Ancien maudit Thiercelieux\s*!\s*Tous les villageois perdent leurs pouvoirs\.?$").firstMatch(log);
+    m = RegExp(r"^📜 Malédiction de l'Ancien : Condamné par le village, l'Ancien maudit Le Village\s*!\s*Tous les villageois perdent leurs pouvoirs\.?$").firstMatch(log);
     if (m != null) return getText(context, 'log_elder_curse');
 
     m = RegExp(r"^⚖️ Le Juge Bègue a exigé un second vote consécutif\s*!\s*Le village retourne immédiatement aux urnes\.?$").firstMatch(log);

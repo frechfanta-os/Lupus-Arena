@@ -1,25 +1,23 @@
-/// Rôles supportés par Lupus Arena
 enum RoleType {
   villager,
   werewolf,
-  stealer,          // Voleur
-  cupid,            // Cupidon
-  actor,            // Comédien
-  seer,             // Voyante
-  fox,              // Renard
-  crow,             // Corbeau
-  pyromaniac,       // Pyromane
-  bodyguard,        // Salvateur
-  fatherOfWolves,   // Infect Père des Loups
-  bigBadWolf,       // Grand Méchant Loup
-  whiteWolf,        // Loup Blanc
-  witch,            // Sorcière
-  dedicatedMaid,    // Servante Dévouée
-  stutteringJudge,  // Juge Bègue
-  hunter,           // Chasseur
+  stealer,
+  cupid,
+  actor,
+  seer,
+  fox,
+  crow,
+  pyromaniac,
+  bodyguard,
+  fatherOfWolves,
+  bigBadWolf,
+  whiteWolf,
+  witch,
+  dedicatedMaid,
+  stutteringJudge,
+  hunter,
 }
 
-/// Camps d'allégeance
 enum Faction {
   village,
   werewolves,
@@ -27,7 +25,6 @@ enum Faction {
   lovers,
 }
 
-/// Macro-États du jeu
 enum GamePhase {
   initialization,
   preliminaryNight,
@@ -40,12 +37,11 @@ enum GamePhase {
   gameOver,
 }
 
-/// Étapes de rôle (file d'attente dynamique)
 enum GameStep {
-  // Nuit Préliminaire (Nuit 0)
+
   preStealer,
   preCupid,
-  // Nuit Régulière
+
   roleActor,
   roleSeer,
   roleFox,
@@ -56,11 +52,10 @@ enum GameStep {
   roleBigBadWolf,
   roleWhiteWolf,
   roleWitch,
-  // Hooks de transition
+
   hookDedicatedMaid,
 }
 
-/// Types d'attaques / éliminations pour le buffer
 enum KillSource {
   werewolves,
   bigBadWolf,
@@ -71,7 +66,6 @@ enum KillSource {
   villageExecution,
 }
 
-/// Représentation d'une tentative d'élimination
 class KillIntent {
   final String targetPlayerId;
   final KillSource source;
@@ -79,12 +73,11 @@ class KillIntent {
   const KillIntent({required this.targetPlayerId, required this.source});
 }
 
-/// Buffer des actions de nuit non résolues
 class NightActionBuffer {
   final List<KillIntent> killIntents = [];
-  String? protectedPlayerId; // Protection du Salvateur
-  String? healedPlayerId;    // Soin de la Sorcière
-  bool isInfected = false;   // Infection du Père des Loups
+  String? protectedPlayerId;
+  String? healedPlayerId;
+  bool isInfected = false;
 
   void clear() {
     killIntents.clear();
@@ -94,7 +87,6 @@ class NightActionBuffer {
   }
 }
 
-/// Modèle du Joueur
 class Player {
   final String id;
   final String name;
@@ -102,7 +94,7 @@ class Player {
   Faction faction;
   bool isAlive;
   bool isCaptain;
-  bool isDousedWithGas; // Marqué par le Pyromane
+  bool isDousedWithGas;
   Set<String> loversIds;
 
   Player({

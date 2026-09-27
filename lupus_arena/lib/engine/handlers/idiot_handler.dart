@@ -2,8 +2,6 @@ import '../../models/game_role.dart';
 import '../../models/game_state.dart';
 import 'role_action_handler.dart';
 
-/// Gestionnaire de rôle pour L'Idiot du Village.
-/// S'il est condamné par le vote du village, il est gracié mais perd définitivement son droit de vote.
 class IdiotHandler extends RoleActionHandler {
   @override
   GameRole get role => GameRole.idiot;
@@ -19,12 +17,11 @@ class IdiotHandler extends RoleActionHandler {
     required String actorId,
     required Map<String, dynamic> actionPayload,
   }) {
-    // Si l'idiot a déjà été gracié, la grâce ne s'applique plus : l'exécution a lieu
+
     if (state.expandedRolesState.idiotPardoned) {
       return state;
     }
 
-    // Premier vote contre lui : il est gracié et perd définitivement son droit de vote
     final permanentlyBanned = Set<String>.from(state.expandedRolesState.permanentlyBannedVoters)..add(actorId);
     final updated = state.expandedRolesState.copyWith(
       idiotPardoned: true,
@@ -32,7 +29,7 @@ class IdiotHandler extends RoleActionHandler {
     );
 
     return state.copyWith(
-      clearPendingExecutedPlayerId: true, // Gracié !
+      clearPendingExecutedPlayerId: true,
       expandedRolesState: updated,
     );
   }

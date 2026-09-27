@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
-/// Secousse d'écran physique brève avec amortissement (Screen Shake)
 class ScreenShakeWrapper extends StatelessWidget {
   final Animation<double> animation;
   final Widget child;
@@ -19,7 +18,7 @@ class ScreenShakeWrapper extends StatelessWidget {
       builder: (context, c) {
         final val = animation.value;
         if (val == 0.0) return c!;
-        // Oscillation sinusoïdale amortie multi-axes
+
         final dx = math.sin(val * math.pi * 6.0) * (1.0 - val) * 9.0;
         final dy = math.cos(val * math.pi * 4.0) * (1.0 - val) * 5.0;
         return Transform.translate(
@@ -32,7 +31,6 @@ class ScreenShakeWrapper extends StatelessWidget {
   }
 }
 
-/// Flash d'impact visuel sur la cible abattue par le Chasseur (500ms)
 class HunterImpactEffect extends StatefulWidget {
   final double size;
   final VoidCallback? onCompleted;
@@ -101,7 +99,7 @@ class _HunterImpactEffectState extends State<HunterImpactEffect>
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    // Onde de choc d'impact éclatante
+
                     Container(
                       width: widget.size * 1.3,
                       height: widget.size * 1.3,
@@ -125,7 +123,7 @@ class _HunterImpactEffectState extends State<HunterImpactEffect>
                         ],
                       ),
                     ),
-                    // Réticule d'impact
+
                     const Text(
                       '🎯',
                       style: TextStyle(
@@ -146,7 +144,6 @@ class _HunterImpactEffectState extends State<HunterImpactEffect>
   }
 }
 
-/// Éclatement / propagation radiale de flammes luminescentes du Pyromane (750ms)
 class PyroFlameBurstEffect extends StatefulWidget {
   final double size;
   final VoidCallback? onCompleted;
@@ -216,7 +213,7 @@ class _PyroFlameBurstEffectState extends State<PyroFlameBurstEffect>
                   alignment: Alignment.center,
                   clipBehavior: Clip.none,
                   children: [
-                    // Onde de choc thermique radiale
+
                     Container(
                       width: widget.size * 1.5,
                       height: widget.size * 1.5,
@@ -240,7 +237,7 @@ class _PyroFlameBurstEffectState extends State<PyroFlameBurstEffect>
                         ],
                       ),
                     ),
-                    // Flammes incandescentes en expansion
+
                     const Text(
                       '🔥',
                       style: TextStyle(
@@ -261,7 +258,6 @@ class _PyroFlameBurstEffectState extends State<PyroFlameBurstEffect>
   }
 }
 
-/// Halo pulsant fluide en fondu (fade + pulse glow) pour les joueurs charmés par la Flûte
 class CharmedPulsingHalo extends StatefulWidget {
   final double size;
   final Widget? child;

@@ -8,7 +8,7 @@ Toutes les modifications notables apportées à ce projet sont documentées dans
 
 #### Ajouté (Added)
 - **Synchronisation Audio Agora en Temps Réel :** Coupure réelle du flux haut-parleur Agora (`_voiceService.muteSpeaker(true)`) lorsque la Petite Fille ferme les yeux pour se cacher, et réactivation instantanée (`muteSpeaker(false)`) lors de la réouverture des yeux pendant la phase des loups (`nightWerewolves`).
-- **Contre-Jeu Canonique Thiercelieux des Loups-Garous :** Bouton tactique épuré « Dénicher l'espionne » (`wolf_unmask_peeker_btn`) permettant à la meute de sonder un villageois suspecté d'espionnage nocturne.
+- **Contre-Jeu Canonique Le Village des Loups-Garous :** Bouton tactique épuré « Dénicher l'espionne » (`wolf_unmask_peeker_btn`) permettant à la meute de sonder un villageois suspecté d'espionnage nocturne.
 - **Mort de Frayeur Nocturne Réactive (`PETITE_FILLE_SURPRISE`) :** Si la cible des loups est la Petite Fille et qu'elle a les yeux ouverts, elle succombe immédiatement à la terreur et son décès est consigné dans les chroniques et le registre des morts ; si elle s'est cachée sous ses draps (yeux fermés), la tentative des loups échoue (fausse alerte).
 - **Vignette Atmosphérique Nocturne :** Masque visuel cinématique superposé à la Table Mystique avec fentes d'observation en mode espionnage et voile protecteur sombre avec indicateur de sécurité en mode yeux fermés.
 - **Traductions Intégrales 100% (FR / AR / EN) :** Intégration de toutes les clés d'interface, avertissements et causes de mort dans le dictionnaire centralisé, avec zéro emoji sur les boutons et préservation du layout LTR.

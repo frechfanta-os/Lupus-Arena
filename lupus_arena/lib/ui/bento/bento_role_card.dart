@@ -5,7 +5,6 @@ import '../theme/lupus_theme.dart';
 import 'bento_card.dart';
 import 'role_card_image.dart';
 
-/// Carte secrète du joueur avec fonction de masquage / révélation
 class BentoRoleCard extends StatefulWidget {
   final GameRole role;
   final bool isAlive;
@@ -70,7 +69,7 @@ class _BentoRoleCardState extends State<BentoRoleCard> {
                   ),
                 ],
               ),
-              // Bouton pour afficher/masquer
+
               IconButton(
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
@@ -89,7 +88,7 @@ class _BentoRoleCardState extends State<BentoRoleCard> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Illustration officielle de la carte (assets/cards/)
+
                 GestureDetector(
                   onTap: () => _showFullCardDialog(context, role),
                   child: Hero(

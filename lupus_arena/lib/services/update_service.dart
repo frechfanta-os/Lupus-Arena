@@ -10,7 +10,6 @@ import 'package:open_filex/open_filex.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 
-/// Informations détaillées sur une mise à jour disponible
 class AppUpdateInfo {
   final String version;
   final String rawTag;
@@ -22,7 +21,6 @@ class AppUpdateInfo {
   final String matchedAbi;
   final bool hasUpdate;
 
-  // Getters compatibles avec le format FastUpdateService
   String get tagName => rawTag;
   String get changelog => releaseNotes;
   String get apkUrl => downloadUrl;
@@ -40,11 +38,8 @@ class AppUpdateInfo {
   });
 }
 
-/// Alias pour compatibilité
 typedef UpdateInfo = AppUpdateInfo;
 
-/// Service autonome d'auto-mise à jour in-app connecté directement à l'API GitHub Releases
-/// avec sélection dynamique de l'architecture processeur (ABI) pour un téléchargement allégé.
 class UpdateService {
   static final UpdateService _instance = UpdateService._internal();
   factory UpdateService() => _instance;
@@ -56,7 +51,6 @@ class UpdateService {
   static const MethodChannel _nativeInstaller =
       MethodChannel('com.anisghdlab.lupusarena/installer');
 
-  /// Vérifie si l'appareil a accordé la permission d'installer des packages inconnus (Android 8+)
   static Future<bool> canRequestPackageInstalls() async {
     if (!Platform.isAndroid) return true;
     try {
@@ -68,7 +62,6 @@ class UpdateService {
     }
   }
 
-  /// Ouvre l'écran des paramètres système pour autoriser l'installation d'applications
   static Future<void> openInstallPermissionSettings() async {
     if (!Platform.isAndroid) return;
     try {
@@ -78,7 +71,6 @@ class UpdateService {
     }
   }
 
-  /// Détecte l'architecture du processeur du téléphone via AndroidDeviceInfo.supportedAbis
   static Future<String> getTargetAbi() async {
     if (!Platform.isAndroid) return 'universal';
 
@@ -89,11 +81,10 @@ class UpdateService {
 
       debugPrint('[UpdateService] ABIs supportées par l\'appareil: $supportedAbis');
 
-      // Priorité aux processeurs 64-bit récents (arm64-v8a)
       if (supportedAbis.contains('arm64-v8a')) {
         return 'arm64';
       }
-      // Téléphones 32-bit (ex: itel A50c, armeabi-v7a)
+
       if (supportedAbis.contains('armeabi-v7a')) {
         return 'arm32';
       }
@@ -103,8 +94,6 @@ class UpdateService {
     return 'universal';
   }
 
-  /// Compare deux versions sémantiques (avec support du build number, ex: "1.0.13+14").
-  /// Retourne `true` si `remote` est strictement supérieure à `local`.
   static bool isRemoteVersionGreater(String remote, String local) {
     final cleanRemote = remote.trim().replaceFirst(RegExp(r'^[vV]'), '');
     final cleanLocal = local.trim().replaceFirst(RegExp(r'^[vV]'), '');
@@ -112,7 +101,6 @@ class UpdateService {
     if (cleanRemote.isEmpty || cleanLocal.isEmpty) return false;
     if (cleanRemote == cleanLocal) return false;
 
-    // Séparer version et build number (ex: 1.0.13+14 -> ["1.0.13", "14"])
     final remoteParts = cleanRemote.split('+');
     final localParts = cleanLocal.split('+');
 
@@ -133,7 +121,6 @@ class UpdateService {
       if (r < l) return false;
     }
 
-    // Si les versions de base sont identiques, comparer le build number
     if (remoteParts.length > 1 && localParts.length > 1) {
       final rBuild = int.tryParse(RegExp(r'\d+').firstMatch(remoteParts[1])?.group(0) ?? '') ?? 0;
       final lBuild = int.tryParse(RegExp(r'\d+').firstMatch(localParts[1])?.group(0) ?? '') ?? 0;
@@ -145,7 +132,6 @@ class UpdateService {
     return false;
   }
 
-  /// Récupère la dernière release GitHub et sélectionne l'APK le plus léger adapté à l'appareil
   Future<AppUpdateInfo?> checkForUpdate({
     String owner = defaultOwner,
     String repo = defaultRepo,
@@ -156,16 +142,13 @@ class UpdateService {
           ? '${packageInfo.version}+${packageInfo.buildNumber}'
           : packageInfo.version;
 
-      // 1. Essai API GitHub sur le dépôt principal
       AppUpdateInfo? update = await _fetchRelease(owner, repo, localVersion);
 
-      // 2. Secours miroir si dépôt principal échoue
       if (update == null && owner == defaultOwner && repo == defaultRepo) {
         debugPrint('[UpdateService] Tentative de secours sur le miroir zakghd/LUPUS_ARENA...');
         update = await _fetchRelease('zakghd', 'LUPUS_ARENA', localVersion);
       }
 
-      // 3. Secours via redirection Web GitHub (contourne la limite de taux API GitHub HTTP 403)
       if (update == null && owner == defaultOwner && repo == defaultRepo) {
         debugPrint('[UpdateService] Tentative de secours via redirection Web...');
         update = await _fetchReleaseFromWeb(owner, repo, localVersion);
@@ -207,11 +190,9 @@ class UpdateService {
       final releaseNotes = (data['body'] ?? 'Mise à jour de performance et nouvelles fonctionnalités.').toString();
       final assets = data['assets'] as List<dynamic>? ?? [];
 
-      // 1. Détection de l'architecture processeur (ABI)
       final abi = await getTargetAbi();
       debugPrint('[UpdateService] Architecture cible sélectionnée: $abi');
 
-      // 2. Sélection dynamique de l'Asset GitHub ciblé et allégé
       dynamic targetAsset;
       if (abi == 'arm64') {
         targetAsset = assets.firstWhere(
@@ -229,13 +210,11 @@ class UpdateService {
         );
       }
 
-      // Fallback 1: LupusArena.apk
       targetAsset ??= assets.firstWhere(
         (a) => (a is Map) && (a['name'] as String? ?? '') == 'LupusArena.apk',
         orElse: () => null,
       );
 
-      // Fallback 2: N'importe quel APK disponible
       targetAsset ??= assets.firstWhere(
         (a) => (a is Map) && (a['name'] as String? ?? '').toLowerCase().endsWith('.apk'),
         orElse: () => null,
@@ -255,7 +234,6 @@ class UpdateService {
         return null;
       }
 
-      // Comparer avec la version locale
       final isNewer = isRemoteVersionGreater(remoteVersion, localVersion);
       if (!isNewer) {
         debugPrint('[UpdateService] L\'application est à jour ($localVersion >= $remoteVersion)');
@@ -280,7 +258,6 @@ class UpdateService {
     }
   }
 
-  /// Secours en cas de limitation de taux API GitHub : interroge l'URL web qui redirige vers le tag
   Future<AppUpdateInfo?> _fetchReleaseFromWeb(
     String owner,
     String repo,
@@ -331,7 +308,6 @@ class UpdateService {
     }
   }
 
-  /// Dossier de téléchargement optimisé (cache externe Android pour éviter les restrictions de bac à sable)
   static Future<Directory> getDownloadDirectory() async {
     if (Platform.isAndroid) {
       try {
@@ -344,7 +320,6 @@ class UpdateService {
     return await getTemporaryDirectory();
   }
 
-  /// Vérifie si un APK déjà téléchargé correspond exactement à la version et à la taille attendues
   static Future<File?> getExistingApkFile(
     String fileName,
     String version,
@@ -367,7 +342,6 @@ class UpdateService {
     return null;
   }
 
-  /// Nettoie les anciens fichiers APK de mises à jour précédentes pour économiser l'espace disque
   static Future<void> _cleanupOldApks(Directory dir, String currentApkName) async {
     try {
       final entities = await dir.list().toList();
@@ -383,7 +357,6 @@ class UpdateService {
     } catch (_) {}
   }
 
-  /// Déclenche l'installation native d'un fichier APK
   static Future<String> launchApkInstallation(String filePath) async {
     final file = File(filePath);
     if (!await file.exists()) {
@@ -391,7 +364,6 @@ class UpdateService {
       return 'FILE_NOT_FOUND';
     }
 
-    // 0. Vérifier si l'autorisation d'installer depuis des sources inconnues est accordée (Android 8.0+)
     if (Platform.isAndroid) {
       final canInstall = await canRequestPackageInstalls();
       if (!canInstall) {
@@ -401,7 +373,6 @@ class UpdateService {
       }
     }
 
-    // 1. Essayer d'abord le MethodChannel natif Android (haute fiabilité avec FileProvider interne et permissions explicites)
     if (Platform.isAndroid) {
       try {
         final result = await _nativeInstaller.invokeMethod<String>('installApk', {
@@ -416,7 +387,6 @@ class UpdateService {
       }
     }
 
-    // 2. Fallback avec OpenFilex en spécifiant explicitement le type MIME Android APK
     try {
       final openResult = await OpenFilex.open(
         filePath,
@@ -430,7 +400,6 @@ class UpdateService {
     }
   }
 
-  /// Télécharge l'APK avec reprise sécurisée (.part), vérification de taille et lancement de l'installateur
   Future<String> downloadAndInstall({
     required String downloadUrl,
     required String fileName,
@@ -447,10 +416,8 @@ class UpdateService {
       final apkFile = File('${dir.path}/$safeApkName');
       final partFile = File('${dir.path}/$safeApkName.part');
 
-      // Nettoyer les anciens APKs périmés pour libérer l'espace
       await _cleanupOldApks(dir, safeApkName);
 
-      // Si l'APK complet valide existe déjà sur l'appareil, le lancer immédiatement
       if (await apkFile.exists()) {
         final existingFullLength = await apkFile.length();
         final isValidSize = expectedSize != null && expectedSize > 0
@@ -487,7 +454,6 @@ class UpdateService {
           existingBytes = await partFile.length();
         }
 
-        // Si le fichier partiel dépasse la taille attendue, réinitialiser
         if (totalBytes > 0 && existingBytes >= totalBytes) {
           try {
             await partFile.delete();
@@ -519,7 +485,7 @@ class UpdateService {
           );
 
           if (response.statusCode == 416) {
-            // Range non valide -> Réinitialiser le fichier partiel
+
             debugPrint('[UpdateService] Code 416 reçu, réinitialisation du fichier partiel...');
             try {
               await partFile.delete();
@@ -600,7 +566,7 @@ class UpdateService {
             } catch (_) {}
           }
           await partFile.rename(apkFile.path);
-          break; // Succès
+          break;
         } catch (e) {
           retryCount++;
           debugPrint(
@@ -617,7 +583,6 @@ class UpdateService {
         throw Exception('Le fichier APK final n\'a pas pu être enregistré sur l\'appareil.');
       }
 
-      // Lancement immédiat de l'installation de l'APK téléchargé
       final installResult = await launchApkInstallation(apkFile.path);
       return installResult;
     } catch (e) {
@@ -628,7 +593,6 @@ class UpdateService {
   }
 }
 
-/// Service rapide d'auto-mise à jour avec méthodes statiques
 class FastUpdateService {
   static Future<String> getTargetAbi() => UpdateService.getTargetAbi();
 
@@ -637,11 +601,9 @@ class FastUpdateService {
     String repo = UpdateService.defaultRepo,
   }) => UpdateService().checkForUpdate(owner: owner, repo: repo);
 
-  /// Lance directement l'installation d'un fichier APK déjà présent
   static Future<String> installApk(String filePath) =>
       UpdateService.launchApkInstallation(filePath);
 
-  /// Télécharge le binaire ciblé et allégé puis lance l'installateur
   static Future<String> downloadAndInstall({
     required String apkUrl,
     required Function(double progress) onProgress,

@@ -6,7 +6,6 @@ import '../../services/fog_of_war_service.dart';
 import '../theme/lupus_theme.dart';
 import 'bento_player_tile.dart';
 
-/// Grille Bento réactive organisant les joueurs autour de l'arène
 class BentoPlayerGrid extends StatelessWidget {
   final List<PlayerModel> players;
   final String currentUserId;
@@ -84,7 +83,6 @@ class BentoPlayerGrid extends StatelessWidget {
       );
     }
 
-    // Calculer le total des votes reçus par chaque joueur
     final Map<String, int> votesPerPlayer = {};
     for (final p in players) {
       if (p.targetVoteId != null) {
@@ -94,12 +92,11 @@ class BentoPlayerGrid extends StatelessWidget {
     }
 
     final screenWidth = MediaQuery.of(context).size.width;
-    // Ratio vertical équilibré pour garantir l'espace nécessaire à l'avatar et au nom sans dépassement
+
     final double ratio = screenWidth < 380
         ? 0.64
         : (screenWidth < 500 ? 0.70 : 0.78);
 
-    // Pré-calculs uniques O(1) hors-boucle pour le rendu de la grille
     final isDevMode = isDevModeActive || isDevRoom;
     final isMeWolfTeam = isMeEvil ||
         myRole.isEvil ||

@@ -23,7 +23,6 @@ class AbominableSectarianHandler extends RoleActionHandler {
     final teamA = <String>[];
     final teamB = <String>[];
 
-    // Répartition canonique équilibrée alternée
     for (int i = 0; i < alive.length; i++) {
       if (i.isEven) {
         teamA.add(alive[i]);

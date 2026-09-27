@@ -1,22 +1,20 @@
 import 'game_role.dart';
 
-/// Modèle d'état étendu pour les 17 rôles additionnels
-/// Sérialisable et rétrocompatible avec Firebase RTDB
 class ExpandedRolesState {
   final String? infectedPlayerId;
   final String? wildChildModelId;
   final bool wildChildTransformed;
   final String? crowTargetId;
-  final Map<String, int> ancientLives; // playerId -> vies restantes (2 par défaut)
-  final bool ancientPowerLost; // Si l'Ancien a été tué par le village
-  final bool cubDiedYesterday; // Les loups tuent 2 fois cette nuit
+  final Map<String, int> ancientLives;
+  final bool ancientPowerLost;
+  final bool cubDiedYesterday;
   final String? rustyKnightContaminatedWolfId;
   final int? rustyKnightDeathNight;
   final bool judgeSecondVoteAvailable;
   final bool isSecondVoteTriggered;
-  final Map<String, List<String>> sectarianTeams; // 'teamA' -> [ids], 'teamB' -> [ids]
-  final Map<String, List<GameRole>> actorAvailableRoles; // playerId -> [rôles restants]
-  final Set<String> bannedVotersForToday; // Choisi par le Bouc Émissaire
+  final Map<String, List<String>> sectarianTeams;
+  final Map<String, List<GameRole>> actorAvailableRoles;
+  final Set<String> bannedVotersForToday;
   final bool angelWon;
   final bool foxPowerActive;
   final bool? lastFoxCheckResult;
@@ -28,14 +26,13 @@ class ExpandedRolesState {
   final bool idiotPardoned;
   final Set<String> permanentlyBannedVoters;
 
-  // --- ÉTAT DU MAIRE (CAPITAINE) DU VILLAGE ---
   final String? mayorPlayerId;
   final bool isMayorElected;
   final String? pendingMayorSuccessorId;
   final bool isMayorSuccessionPending;
   final bool mayorSpeechOpeningDone;
   final bool mayorSpeechClosingDone;
-  // --- ÉTAT DE LA PETITE FILLE (ESPIONNAGE & DÉTECTION) ---
+
   final bool littleGirlEyesOpen;
   final String? littleGirlCaughtId;
 
@@ -197,7 +194,6 @@ class ExpandedRolesState {
   factory ExpandedRolesState.fromMap(Map<dynamic, dynamic>? map) {
     if (map == null) return const ExpandedRolesState();
 
-    // Parsing ancientLives
     final parsedAncientLives = <String, int>{};
     if (map['ancientLives'] is Map) {
       (map['ancientLives'] as Map).forEach((k, v) {
@@ -207,7 +203,6 @@ class ExpandedRolesState {
       });
     }
 
-    // Parsing sectarianTeams
     final parsedSectarianTeams = <String, List<String>>{};
     if (map['sectarianTeams'] is Map) {
       (map['sectarianTeams'] as Map).forEach((k, v) {
@@ -218,7 +213,6 @@ class ExpandedRolesState {
       });
     }
 
-    // Parsing actorAvailableRoles
     final parsedActorRoles = <String, List<GameRole>>{};
     if (map['actorAvailableRoles'] is Map) {
       (map['actorAvailableRoles'] as Map).forEach((k, v) {
@@ -230,7 +224,6 @@ class ExpandedRolesState {
       });
     }
 
-    // Parsing bannedVotersForToday
     final parsedBannedVoters = <String>{};
     if (map['bannedVotersForToday'] is Iterable) {
       for (final id in map['bannedVotersForToday'] as Iterable) {
@@ -238,7 +231,6 @@ class ExpandedRolesState {
       }
     }
 
-    // Parsing permanentlyBannedVoters
     final parsedPermanentlyBanned = <String>{};
     if (map['permanentlyBannedVoters'] is Iterable) {
       for (final id in map['permanentlyBannedVoters'] as Iterable) {

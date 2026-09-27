@@ -2,11 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import 'locale_provider.dart';
 
-/// Service dédié au partage natif du code de salon (Room Code)
-/// avec support multilingue dynamique (Français, Arabe, Anglais)
-/// et configuration du `sharePositionOrigin` pour iPad/tablettes.
 class RoomShareService {
-  /// Génère le message textuel d'invitation selon la langue actuelle du joueur
+
   static String buildShareMessage(BuildContext? context, String roomCode) {
     String langCode = 'en';
 
@@ -39,7 +36,6 @@ class RoomShareService {
     }
   }
 
-  /// Sujet optionnel du partage (ex. pour e-mail ou messageries supportant le subject)
   static String buildShareSubject(BuildContext? context) {
     String langCode = 'en';
 
@@ -64,13 +60,12 @@ class RoomShareService {
     }
   }
 
-  /// Déclenche le partage natif système avec positionnement précis de la popup (iPad/tablettes)
   static Future<ShareResult> shareRoomCode({
     required BuildContext context,
     required String roomCode,
     Rect? sharePositionOrigin,
   }) async {
-    // Si aucun Rect n'est explicitement fourni, on le calcule depuis le BuildContext
+
     Rect? origin = sharePositionOrigin;
     if (origin == null) {
       try {

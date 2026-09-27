@@ -7,7 +7,7 @@ class RustySwordKnightHandler extends RoleActionHandler {
   GameRole get role => GameRole.knightRustySword;
 
   @override
-  bool canAct(GameState state, String playerId) => false; // Passif à la mort
+  bool canAct(GameState state, String playerId) => false;
 
   @override
   GameState executeAction(
@@ -16,7 +16,6 @@ class RustySwordKnightHandler extends RoleActionHandler {
     required Map<String, dynamic> actionPayload,
   }) => state;
 
-  /// Appelé si le chevalier est dévoré la nuit par les loups
   static GameState onDevouredByWolves(GameState state, String knightId) {
     final alive = state.alivePlayerIdsInOrder;
     final startIndex = alive.indexOf(knightId);
@@ -25,7 +24,6 @@ class RustySwordKnightHandler extends RoleActionHandler {
     final n = alive.length;
     String? contaminatedWolfId;
 
-    // Premier loup à sa gauche (indice - 1 circulaire)
     for (int i = 1; i < n; i++) {
       final candId = alive[(startIndex - i + n) % n];
       final r = state.playerRoles[candId];

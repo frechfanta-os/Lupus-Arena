@@ -14,7 +14,7 @@ void main() {
       );
       expect(
         LupusAssets.lobbyScreenAsset,
-        equals('assets/images/lobby screen.jpg'),
+        equals('assets/images/lobby_screen.jpg'),
       );
       expect(
         LupusAssets.lobbyScreenNormalizedAsset,
@@ -26,19 +26,10 @@ void main() {
       );
     });
 
-    test('Les fichiers d\'assets correspondants existent dans assets/images/', () {
+    test('Le fichier d\'asset correspondant existe dans assets/images/', () {
       final normalizedFile = File('assets/images/lobby_screen.jpg');
-      final legacyFile = File('assets/images/backlobby.jpg');
-      final directFile = File('assets/images/lobby screen.jpg');
-
       expect(normalizedFile.existsSync(), isTrue, reason: 'lobby_screen.jpg doit exister');
-      expect(legacyFile.existsSync(), isTrue, reason: 'backlobby.jpg doit exister');
-      expect(directFile.existsSync(), isTrue, reason: 'lobby screen.jpg doit exister');
-
-      // Vérifie que les fichiers ont la bonne taille (> 50 KB, JPEG valide)
       expect(normalizedFile.lengthSync(), greaterThan(50000));
-      expect(legacyFile.lengthSync(), greaterThan(50000));
-      expect(directFile.lengthSync(), greaterThan(50000));
     });
 
     testWidgets('buildLobbyBackground() génère un widget valide avec BoxFit.cover', (tester) async {

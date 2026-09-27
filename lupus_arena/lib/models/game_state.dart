@@ -3,7 +3,6 @@ import 'expanded_roles_state.dart';
 import 'game_phase.dart';
 import 'player_model.dart';
 
-/// Modèle d'état immuable du moteur de jeu pour l'arbitrage pur et le Strategy Pattern
 class GameState {
   final int currentTurn;
   final GamePhase currentPhase;

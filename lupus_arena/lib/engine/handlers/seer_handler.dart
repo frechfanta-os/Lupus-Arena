@@ -3,8 +3,6 @@ import '../../models/game_role.dart';
 import '../../models/game_state.dart';
 import 'role_action_handler.dart';
 
-/// Gestionnaire de rôle pour La Voyante.
-/// Chaque nuit, elle sonde l'âme d'un joueur pour découvrir son identité secrète.
 class SeerHandler extends RoleActionHandler {
   @override
   GameRole get role => GameRole.seer;

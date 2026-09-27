@@ -8,7 +8,7 @@ class ScapegoatHandler extends RoleActionHandler {
 
   @override
   bool canAct(GameState state, String playerId) {
-    // Activable lors de son testament post-mortem si éliminé par égalité
+
     return state.lastEliminatedPlayerId == playerId &&
         state.expandedRolesState.scapegoatNeedsToBan;
   }

@@ -4,7 +4,6 @@ import '../models/game_phase.dart';
 import '../models/player_model.dart';
 import 'role_security_service.dart';
 
-/// Résultat complet de la redistribution conditionnelle des rôles
 class RoleDistributionResult {
   final Map<String, PlayerModel> updatedPlayers;
   final Map<String, String> secretRoleTokens;
@@ -25,33 +24,26 @@ class RoleDistributionResult {
   });
 }
 
-/// Service de redistribution aléatoire conditionnelle des rôles
-/// intégrant un double mélange Fisher-Yates cryptographique,
-/// un algorithme anti-répétition consécutive par UID,
-/// et le dimensionnement dynamique des quotas de visions et potions.
 class ConditionalRoleDistributor {
-  /// Calcule le quota dynamique de visions de la Voyante : max(1, nbJoueurs ~/ 4)
+
   static int computeVisionsQuota(int playerCount) {
     return max(1, playerCount ~/ 4);
   }
 
-  /// Calcule le quota dynamique de potions de la Sorcière : max(1, nbJoueurs ~/ 10)
   static int computePotionsQuota(int playerCount) {
     return max(1, playerCount ~/ 10);
   }
 
-  /// Génère une liste de rôles déployée à partir d'un pool de rôles (ex: {'seer': 1, 'simple_werewolf': 2})
   static List<GameRole> expandRolePool(Map<String, int> rolePool, int targetCount) {
     final List<GameRole> roles = [];
     rolePool.forEach((roleKey, count) {
       final role = GameRole.fromId(roleKey);
-      if (role == GameRole.mayor) return; // Le Maire est un titre électif par scrutin
+      if (role == GameRole.mayor) return;
       for (int i = 0; i < count; i++) {
         roles.add(role);
       }
     });
 
-    // Ajustement strict à targetCount
     while (roles.length < targetCount) {
       roles.add(GameRole.simpleVillager);
     }
@@ -62,7 +54,6 @@ class ConditionalRoleDistributor {
     return roles;
   }
 
-  /// Mélange de Fisher-Yates (Knuth) garanti O(N) avec générateur cryptographique sécurisé
   static void fisherYatesShuffle<T>(List<T> list, Random random) {
     for (int i = list.length - 1; i > 0; i--) {
       final j = random.nextInt(i + 1);
@@ -72,7 +63,6 @@ class ConditionalRoleDistributor {
     }
   }
 
-  /// Exécute la redistribution conditionnelle complète
   static RoleDistributionResult distribute({
     required Map<String, PlayerModel> currentPlayers,
     required Map<String, int> rolePool,
@@ -83,18 +73,15 @@ class ConditionalRoleDistributor {
     final int playerCount = playerList.length;
     final rand = Random.secure();
 
-    // 1. Quotas dynamiques
     final maxVisions = computeVisionsQuota(playerCount);
     final maxPotions = computePotionsQuota(playerCount);
 
-    // 2. Déploiement et double mélange du deck de cartes
     final expandedRoles = expandRolePool(rolePool, playerCount);
     fisherYatesShuffle(expandedRoles, rand);
-    fisherYatesShuffle(expandedRoles, rand); // Double brassage cryptographique
+    fisherYatesShuffle(expandedRoles, rand);
 
-    // 3. Optimisation anti-répétition consécutive par UID
     final playerUids = playerList.map((p) => p.id).toList();
-    fisherYatesShuffle(playerUids, rand); // Mélange des places
+    fisherYatesShuffle(playerUids, rand);
 
     final assignedRoles = _optimizeRoleAssignment(
       playerUids: playerUids,
@@ -103,11 +90,9 @@ class ConditionalRoleDistributor {
       rand: rand,
     );
 
-    // 4. Seating Order aléatoire
     final seatingOrder = List<String>.from(playerUids);
     fisherYatesShuffle(seatingOrder, rand);
 
-    // 5. Chiffrement individuel et construction des PlayerModels
     final Map<String, PlayerModel> updatedPlayers = {};
     final Map<String, String> secretRoleTokens = {};
     final List<String> wolfUids = [];
@@ -158,13 +143,11 @@ class ConditionalRoleDistributor {
       updatedPlayers[uid] = updatedPlayer;
     }
 
-    // 6. Chiffrement du roster de la meute
     final encryptedWolfRoster = RoleSecurityService.encryptWolfRoster(
       wolfUids,
       roomCode,
     );
 
-    // 7. Détermination de la première phase canonique
     final startingPhase = _resolveStartingPhase(updatedPlayers.values);
 
     return RoleDistributionResult(
@@ -178,7 +161,6 @@ class ConditionalRoleDistributor {
     );
   }
 
-  /// Algorithme glouton d'affectation anti-répétition minimisant les doublons consécutifs
   static Map<String, GameRole> _optimizeRoleAssignment({
     required List<String> playerUids,
     required List<GameRole> availableRoles,
@@ -188,13 +170,12 @@ class ConditionalRoleDistributor {
     final Map<String, GameRole> assignments = {};
     final remainingRoles = List<GameRole>.from(availableRoles);
 
-    // Première passe : attribuer un rôle différent du rôle précédent si possible
     for (final uid in playerUids) {
       final prev = previousRoles[uid];
       int candidateIndex = -1;
 
       if (prev != null) {
-        // Chercher un rôle différent du rôle précédent
+
         for (int i = 0; i < remainingRoles.length; i++) {
           if (remainingRoles[i] != prev) {
             candidateIndex = i;
@@ -217,7 +198,6 @@ class ConditionalRoleDistributor {
     return assignments;
   }
 
-  /// Détermine la première phase nocturne active selon la composition
   static GamePhase _resolveStartingPhase(Iterable<PlayerModel> players) {
     bool hasRole(GameRole role) => players.any((p) => p.role == role);
     bool hasWolves() => players.any((p) => p.role.isEvil);

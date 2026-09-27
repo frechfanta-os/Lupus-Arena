@@ -34,14 +34,13 @@ void main() {
     });
 
     test('Résolution de source : bascule dynamique entre DeviceFileSource et AssetSource', () {
-      // Test d'un fichier existant sur le disque
+
       final lobbySource = LupusAudioManager.resolveAudioSource(
         LupusAudioManager.lobbySourcePath,
         LupusAudioManager.lobbyAssetFallback,
       );
       expect(lobbySource, isA<Source>());
 
-      // Test d'un chemin virtuel inexistant -> bascule sur AssetSource
       final fallbackSource = LupusAudioManager.resolveAudioSource(
         'Chemin/Inexistant/Track.mp3',
         'assets/audio/Aldeas de Niebla.mp3',
@@ -78,21 +77,17 @@ void main() {
         ),
       );
 
-      // État initial non-muté : icône note de musique
       expect(find.byType(MusicMuteButton), findsOneWidget);
       expect(find.byIcon(Icons.music_note_rounded), findsOneWidget);
       expect(find.byIcon(Icons.music_off_rounded), findsNothing);
 
-      // Clic sur le bouton Mute
       await tester.tap(find.byType(MusicMuteButton));
       await tester.pumpAndSettle();
 
-      // État muté : icône note coupée (music_off)
       expect(manager.isMusicMuted, isTrue);
       expect(find.byIcon(Icons.music_off_rounded), findsOneWidget);
       expect(find.byIcon(Icons.music_note_rounded), findsNothing);
 
-      // Clic pour réactiver
       await tester.tap(find.byType(MusicMuteButton));
       await tester.pumpAndSettle();
 

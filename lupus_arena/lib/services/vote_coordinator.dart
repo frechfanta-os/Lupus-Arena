@@ -4,7 +4,6 @@ import '../models/expanded_roles_state.dart';
 import '../models/player_model.dart';
 import 'expanded_roles_coordinator.dart';
 
-/// Résultat du dépouillement des votes du jour
 class VoteTallyResult {
   final Map<String, int> voteCounts;
   final List<String> topCandidates;
@@ -25,11 +24,9 @@ class VoteTallyResult {
   });
 }
 
-/// Coordinateur d'arbitrage et de dépouillement des votes (VoteCoordinator)
 class VoteCoordinator {
   const VoteCoordinator();
 
-  /// Compte les votes de la meute des loups pour la nuit
   String? tallyWerewolfVotes({
     required List<PlayerModel> alivePlayers,
     String? currentUserId,
@@ -46,7 +43,6 @@ class VoteCoordinator {
     return votes.entries.reduce((a, b) => a.value > b.value ? a : b).key;
   }
 
-  /// Dépouille l'ensemble des votes du village pour la phase de vote de jour
   VoteTallyResult tallyDayVotes({
     required Map<String, PlayerModel> players,
     required ExpandedRolesState expandedRolesState,
@@ -57,7 +53,7 @@ class VoteCoordinator {
 
     final livingCount = players.values.where((p) => p.isAlive).length;
     for (final voter in players.values.where((p) => p.isAlive)) {
-      // Ignorer les votants bannis par le Bouc Émissaire ou l'Idiot du Village gracié
+
       if (expandedRolesState.bannedVotersForToday.contains(voter.id) ||
           expandedRolesState.permanentlyBannedVoters.contains(voter.id)) {
         continue;
@@ -65,14 +61,13 @@ class VoteCoordinator {
 
       final target = voter.targetVoteId;
       if (target != null && players[target]?.isAlive == true) {
-        // Le Capitaine / Maire a un vote double (poids 2), sauf s'il reste <= 3 survivants où le vote redevient 1
+
         final isMayor = voter.isCaptain || voter.id == captainId || voter.id == expandedRolesState.mayorPlayerId;
         final weight = (isMayor && livingCount > 3) ? 2 : 1;
         voteCounts[target] = (voteCounts[target] ?? 0) + weight;
       }
     }
 
-    // Application des votes de menace du Corbeau (+2 votes sur la cible)
     final countsWithCrow = ExpandedRolesCoordinator.applyCrowBonusVotes(
       baseVoteCounts: voteCounts,
       crowTargetId: expandedRolesState.crowTargetId,
@@ -92,9 +87,8 @@ class VoteCoordinator {
         .map((e) => e.key)
         .toList();
 
-    // Cas d'égalité
     if (topCandidates.length > 1) {
-      // Arbitrage canonique : Bouc Émissaire exécuté en cas d'égalité
+
       final scapegoatResolution = ExpandedRolesCoordinator.resolveScapegoatTie(
         alivePlayers: players.values.where((p) => p.isAlive).toList(),
         realRoles: realRoles,
@@ -113,7 +107,6 @@ class VoteCoordinator {
         );
       }
 
-      // Égalité standard sans Bouc Émissaire : vote prépondérant du Capitaine
       final captain = players.values.cast<PlayerModel?>().firstWhere(
             (p) => p != null && p.isAlive && (p.isCaptain || p.id == captainId),
             orElse: () => null,

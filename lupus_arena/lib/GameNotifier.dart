@@ -1,5 +1,3 @@
-// ignore_for_file: file_names
-
 import 'dart:async';
 import 'dart:math';
 
@@ -27,11 +25,9 @@ import 'services/room_presence_service.dart';
 import 'services/server_time_service.dart';
 import 'services/vote_coordinator.dart';
 
-/// URL spécifique de la Realtime Database configurée dans google-services.json
 const String kFirebaseDatabaseUrl =
     'https://lupusarena-default-rtdb.europe-west1.firebasedatabase.app';
 
-/// État global du jeu pour Riverpod
 class LupusGameState {
   final String currentUserId;
   final String currentUserName;
@@ -46,7 +42,7 @@ class LupusGameState {
   final bool isMuted;
   final bool isAdmin;
   final bool isDevModeActive;
-  final String? impersonatedUserId; // UID du joueur incarné par l'hôte en Mode Dev
+  final String? impersonatedUserId;
   final bool isOmniscientVoice;
   final String? currentVoiceChannel;
   final Map<String, GameRole> seerInspectedRoles;
@@ -83,7 +79,6 @@ class LupusGameState {
   bool get isHost => room != null && room!.hostId == currentUserId;
   bool get isDevMode => isDevModeActive || (room?.isDevRoom == true) || isAdmin;
 
-  /// UID effectif pour l'émission d'actions (permet à l'Hôte Dev d'incarner n'importe quel personnage)
   String get effectiveUserId =>
       (isDevMode && impersonatedUserId != null && impersonatedUserId!.isNotEmpty)
           ? impersonatedUserId!
@@ -184,7 +179,6 @@ class LupusGameState {
   }
 }
 
-/// Moteur de règles canoniques des Loups-Garous de Thiercelieux
 class GameNotifier extends StateNotifier<LupusGameState> {
   final AgoraVoiceService _voiceService = AgoraVoiceService();
   final GamePhaseCoordinator phaseCoordinator = const GamePhaseCoordinator();
@@ -204,9 +198,9 @@ class GameNotifier extends StateNotifier<LupusGameState> {
   StreamSubscription<DatabaseEvent>? _replayStatusSubscription;
   StreamSubscription<DatabaseEvent>? _gameResetSubscription;
   StreamSubscription<DatabaseEvent>? _cemeterySubscription;
-  /// Surveille le statut en ligne de l'hôte pour déclencher le transfert automatique.
+
   StreamSubscription<DatabaseEvent>? _hostPresenceSubscription;
-  /// Écoute les changements de hostId pour que le nouvel hôte active immédiatement ses timers.
+
   StreamSubscription<DatabaseEvent>? _hostIdSubscription;
   DatabaseReference? _currentRoomRef;
   String? _lastAppliedVoiceChannel;
@@ -216,31 +210,23 @@ class GameNotifier extends StateNotifier<LupusGameState> {
   Timer? _phaseExpirationTimer;
   int _lastProcessedPhaseStartedAt = 0;
 
-  /// Ensemble des tours de jeu pour lesquels la résolution du vote diurne a déjà été traitée (Garantie d'Idempotence stricte).
   final Set<int> _resolvedDayVoteRounds = {};
 
-  /// Annule et détruit immédiatement le minuteur d'expiration de phase en cours
   void _cancelPhaseTimer() {
     _phaseExpirationTimer?.cancel();
     _phaseExpirationTimer = null;
   }
 
-  /// Clôture définitivement le vote du jour (idempotent par cycle journalier)
   Future<void> cloturerVote() => processDayVoteResolution();
 
-  /// Affiche le verdict et déclenche la transition suivante
   Future<void> afficherVerdict() => nextPhase();
 
-  /// Registre inviolable des défunts (délégué au singleton DeathRegistryService).
-  /// Règle d'or : "Celui qui meurt meurt".
   DeathRegistryService get _deathRegistry => DeathRegistryService.instance;
 
-  /// Exception unique de résurrection : Potion de vie de la Sorcière
   void applyWitchRevive(String victimId) {
     _deathRegistry.allowWitchRevive(victimId);
   }
 
-  /// Correction immédiate en base de données si un zombie a été détecté
   Future<void> _fixZombieOnDatabase(String pid) async {
     if (_currentRoomRef == null) return;
     try {
@@ -252,7 +238,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     }
   }
 
-  /// Reconnexion sécurisée : ré-impose l'état serveur et préserve l'état de mort
   Future<void> handlePlayerReconnect(String roomId, String uid) async {
     try {
       final snapshot = await _database.ref('rooms/$roomId/players/$uid').get();
@@ -295,7 +280,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     ServerTimeService().initialize(_database);
   }
 
-  /// Charge le profil utilisateur précédemment sauvegardé sur l'appareil
   Future<void> loadSavedProfile() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -343,7 +327,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       currentUserAvatar: updatedAvatar,
     );
 
-    // Sauvegarde persistante sur le téléphone (SharedPreferences)
     SharedPreferences.getInstance().then((prefs) {
       if (name != null && name.trim().isNotEmpty) {
         prefs.setString('player_nickname', name.trim());
@@ -356,24 +339,17 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     });
   }
 
-  /// Efface le message d'erreur actuel
   void clearError() {
     state = state.copyWith(errorMessage: null);
   }
 
-  /// ═══════════════════════════════════════════════════════════════════════════
-  /// ÉCRITURE FIREBASE ATOMIQUE — chemin canonique unique : rooms/$roomCode
-  /// Une seule requête multi-path par action, éliminant toute écriture miroir.
-  /// ═══════════════════════════════════════════════════════════════════════════
   Future<void> _syncState(Map<String, dynamic> updates) async {
     if (_currentRoomRef == null) return;
 
-    // ── GARDE MONOTONE STRICT (Anti-Rollback local & distant) ──
     if (state.room != null) {
       final currentRound = state.room!.round;
       final currentPhase = state.room!.phase;
 
-      // 1. Refus formel de rétrogradation de tour
       if (updates.containsKey('round')) {
         final rawRound = updates['round'];
         final incomingRound = rawRound is num ? rawRound.toInt() : currentRound;
@@ -385,7 +361,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
         }
       }
 
-      // 2. Refus formel de régression Nuit -> Jour ou d'ordre nocturne au sein du même tour
       final rawIncomingPhase = updates['phase']?.toString() ?? updates['currentPhase']?.toString();
       if (rawIncomingPhase != null) {
         final incomingPhase = GamePhase.fromString(rawIncomingPhase);
@@ -412,7 +387,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       }
     }
 
-    // Synchronisation stricte phase <-> currentPhase
     if (updates.containsKey('phase')) {
       final pName = updates['phase'].toString();
       updates['currentPhase'] = pName == GamePhase.dayVoting.name
@@ -437,14 +411,10 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       _cancelPhaseTimer();
     }
 
-    // CALCUL DU COMPTE À REBOURS SERVEUR PUR (phaseEndsAt, phaseStartedAt, phaseDurationMs)
     final bool isPhaseChanging = updates.containsKey('phase') || updates.containsKey('currentPhase');
     final bool isTimerUpdating = updates.containsKey('timerSeconds');
     final bool isSpeakerChanging = updates.containsKey('currentSpeakerId');
 
-    // ── RÉINITIALISATION AUTOMATIQUE SYSTÉMIQUE DES VOTES ET ACTIONS STRATÉGIQUES ──
-    // À chaque transition de phase ou de cycle nocturne, tous les votes de joueurs,
-    // tables de votes et sélections tactiques sont réinitialisés de façon atomique.
     if (isPhaseChanging) {
       _resetAllVotes(updates);
     }
@@ -466,7 +436,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       updates['phaseDurationMs'] = durationMs;
     }
 
-    // ── Synchroniser le sous-nœud public_state pour les abonnements partitionnés ──
     final publicKeys = [
       'phase',
       'currentPhase',
@@ -496,7 +465,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       }
     }
 
-    // Synchroniser et garantir le verrou anti-résurrection absolu sur Firebase
     final bool isWitchHealAction = (updates['witchHealed'] == true && updates['nightVictimId'] != null) ||
         (state.room?.witchHealed == true && state.room?.nightVictimId != null);
     final String? healedPid = updates['witchHealed'] == true
@@ -516,8 +484,7 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     }
 
     try {
-      // ── ÉCRITURE ATOMIQUE UNIQUE : rooms/$roomCode ──
-      // Suppression des miroirs games/$roomCode et rooms/$roomCode/state.
+
       await _currentRoomRef!.update(updates);
     } catch (e) {
       debugPrint('[Firebase Sync Error] $e');
@@ -534,7 +501,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
           ? (updates['timerSeconds'] is num ? (updates['timerSeconds'] as num).toInt() : state.room!.timerSeconds)
           : state.room!.timerSeconds;
 
-      // Appliquer les mises à jour directes sur les joueurs (isAlive, role, isCaptain, etc.)
       final updatedPlayers = Map<String, PlayerModel>.from(state.room!.players);
       if (isPhaseChanging) {
         for (final pid in updatedPlayers.keys) {
@@ -693,8 +659,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     }
   }
 
-  /// Méthode utilitaire d'écriture multi-path atomique sur rooms/$roomCode
-  /// pour les opérations hors-_syncState (join, leave, status).
   Future<void> _updateRoomState(
     String roomCode,
     Map<String, dynamic> updates,
@@ -706,7 +670,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     }
   }
 
-  /// Créer un salon de jeu
   Future<bool> createRoom() async {
     DeathRegistryService.instance.clearForNewGame();
     state = state.copyWith(isLoading: true, errorMessage: null);
@@ -774,7 +737,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     }
   }
 
-  /// Rejoindre un salon
   Future<bool> joinRoom(String code) async {
     final cleanCode = code.trim().toUpperCase();
     if (cleanCode.isEmpty) {
@@ -804,8 +766,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       final data = snapshot.value as Map<dynamic, dynamic>;
       final room = GameRoom.fromMap(data, cleanCode, state.currentUserId);
 
-      // --- 4. ENTRÉE UNIQUE PAR JOUEUR DANS LE SALON (ANTI-DOUBLON & RECONNEXION) ---
-      // Vérification de l'identifiant unique (userId) dans la table de hachage des joueurs
       final existingPlayer = room.players[state.currentUserId] ??
           room.playerList.cast<PlayerModel?>().firstWhere(
                 (p) => p != null && p.id == state.currentUserId,
@@ -816,7 +776,7 @@ class GameNotifier extends StateNotifier<LupusGameState> {
           'sock_${state.currentUserId}_${DateTime.now().millisecondsSinceEpoch}';
 
       if (existingPlayer != null) {
-        // Enregistre tous les morts connus du salon dans le registre de cimetière
+
         for (final p in room.playerList) {
           if (!p.isAlive) {
             DeathRegistryService.instance.markDead(p.id);
@@ -829,8 +789,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
           DeathRegistryService.instance.markDead(state.currentUserId);
         }
 
-        // JOUEUR DÉJÀ EXISTANT : RECONNEXION & REMPLACEMENT DU SOCKET
-        // Conserve le rôle, le statut de vie et les privilèges du joueur sans dupliquer son entrée
         final updatedPlayer = existingPlayer.copyWith(
           agoraUid: state.agoraUid,
           socketId: currentSocketId,
@@ -858,7 +816,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
           'logs': updatedLogs,
         };
 
-        // ── Écriture atomique unique par clés feuilles (préserve isAlive, rôles et états) ──
         await _updateRoomState(cleanCode, leafPlayerUpdates);
 
         try {
@@ -886,7 +843,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
         return true;
       }
 
-      // NOUVEAU JOUEUR TENTANT D'ENTRER DANS LE SALON
       if (room.phase != GamePhase.lobby) {
         state = state.copyWith(
           isLoading: false,
@@ -924,7 +880,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
         '${state.currentUserName} a rejoint le village.',
       ];
 
-      // ── Écriture atomique unique (joueur + logs) : rooms/$cleanCode ──
       await _updateRoomState(cleanCode, {
         'players/${state.currentUserId}': playerMap,
         'logs': updatedLogs,
@@ -1128,7 +1083,7 @@ class GameNotifier extends StateNotifier<LupusGameState> {
   }
 
   Future<void> updateRolePool(String roleId, int delta) async {
-    // Le Maire est un titre électif par vote, strictement interdit dans le pool de cartes
+
     if (roleId == GameRole.mayor.id || roleId == 'mayor') return;
     if (!state.isHost || _currentRoomRef == null || state.room == null) return;
 
@@ -1153,7 +1108,7 @@ class GameNotifier extends StateNotifier<LupusGameState> {
 
     final roomCode = state.room!.roomCode;
     try {
-      // ── Écriture atomique unique : rooms/$roomCode/rolePool ──
+
       await _updateRoomState(roomCode, {'rolePool': currentPool});
     } catch (e) {
       debugPrint('[Firebase RolePool Sync Error] $e');
@@ -1198,12 +1153,11 @@ class GameNotifier extends StateNotifier<LupusGameState> {
 
     final secureRandom = Random.secure();
     flatRoles.shuffle(secureRandom);
-    flatRoles.shuffle(secureRandom); // Double brassage cryptographique pour aléatoire 100% garanti
+    flatRoles.shuffle(secureRandom);
 
     final shuffledPlayers = List<PlayerModel>.from(playersList)
       ..shuffle(secureRandom);
 
-    // Distribution des sièges à la table 100% aléatoire à chaque partie
     final seatingOrder = shuffledPlayers.map((p) => p.id).toList()
       ..shuffle(secureRandom);
 
@@ -1277,7 +1231,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       debugPrint('[Firebase Secret Roles Error] $e');
     }
 
-    // Ordre : Voleur -> Cupidon -> Salvateur -> Loups -> Voyante -> Sorcière
     final assignedRoleIds = flatRoles.map((r) => r.id).toSet();
     GamePhase firstPhase;
     if (assignedRoleIds.contains('thief') ||
@@ -1337,10 +1290,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     );
   }
 
-  // ===========================================================================
-  // 1. CYCLE DE JEU : ALTERNANCE NUIT / JOUR
-  // ===========================================================================
-
   Future<void> processNightTransitions() async {
     if (state.room == null) return;
     if (_isTransitioningPhase) {
@@ -1363,7 +1312,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
         realRoles: realRoles,
       );
 
-      // GARDE MONOTONE STRICT : Interdiction absolue de reculer dans l'ordre des phases nocturnes
       if (current.isNight && next.isNight && next.nightOrderIndex <= current.nightOrderIndex) {
         debugPrint(
           '[processNightTransitions] Violation de monotonie nocturne : tentative de passer de $current (${current.nightOrderIndex}) à $next (${next.nightOrderIndex}) - Transition annulée.',
@@ -1383,7 +1331,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
           'logs': logs,
         };
 
-        // Entrée dans le tour des loups : réinitialisation stricte des choix stratégiques de la meute
         if (next == GamePhase.nightWerewolves) {
           updates['nightVictimId'] = null;
           updates['blackWolfTargetId'] = null;
@@ -1391,7 +1338,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
           updates['public_state/blackWolfTargetId'] = null;
         }
 
-        // Si Cupidon termine sa phase sans choix, lier d'office 2 survivants aléatoires
         if (current == GamePhase.nightCupid) {
           final hasLovers = room.playerList.any((p) => p.isLover);
           if (!hasLovers) {
@@ -1409,7 +1355,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
           }
         }
 
-        // Si les loups terminent leur phase, calculer et fixer leur cible pour la Voyante et la Sorcière
         if (current == GamePhase.nightWerewolves) {
           String? wolfVictimId = _tallyWerewolfVotes(realRoles) ?? room.nightVictimId;
           if (wolfVictimId != null && (room.players[wolfVictimId]?.isAlive != true || DeathRegistryService.instance.isDead(wolfVictimId))) {
@@ -1430,10 +1375,9 @@ class GameNotifier extends StateNotifier<LupusGameState> {
           if (wolfVictimId != null) {
             updates['nightVictimId'] = wolfVictimId;
             updates['public_state/nightVictimId'] = wolfVictimId;
-            // CONFIDENTIALITÉ STRICTE : Ne JAMAIS divulguer l'identité de la victime dans le journal public avant l'Aube !
+
           }
 
-          // Double action obligatoire : s'assurer qu'une cible de silence est définie
           String? currentSilenceId = room.blackWolfTargetId;
           if (currentSilenceId != null && (room.players[currentSilenceId]?.isAlive != true || DeathRegistryService.instance.isDead(currentSilenceId))) {
             currentSilenceId = null;
@@ -1448,12 +1392,11 @@ class GameNotifier extends StateNotifier<LupusGameState> {
                   silenceCandidates[Random().nextInt(silenceCandidates.length)];
               updates['blackWolfTargetId'] = autoSilenceTarget.id;
               updates['public_state/blackWolfTargetId'] = autoSilenceTarget.id;
-              // CONFIDENTIALITÉ STRICTE : Ne JAMAIS divulguer la cible du silence dans le journal public avant l'Aube !
+
             }
           }
         }
 
-        // Nettoyage systématique des votes lors de chaque transition
         _resetAllVotes(updates);
 
         await _syncState(updates);
@@ -1468,10 +1411,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     }
   }
 
-  /// Séquence canonique stricte des nuits :
-  /// 1: Voleur (Nuit 1) -> 2: Cupidon (Nuit 1) -> 3: Salvateur -> 4: Loups-Garous ->
-  /// 5: Loup Noir -> 6: Loup Blanc (Paires) -> 7: Voyante -> 8: Renard -> 9: Sorcière ->
-  /// 10: Joueur de Flûte -> 11: Pyromane -> 12: Aube
   GamePhase _getNextNightPhase({
     required GamePhase current,
     required int round,
@@ -1503,7 +1442,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       final logs = List<String>.from(room.logs);
       final List<String> effectiveDeaths = [];
 
-      // 1. Victime des Loups
       final wolfVictimId = room.nightVictimId ?? state.room?.nightVictimId ?? _tallyWerewolfVotes();
       if (wolfVictimId != null) {
         final isProtected = room.currentProtectedPlayerId == wolfVictimId;
@@ -1516,7 +1454,7 @@ class GameNotifier extends StateNotifier<LupusGameState> {
         } else if (isHealed) {
           logs.add('✨ Une potion de guérison miraculeuse a sauvé la victime !');
         } else if (room.infectedPlayerId == wolfVictimId && !room.vileFatherInfectionUsed) {
-          // L'Infect Père des Loups corrompt la victime au lieu de la tuer !
+
           updates['players/$wolfVictimId/isInfected'] = true;
           updates['vileFatherInfectionUsed'] = true;
           updates['infectedPlayerId'] = null;
@@ -1545,14 +1483,12 @@ class GameNotifier extends StateNotifier<LupusGameState> {
         }
       }
 
-      // 2. Victime du poison
       final poisonVictimId = room.witchPoisonVictimId ?? state.room?.witchPoisonVictimId;
       if (poisonVictimId != null &&
           !effectiveDeaths.contains(poisonVictimId)) {
         effectiveDeaths.add(poisonVictimId);
       }
 
-      // 2b. Pyromane
       if (room.pyromaniacIgnited) {
         int burnedCount = 0;
         for (final p in room.alivePlayers) {
@@ -1572,7 +1508,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
         updates['pyromaniacIgnited'] = false;
       }
 
-      // 2c. Victime du Loup-Garou Blanc
       final whiteWolfTargetId = room.expandedRolesState.whiteWolfTargetId;
       if (whiteWolfTargetId != null &&
           whiteWolfTargetId.isNotEmpty &&
@@ -1583,7 +1518,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
         updates['expandedRolesState'] = room.expandedRolesState.copyWith(whiteWolfTargetId: '').toMap();
       }
 
-      // 2d. Petite Fille surprise les yeux ouverts par la meute
       final caughtLittleGirlId = room.expandedRolesState.littleGirlCaughtId;
       if (caughtLittleGirlId != null &&
           caughtLittleGirlId.isNotEmpty &&
@@ -1598,7 +1532,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
             .toMap();
       }
 
-      // 3. Morts et Chagrin des Amoureux
       final allDeaths = <String>{...effectiveDeaths};
       for (final deadId in effectiveDeaths) {
         final partnerDead = handleLoverDeath(deadId, room.players, logs);
@@ -1656,7 +1589,7 @@ class GameNotifier extends StateNotifier<LupusGameState> {
 
       if (allDeaths.isEmpty) {
         logs.add(
-          '🌅 L\'aube se lève sur Thiercelieux... Aucun mort n\'est à déplorer cette nuit !',
+          '🌅 L\'aube se lève sur Le Village... Aucun mort n\'est à déplorer cette nuit !',
         );
       } else {
         logs.add(
@@ -1664,7 +1597,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
         );
       }
 
-      // 2c. Loup Noir : Réduire au silence pour toute la durée de la journée
       if (room.blackWolfTargetId != null) {
         final silencedId = room.blackWolfTargetId!;
         final silencedPlayer = room.players[silencedId];
@@ -1690,7 +1622,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
 
       final realRoles = await _resolveRealRoles(room);
 
-      // Montreur d'Ours : grogne à l'aube si un loup est adjacent
       final bearTamer = room.alivePlayers.cast<PlayerModel?>().firstWhere(
             (p) => p != null && (realRoles[p.id] ?? p.role) == GameRole.bearTamer,
             orElse: () => null,
@@ -1709,7 +1640,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
         }
       }
 
-      // Chevalier à l'Épée Rouillée : contamination du loup à gauche
       for (final id in allDeaths) {
         final r = realRoles[id] ?? room.players[id]?.role;
         if (r == GameRole.knightRustySword) {
@@ -1730,7 +1660,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
         }
       }
 
-      // Chevalier à l'Épée Rouillée : résolution de la mort différée du loup contaminé
       final contaminatedWolfId = room.expandedRolesState.rustyKnightContaminatedWolfId;
       final deathNight = room.expandedRolesState.rustyKnightDeathNight;
       if (contaminatedWolfId != null && deathNight != null && room.round >= deathNight) {
@@ -1746,7 +1675,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
         }
       }
 
-      // Enfant Sauvage : transformation si son modèle périt cette nuit
       final wildModelId = room.expandedRolesState.wildChildModelId;
       if (wildModelId != null && allDeaths.contains(wildModelId)) {
         final wildChild = room.alivePlayers.cast<PlayerModel?>().firstWhere(
@@ -1759,7 +1687,7 @@ class GameNotifier extends StateNotifier<LupusGameState> {
           updates['expandedRolesState'] = room.expandedRolesState.copyWith(wildChildTransformed: true).toMap();
         }
       }
-      // Chiot de Loup : double meurtre pour la meute la nuit prochaine s'il périt
+
       for (final id in allDeaths) {
         final r = realRoles[id] ?? room.players[id]?.role;
         if (r == GameRole.wolfCub) {
@@ -1783,7 +1711,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       updates['morningVictims'] = allDeaths.toList();
       _resetAllVotes(updates);
 
-      // ── DÉCLENCHEMENT SYNCHRONE APRÈS LES MORTS DE LA NUIT (RÉSOLUTION DE L'AUBE) ──
       final simulatedRoom = room.copyWith(
         players: room.players.map(
           (k, v) => MapEntry(k, allDeaths.contains(k) ? v.copyWith(isAlive: false) : v),
@@ -1798,7 +1725,7 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       );
 
       if (isGameOver) {
-        // Interruption immédiate : victoire proclamée instantanément, aucune sous-phase superflue
+
         return;
       }
 
@@ -1877,7 +1804,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
   ) {
     _cancelPhaseTimer();
 
-    // GARDE ABSOLU : Si une condition de victoire est atteinte, fin de partie immédiate sans sous-phase
     final win = checkWinConditions(room);
     if (win != null) {
       updates['phase'] = GamePhase.gameOver.name;
@@ -1937,10 +1863,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       }
     }
   }
-
-  // ===========================================================================
-  // C. PHASE DIURNE (DÉBAT & VOTE)
-  // ===========================================================================
 
   Future<void> concludeMayorSpeechOpening() async {
     if (state.room == null) return;
@@ -2038,7 +1960,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       queue.removeAt(0);
     }
 
-    // SAUT AUTOMATIQUE SI LE JOUEUR EST RÉDUIT AU SILENCE (isMuted)
     while (queue.isNotEmpty && (room.players[queue.first]?.isMuted ?? false)) {
       final mutedId = queue.removeAt(0);
       final mutedName = room.players[mutedId]?.name ?? 'Un citoyen';
@@ -2082,7 +2003,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
 
   Future<void> passDebate() => passTurnDebate();
 
-  /// Clôture immédiate du débat et bascule autoritaire sur le vote du village (JOUR_VOTE / dayVoting)
   Future<void> endDebateAndOpenVote() async {
     if (state.room == null) return;
     final room = state.room!;
@@ -2152,9 +2072,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     final livingCount = room.alivePlayers.length;
     final mayorId = room.captainId ?? room.expandedRolesState.mayorPlayerId;
 
-    // ── LECTURE AUTORITAIRE DIRECTE DE LA TABLE DES VOTES SUR FIREBASE ──
-    // Élimine toute race condition où un vote concurrent validé sur le réseau n'a pas
-    // encore été traité par le flux asynchrone local.
     final liveVotes = <String, String>{};
     try {
       final snap = await _currentRoomRef?.child('votes').get();
@@ -2169,7 +2086,7 @@ class GameNotifier extends StateNotifier<LupusGameState> {
 
     final voteTally = <String, int>{};
     for (final voter in room.alivePlayers) {
-      // Priorité au snapshot direct Firebase, sinon fallback sur l'état local
+
       final target = liveVotes[voter.id] ?? voter.targetVoteId;
       if (target != null) {
         final weight = _phaseCoordinator.getVoteWeight(
@@ -2181,7 +2098,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       }
     }
 
-    // 1. Bonus de 2 voix du Corbeau
     final crowTarget = room.expandedRolesState.crowTargetId;
     if (crowTarget != null && room.players[crowTarget]?.isAlive == true) {
       voteTally[crowTarget] = (voteTally[crowTarget] ?? 0) + 2;
@@ -2213,7 +2129,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       '⚖️ Égalité parfaite au scrutin (${topCandidates.length} accusés à $maxVotes voix) !',
     );
 
-    // 2. Sacrifice canonique du Bouc Émissaire en cas d'égalité
     final scapegoat = room.alivePlayers.cast<PlayerModel?>().firstWhere(
           (p) => p != null && p.role == GameRole.scapegoat,
           orElse: () => null,
@@ -2395,17 +2310,15 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       ?deadPartnerId,
     };
 
-    // Ancien : Déchéance des pouvoirs si exécuté par le village
     if (ExpandedRolesCoordinator.checkElderDeathConsequences(
       killedPlayerId: condemnedId,
       killedRole: condemnedRealRole,
       eliminationSource: 'vote',
     )) {
-      logs.add('📜 Malédiction de l\'Ancien : Condamné par le village, l\'Ancien maudit Thiercelieux ! Tous les villageois perdent leurs pouvoirs.');
+      logs.add('📜 Malédiction de l\'Ancien : Condamné par le village, l\'Ancien maudit Le Village ! Tous les villageois perdent leurs pouvoirs.');
       updates['expandedRolesState'] = room.expandedRolesState.copyWith(ancientPowerLost: true).toMap();
     }
 
-    // Enfant Sauvage : transformation en loup si son modèle périt
     final wildModelId = room.expandedRolesState.wildChildModelId;
     if (wildModelId != null && allDeaths.contains(wildModelId)) {
       final wildChild = room.alivePlayers.cast<PlayerModel?>().firstWhere(
@@ -2419,7 +2332,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       }
     }
 
-    // Chiot de Loup : double meurtre pour la meute la nuit prochaine s'il est lynché
     if (condemnedRealRole == GameRole.wolfCub) {
       logs.add('🐺 Le Chiot de Loup a été lynché par le village ! La meute enragée dévorera deux victimes la nuit prochaine.');
       updates['expandedRolesState'] = (updates['expandedRolesState'] != null
@@ -2443,7 +2355,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       }
     }
 
-    // ── DÉCLENCHEMENT SYNCHRONE APRÈS L'ÉLIMINATION DU VOTE DIURNE (BÛCHER) ──
     final simulatedRoom = room.copyWith(
       players: room.players.map(
         (k, v) =>
@@ -2459,7 +2370,7 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     );
 
     if (isGameOver) {
-      // Interruption immédiate : fin de partie proclamée, aucune sous-phase superflue
+
       return;
     }
 
@@ -2516,12 +2427,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     _resetAllVotes(updates);
   }
 
-  // ===========================================================================
-  // 2. CONDITIONS D'ARRÊT ET DÉCLARATION DE VICTOIRE
-  // ===========================================================================
-
-  /// Résout les rôles réels (authentiques) de tous les joueurs de la salle,
-  /// que la salle soit en production (chiffrée/masquée) ou en mode test.
   Future<Map<String, GameRole>> _resolveRealRoles(GameRoom room) async {
     final roles = <String, GameRole>{};
 
@@ -2588,7 +2493,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       return p.resolveRealRole(room.roomCode);
     }
 
-    // 1. Victoire Absolue des Amoureux : les deux derniers survivants sont en couple
     if (alive.length == 2) {
       final p1 = alive[0];
       final p2 = alive[1];
@@ -2597,7 +2501,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       }
     }
 
-    // 2. Victoire Solitaire : Joueur de Flûte (tous les autres vivants sont charmés)
     final piper = alive.cast<PlayerModel?>().firstWhere(
           (p) => p != null && getRole(p) == GameRole.piedPiper,
           orElse: () => null,
@@ -2609,7 +2512,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       }
     }
 
-    // 2b. Victoire Solitaire : Abominable Sectaire (éradication du clan adverse)
     final sectarian = alive.cast<PlayerModel?>().firstWhere(
           (p) => p != null && getRole(p) == GameRole.sectLeader,
           orElse: () => null,
@@ -2625,7 +2527,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       }
     }
 
-    // 3. Victoires Solitaires au Dernier Survivant (Loup Blanc ou Pyromane)
     if (alive.length == 1) {
       final survivor = alive.first;
       final role = getRole(survivor);
@@ -2636,17 +2537,14 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       return 'village';
     }
 
-    // 4. Décompte des camps avec les vrais rôles (y compris les infectés)
     final aliveWolves = alive.where((p) => getRole(p).isEvil || p.isInfected).length;
     final aliveVillagers = alive.where((p) => !getRole(p).isEvil && !p.isInfected).length;
 
-    // Rôles solitaires hostiles pouvant encore l'emporter seuls
     final hasHostileSolo = alive.any((p) {
       final r = getRole(p);
       return r == GameRole.pyromaniac || r == GameRole.whiteWerewolf;
     });
 
-    // Détection d'un couple mixte encore en vie (un loup et un villageois)
     final hasLivingMixedCouple = alive.any((p) {
       if (!p.isLover || p.loverId == null) return false;
       final partner = room.players[p.loverId!];
@@ -2658,11 +2556,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       return pIsWolf != partnerIsWolf;
     });
 
-    // Condition canonique de victoire des Loups :
-    // - Au moins un loup en vie (aliveWolves > 0)
-    // - Parité ou supériorité numérique atteinte face aux villageois (aliveWolves >= aliveVillagers)
-    // - Aucun rôle solitaire hostile (Loup Blanc, Pyromane) en vie
-    // - Aucun couple mixte encore en vie (sinon le couple mixte peut encore l'emporter)
     final bool wolvesWon = (aliveWolves > 0) &&
         (aliveWolves >= aliveVillagers) &&
         !hasHostileSolo &&
@@ -2672,16 +2565,12 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       return 'werewolves';
     }
 
-    // Condition canonique de victoire du Village :
-    // - Tous les loups sont éliminés (aliveWolves == 0)
-    // - Aucun rôle solitaire hostile en vie
     if (aliveWolves == 0) {
       if (!hasHostileSolo) {
         return 'village';
       }
     }
 
-    // La partie continue (nuit ou jour suivant)
     return null;
   }
 
@@ -2713,8 +2602,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     }
   }
 
-  /// Évaluation synchrone des conditions de victoire et interruption immédiate du jeu en cas de victoire.
-  /// Stoppe instantanément le flux de la partie (purge des timers, annonce de la victoire et fin de cycle).
   Future<bool> evaluateVictoryConditions({
     required GameRoom room,
     required Map<String, dynamic> updates,
@@ -2740,7 +2627,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     return false;
   }
 
-  /// Alias conforme à la spécification checkGameEnd
   Future<bool> checkGameEnd({
     required GameRoom room,
     required Map<String, dynamic> updates,
@@ -2752,10 +2638,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     logs: logs,
     realRoles: realRoles,
   );
-
-  // ===========================================================================
-  // POUVOIRS ET ACTIONS SPÉCIFIQUES DES JOUEURS
-  // ===========================================================================
 
   Future<void> thiefSteal(String targetPlayerId) async {
     final bool canAct = state.myRole == GameRole.thief ||
@@ -2770,7 +2652,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     final roomCode = state.room?.roomCode;
     if (roomCode == null) return;
 
-    // Détermination de l'ID effectif du voleur
     String thiefId = state.effectiveUserId;
     if (state.myRole != GameRole.thief && state.myRole != GameRole.thiefOfHearts) {
       final t = state.room?.alivePlayers.cast<PlayerModel?>().firstWhere(
@@ -2784,7 +2665,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     final thiefRole = thiefPlayer?.role ?? state.myRole;
     final isSoulStealer = thiefRole == GameRole.thiefOfHearts || state.myRole == GameRole.thiefOfHearts;
 
-    // Résolution du rôle authentique de la cible (démasquage live et dev)
     GameRole stolenRole = target.role;
     if (stolenRole == GameRole.simpleVillager || target.encryptedRole != null) {
       if (target.encryptedRole != null && target.encryptedRole!.isNotEmpty) {
@@ -2805,7 +2685,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       } catch (_) {}
     }
 
-    // Exécution du handler métier
     final inMemoryState = GameState(
       currentTurn: state.room?.round ?? 1,
       currentPhase: state.room?.phase ?? GamePhase.nightThief,
@@ -2850,7 +2729,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       ],
     };
 
-    // Attribution des charges de pouvoir si applicable
     final totalJoueurs = state.room?.players.length ?? 8;
     final maxPotions = max(1, totalJoueurs ~/ 10);
     final maxVisions = totalJoueurs <= 4
@@ -2872,7 +2750,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       updates['players/$thiefId/visionsRestantes'] = stolenVisions;
     }
 
-    // Gestion de la meute de loups
     final allAlive = state.room?.alivePlayers ?? [];
     final wolfIds = allAlive
         .where((p) =>
@@ -2891,7 +2768,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
 
     await _syncState(updates);
 
-    // CRUCIAL : Mise à jour des rôles secrets dans Firebase RTDB
     try {
       await Future.wait([
         _database
@@ -2911,7 +2787,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       debugPrint('[Thief Steal secret_roles error] $e');
     }
 
-    // Mise à jour optimiste du state local
     if (state.room != null) {
       final curPlayers = Map<String, PlayerModel>.from(state.room!.players);
       if (curPlayers.containsKey(thiefId)) {
@@ -2967,7 +2842,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     final thiefRole = thiefPlayer?.role ?? state.myRole;
     final isSoulStealer = thiefRole == GameRole.thiefOfHearts || state.myRole == GameRole.thiefOfHearts;
 
-    // Dispatch métier via handler
     final inMemoryState = GameState(
       currentTurn: state.room?.round ?? 1,
       currentPhase: state.room?.phase ?? GamePhase.nightThief,
@@ -3041,7 +2915,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       ]);
     } catch (_) {}
 
-    // Mise à jour optimiste du state local
     if (state.room != null) {
       final curPlayers = Map<String, PlayerModel>.from(state.room!.players);
       if (curPlayers.containsKey(thiefId)) {
@@ -3138,7 +3011,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       infectedPlayerId: room.expandedRolesState.infectedPlayerId ?? room.infectedPlayerId,
     );
 
-    // Mémorisation locale immédiate pour le Renard (Fog of War asymétrique)
     state = state.copyWith(
       foxSniffedPlayerIds: trio,
       foxWolfDetected: hasWolf,
@@ -3179,7 +3051,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     updates['logs'] = logs;
     await _syncState(updates);
 
-    // Délai de 2.5 secondes pour permettre l'observation visuelle immédiate sur la table avant transition
     await Future.delayed(const Duration(milliseconds: 2500));
     await processNightTransitions();
     return hasWolf;
@@ -3556,7 +3427,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     await processNightTransitions();
   }
 
-  /// Pouvoir de silence des loups : durant la nuit, sélectionne un joueur vivant pour le réduire au silence
   Future<bool> blackWolfSilence(String targetPlayerId) => werewolfSilence(targetPlayerId);
 
   Future<bool> defenderProtect(String targetPlayerId) async {
@@ -3599,9 +3469,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     return true;
   }
 
-  /// Fonction d'inspection du rôle de la Voyante :
-  /// Si le joueur ciblé possède le rôle Loup Blanc (loupBlanc / whiteWerewolf),
-  /// la fonction retourne Simple Villageois (simpleVillageois / simpleVillager) au lieu de son vrai rôle.
   static GameRole getSeerPerceivedRole(GameRole actualRole) {
     if (actualRole == GameRole.whiteWerewolf) {
       return GameRole.simpleVillager;
@@ -3614,7 +3481,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     final target = state.room?.players[targetId];
     if (target == null) return null;
 
-    // Résolution du vrai rôle depuis Firebase (rôle chiffré ou devMode)
     GameRole discoveredRole = target.role;
     final roomCode = state.room?.roomCode;
     if (roomCode != null) {
@@ -3630,11 +3496,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       }
     }
 
-    // ═══════════════════════════════════════════════════════════════
-    // RÈGLE CANONIQUE : Masquage absolu du Loup Blanc pour la Voyante.
-    // Le Loup Blanc apparaît systématiquement comme un Simple Villageois
-    // aux yeux de la Voyante — il est invisible aux deux camps.
-    // ═══════════════════════════════════════════════════════════════
     final inspectedRole = (discoveredRole == GameRole.whiteWerewolf)
         ? GameRole.simpleVillager
         : discoveredRole;
@@ -3642,7 +3503,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     final updatedMap = Map<String, GameRole>.from(state.seerInspectedRoles);
     updatedMap[targetId] = inspectedRole;
 
-    // Récupération de la Voyante et de son quota de visions restantes
     final seerPlayer = state.room?.playerList.cast<PlayerModel?>().firstWhere(
       (p) => p != null && (p.role == GameRole.seer || p.roleInitial == GameRole.seer),
       orElse: () => state.currentPlayer,
@@ -3650,11 +3510,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     final seerId = seerPlayer?.id ?? state.currentUserId;
     final curVisions = seerPlayer?.visionsRestantes ?? 1;
 
-    // ═══════════════════════════════════════════════════════════════
-    // RÈGLE CANONIQUE : Quota de visions scalant par nombre de joueurs
-    // ≤4j → 1  |  5-9j → 2  |  10-14j → 3  |  ≥15j → N÷4
-    // Si le quota est épuisé, la Voyante ne peut plus inspecter.
-    // ═══════════════════════════════════════════════════════════════
     if (curVisions <= 0 && !state.isAdmin) {
       debugPrint('[inspectPlayer] Quota de visions épuisé — inspection refusée.');
       return null;
@@ -3755,7 +3610,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     await _currentRoomRef!.update(voteUpdates);
   }
 
-  /// Intimidation nocturne de la meute : Faire taire un joueur pour toute la journée du lendemain
   Future<bool> werewolfSilence(String targetPlayerId) async {
     if ((!state.myRole.isEvil && !state.isAdmin) || _currentRoomRef == null) {
       return false;
@@ -3764,7 +3618,7 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     if (target == null || !target.isAlive || DeathRegistryService.instance.isDead(targetPlayerId)) {
       return false;
     }
-    // Interdiction de cibler la proie déjà dévorée de la nuit (inutile de bâillonner un mort)
+
     final rawVictimId = state.room?.nightVictimId ?? _tallyWerewolfVotes();
     final victim = rawVictimId != null ? state.room?.players[rawVictimId] : null;
     final currentVictimId = (victim != null && victim.isAlive && !DeathRegistryService.instance.isDead(victim.id)) ? rawVictimId : null;
@@ -3772,7 +3626,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       return false;
     }
 
-    // Enregistrement confidentiel du sortilège de silence (divulgué publiquement à l'Aube)
     if (state.room != null) {
       final inMemoryState = GameState(
         currentTurn: state.room!.round,
@@ -3810,10 +3663,10 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     }
     final wolfVictimId = state.room!.nightVictimId ?? _tallyWerewolfVotes() ?? fallbackTargetId;
     if (wolfVictimId == null) {
-      return; // Aucune cible des loups à sauver
+      return;
     }
     if (state.room!.witchHealed) {
-      return; // Déjà sauvé cette nuit
+      return;
     }
 
     final witchPlayer = state.room!.playerList.cast<PlayerModel?>().firstWhere(
@@ -3824,13 +3677,10 @@ class GameNotifier extends StateNotifier<LupusGameState> {
             state.currentPlayer?.roleInitial == GameRole.witch)
         ? state.effectiveUserId
         : (witchPlayer?.id ?? state.effectiveUserId);
-    // ═══════════════════════════════════════════════════════════════
-    // RÈGLE CANONIQUE : Stock de potions de vie scalant max(1, N÷10).
-    // Initialisé dans startGame(). potionsVie est la source de vérité.
-    // ═══════════════════════════════════════════════════════════════
+
     final curVie = witchPlayer?.potionsVie ?? 0;
     if (curVie <= 0 && !state.isAdmin) {
-      return; // Plus de potion de vie
+      return;
     }
 
     final newVie = max(0, curVie - 1);
@@ -3867,8 +3717,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       ],
     });
 
-    // Auto-advance UNIQUEMENT si aucune autre action n'est possible cette nuit
-    // (ex: si le poison a déjà été utilisé cette nuit, ou si la Sorcière n'a plus de potion de mort, ou si elle est déchue)
     final alreadyPoisoned = state.room?.witchPoisonVictimId != null;
     final canPoison = curMort > 0 && !alreadyPoisoned;
     if (isDechue || !canPoison) {
@@ -3887,10 +3735,10 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     if (targetId.isEmpty) return;
     final target = state.room!.players[targetId];
     if (target == null || !target.isAlive) {
-      return; // Cible invalide ou déjà morte
+      return;
     }
     if (state.room!.witchPoisonVictimId != null) {
-      return; // Déjà empoisonné cette nuit
+      return;
     }
 
     final witchPlayer = state.room!.playerList.cast<PlayerModel?>().firstWhere(
@@ -3902,13 +3750,9 @@ class GameNotifier extends StateNotifier<LupusGameState> {
         ? state.effectiveUserId
         : (witchPlayer?.id ?? state.effectiveUserId);
 
-    // ═══════════════════════════════════════════════════════════════
-    // RÈGLE CANONIQUE : Stock de potions de mort scalant max(1, N÷10).
-    // potionsMort est la source de vérité, initialisé dans startGame().
-    // ═══════════════════════════════════════════════════════════════
     final curMort = witchPlayer?.potionsMort ?? 0;
     if (curMort <= 0 && !state.isAdmin) {
-      return; // Plus de potion de mort
+      return;
     }
 
     final newMort = max(0, curMort - 1);
@@ -3930,7 +3774,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       );
     }
 
-    // La potion de mort marque la cible pour la résolution du matin sans altérer son statut durant la nuit
     await _syncState({
       'witchPoisonVictimId': targetId,
       'players/$witchId/hasUsedPoisonPotion': newMort == 0,
@@ -3944,8 +3787,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       ],
     });
 
-    // Auto-advance UNIQUEMENT si aucune autre action n'est possible cette nuit
-    // (ex: si guérison déjà faite, ou plus de potion de vie, ou pas de victime des loups, ou déchue)
     final alreadyHealed = state.room?.witchHealed == true;
     final wolfVictimId = state.room?.nightVictimId ?? _tallyWerewolfVotes();
     final canHeal = curVie > 0 && !alreadyHealed && wolfVictimId != null;
@@ -4102,7 +3943,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     await _syncState(updates);
   }
 
-  /// Alias officiel conforme à la spécification du Testament du Capitaine
   Future<void> designateCaptainSuccessor(String successorId) =>
       captainPassBadge(successorId);
 
@@ -4128,7 +3968,7 @@ class GameNotifier extends StateNotifier<LupusGameState> {
         isMayorSuccessionPending: false,
       ).toMap(),
     };
-    // Retirer explicitement l'écharpe et le titre du maire défunt
+
     if (room.captainId != null && room.captainId != successorId) {
       updates['players/${room.captainId}/isCaptain'] = false;
     }
@@ -4137,7 +3977,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       updates['players/${room.pendingCaptainId}/isCaptain'] = false;
     }
 
-    // Confirmation explicite et inviolable de l'état de mort pour tous les défunts
     for (final pid in DeathRegistryService.instance.deadPlayerIds) {
       updates['players/$pid/isAlive'] = false;
       updates['cemetery/$pid'] = true;
@@ -4176,7 +4015,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     await _syncState(updates);
   }
 
-  /// Résolution automatique de fin de temps pour le Chasseur (abandon automatique)
   Future<void> autoResolveHunterTimeout() async {
     if (_currentRoomRef == null || state.room == null) return;
     final room = state.room!;
@@ -4216,7 +4054,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     await _syncState(updates);
   }
 
-  /// Résolution automatique de fin de temps pour le Capitaine / Maire (désignation par défaut)
   Future<void> autoResolveCaptainTimeout() async {
     if (_currentRoomRef == null || state.room == null) return;
     final room = state.room!;
@@ -4256,7 +4093,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       );
     }
 
-    // Confirmation explicite et inviolable de l'état de mort pour tous les défunts
     for (final pid in DeathRegistryService.instance.deadPlayerIds) {
       updates['players/$pid/isAlive'] = false;
       updates['cemetery/$pid'] = true;
@@ -4297,7 +4133,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     if (!state.isHost || state.room == null) return;
     final room = state.room!;
 
-    // ── LECTURE AUTORITAIRE DIRECTE DES VOTES D'ÉLECTION SUR FIREBASE ──
     final liveElectionVotes = <String, String>{};
     try {
       final snap = await _currentRoomRef?.child('votes').get();
@@ -4333,7 +4168,7 @@ class GameNotifier extends StateNotifier<LupusGameState> {
         isMayorElected: true,
       ).toMap(),
     };
-    // Confirmation explicite et inviolable de l'état de mort pour tous les défunts
+
     for (final pid in DeathRegistryService.instance.deadPlayerIds) {
       updates['players/$pid/isAlive'] = false;
       updates['cemetery/$pid'] = true;
@@ -4351,7 +4186,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
 
     _resetAllVotes(updates);
 
-    // Après l'élection : Prise de parole solennelle d'ouverture du Maire (15s)
     updates['phase'] = GamePhase.mayorSpeechOpening.name;
     updates['currentSpeakerId'] = winnerId;
     updates['timerSeconds'] = 15;
@@ -4450,7 +4284,7 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       } else if (phase == GamePhase.mayorSpeechClosing) {
         await concludeMayorSpeechClosing();
       } else if (phase == GamePhase.dayDebate) {
-        // Expiration du temps de parole de l'orateur en cours (bot ou humain) : avancement au prochain tour ou clôture vers le vote
+
         await passTurnDebate();
       } else if (phase == GamePhase.dayVoting ||
           phase == GamePhase.dayTieBreakVote) {
@@ -4497,8 +4331,7 @@ class GameNotifier extends StateNotifier<LupusGameState> {
             '🌑 La nuit $nextRound recouvre le village. Les habitants s\'endorment.',
           ],
         };
-        // Rétablir la parole pour les joueurs réduits au silence par le Loup Noir
-        // et réinitialiser les marqueurs éphémères de flairage du Renard du cycle précédent
+
         for (final p in state.room!.players.values) {
           if (p.isMuted) {
             updates['players/${p.id}/isMuted'] = false;
@@ -4516,10 +4349,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       _isTransitioningPhase = false;
     }
   }
-
-  // ===========================================================================
-  // UTILITAIRES ET INTÉGRATION VOCALE AGORA
-  // ===========================================================================
 
   String? _tallyWerewolfVotes([Map<String, GameRole>? realRoles]) {
     if (state.room == null) return null;
@@ -4545,14 +4374,13 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       updates['votes/${p.id}'] = null;
     }
     updates['votes'] = null;
-    // Réinitialisation des sélections et cibles stratégiques éphémères
+
     updates['seerInspectedTargetId'] = null;
     updates['seerInspectedRole'] = null;
     updates['public_state/seerInspectedTargetId'] = null;
     updates['public_state/seerInspectedRole'] = null;
   }
 
-  /// Met à jour la présence et le statut audio sans impacter l'état global du jeu
   Future<void> updatePresence({
     bool? isOnline,
     bool? isMuted,
@@ -4574,9 +4402,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     } catch (_) {}
   }
 
-  /// Vérifie et déclenche l'anticipation instantanée (Fast-Track Quorum)
-  /// Dès que tous les acteurs requis ont validé leur décision / vote,
-  /// court-circuite immédiatement le timer restant sans aucune attente inutile.
   void _checkEarlyResolutionQuorum(GameRoom updatedRoom) {
     if (!state.isHost && !state.isAdmin) return;
     if (_isTransitioningPhase) return;
@@ -4586,7 +4411,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     final votedCount =
         updatedRoom.alivePlayers.where((p) => p.targetVoteId != null).length;
 
-    // 1. Scrutin diurne (Vote ordinaire du village ou Scrutin de ballottage)
     if ((updatedRoom.phase == GamePhase.dayVoting ||
             updatedRoom.phase == GamePhase.dayTieBreakVote) &&
         votedCount >= aliveCount) {
@@ -4595,7 +4419,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       return;
     }
 
-    // 2. Élection solennelle du Capitaine / Maire (Matin Jour 1)
     if ((updatedRoom.phase == GamePhase.captainElection ||
             updatedRoom.phase == GamePhase.mayorElection) &&
         votedCount >= aliveCount) {
@@ -4604,7 +4427,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       return;
     }
 
-    // 3. Nuit des Loups-Garous : tous les loups ont voté + cible de silence prête si loup noir présent
     if (updatedRoom.phase == GamePhase.nightWerewolves) {
       final aliveWolves = updatedRoom.alivePlayers
           .where((p) => p.role.isEvil || p.role == GameRole.whiteWerewolf)
@@ -4625,9 +4447,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     }
   }
 
-  /// Synchronise l'ordonnancement automatique d'expiration de phase pour l'Hôte
-  /// Fonction pure du temps serveur : si le temps restant est nul ou négatif,
-  /// la phase progresse immédiatement sans dépendre de timers UI locaux.
   void _syncPhaseExpirationSchedule(GameRoom room) {
     _phaseExpirationTimer?.cancel();
     _phaseExpirationTimer = null;
@@ -4662,7 +4481,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     }
   }
 
-  /// Fermeture et nettoyage propre de tous les abonnements partitionnés
   void _cancelAllRoomSubscriptions() {
     _cancelPhaseTimer();
     _resolvedDayVoteRounds.clear();
@@ -4695,19 +4513,9 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     _hostIdSubscription = null;
   }
 
-  /// ═══════════════════════════════════════════════════════════════════════════
-  /// ABONNEMENT PARTITIONNÉ (SHARDING D'ÉCOUTE)
-  /// Remplace l'écoute monolithique de la racine par des souscriptions ciblées :
-  /// 1. public_state : phase, timer/endsAt, round, arbitrage
-  /// 2. players : rôles publics, vie, sièges
-  /// 3. votes : table dynamique des votes
-  /// 4. presence : statut vocal, volume micro, connectivité
-  /// 5. logs : historique textuel
-  /// ═══════════════════════════════════════════════════════════════════════════
   void _subscribeToRoom(String roomCode) {
     _cancelAllRoomSubscriptions();
 
-    // 1. Chargement initial complet de la salle
     _currentRoomRef?.get().then((snap) {
       if (snap.exists && snap.value != null) {
         final data = snap.value as Map<dynamic, dynamic>;
@@ -4721,7 +4529,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       debugPrint('[Initial Room Fetch Error] $e');
     });
 
-    // 2. ── SOUSCRIPTION GRANULAIRE : public_state ──
     _publicStateSubscription = _currentRoomRef
         ?.child('public_state')
         .onValue
@@ -4738,7 +4545,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       final currentPhase = state.room!.phase;
       final incomingRound = data['round'] is int ? data['round'] as int : currentRound;
 
-      // GARDE MONOTONE STRICT 1 : Rejet systématique des tours antérieurs
       if (incomingRound < currentRound) {
         debugPrint(
           '⛔ [Anti-Rollback public_state] Tour antérieur ignoré : $incomingRound < $currentRound',
@@ -4746,7 +4552,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
         return;
       }
 
-      // GARDE MONOTONE STRICT 2 : Rejet de timestamp antérieur au sein du même tour
       if (data['phaseStartedAt'] is num) {
         final incomingStartedAt = (data['phaseStartedAt'] as num).toInt();
         if (incomingRound == currentRound &&
@@ -4761,7 +4566,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
         }
       }
 
-      // GARDE MONOTONE STRICT 3 : Empêcher toute régression Nuit -> Jour ou régression de l'ordre nocturne au même tour
       if (incomingRound == currentRound) {
         if (currentPhase.isNight && parsedPhase.isDay) {
           debugPrint(
@@ -4866,14 +4670,13 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       _syncPhaseExpirationSchedule(finalRoom);
     });
 
-    // Écoute dédiée sur currentPhase pour compatibilité temps réel immédiate
     _currentPhaseSubscription =
         _currentRoomRef?.child('currentPhase').onValue.listen((event) {
       final rawPhase = event.snapshot.value?.toString();
       if (rawPhase != null && state.room != null) {
         final parsed = GamePhase.fromString(rawPhase);
         if (state.room!.phase != parsed) {
-          // GARDE MONOTONE STRICT : Empêcher toute régression Nuit -> Jour ou régression nocturne
+
           if (state.room!.phase.isNight && parsed.isDay) {
             debugPrint(
               '⛔ [Anti-Rollback currentPhase] Régression Nuit -> Jour ignorée : ${state.room!.phase.name} -> ${parsed.name}',
@@ -4908,7 +4711,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       }
     });
 
-    // 3. ── SOUSCRIPTION GRANULAIRE : players (profils, vie, rôles publics, sièges) ──
     _playersSubscription =
         _currentRoomRef?.child('players').onValue.listen((event) {
       if (event.snapshot.value == null || state.room == null) return;
@@ -4941,9 +4743,7 @@ class GameNotifier extends StateNotifier<LupusGameState> {
           }
         }
       }
-      // ── VERROU D'IMMORTALITÉ INVERSE (TOMBSTONE LOCAL & ANTI-RÉSURRECTION) ──
-      // Un joueur éliminé (inscrit au DeathRegistryService) ne peut JAMAIS revenir à la vie,
-      // sauf si la Sorcière a utilisé sa potion de vie (witchHealed == true) sur la victime de nuit.
+
       final bool witchHealed = state.room?.witchHealed == true;
       final String? nightVictimId = state.room?.nightVictimId;
 
@@ -4951,21 +4751,19 @@ class GameNotifier extends StateNotifier<LupusGameState> {
         final pid = entry.key;
         var player = entry.value;
 
-        // Exception Sorcière : si la Sorcière a soigné la victime de cette nuit
         if (witchHealed && pid == nightVictimId) {
           DeathRegistryService.instance.allowWitchRevive(pid);
         }
 
-        // Si le joueur est déjà marqué comme mort dans notre registre :
         if (DeathRegistryService.instance.isDead(pid) && !state.isAdmin) {
-          // FORÇAGE : Il RESTE mort, peu importe ce que prétend le snapshot réseau
+
           if (player.isAlive) {
             player = player.copyWith(isAlive: false);
-            // Corriger Firebase en tâche de fond si le serveur était désynchronisé
+
             _fixZombieOnDatabase(pid);
           }
         } else if (!player.isAlive) {
-          // Dès qu'on apprend qu'il est mort, on l'inscrit définitivement au registre
+
           DeathRegistryService.instance.markDead(pid);
         }
 
@@ -4979,7 +4777,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       _checkEarlyResolutionQuorum(updatedRoom);
     });
 
-    // 4. ── SOUSCRIPTION GRANULAIRE : votes (table dynamique des votes du tour) ──
     _votesSubscription =
         _currentRoomRef?.child('votes').onValue.listen((event) {
       if (state.room == null) return;
@@ -4993,7 +4790,7 @@ class GameNotifier extends StateNotifier<LupusGameState> {
         rawVotes.forEach((voterId, targetId) {
           final vid = voterId.toString();
           final tid = targetId?.toString();
-          // Un défunt ne peut en aucun cas voter
+
           if (DeathRegistryService.instance.isDead(vid)) {
             return;
           }
@@ -5013,7 +4810,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       }
     });
 
-    // 4b. ── SOUSCRIPTION GRANULAIRE : cemetery (registre de mort partagé en temps-réel) ──
     _cemeterySubscription =
         _currentRoomRef?.child('cemetery').onValue.listen((event) {
       if (state.room == null) return;
@@ -5027,8 +4823,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       }
     });
 
-    // 5. ── SOUSCRIPTION GRANULAIRE : presence (statut vocal, volume, connectivité) ──
-    // Met à jour la présence de façon isolée SANS re-parser ni reconstruire la salle entière
     _presenceSubscription =
         _currentRoomRef?.child('presence').onValue.listen((event) {
       if (state.room == null) return;
@@ -5060,7 +4854,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       }
     });
 
-    // 6. ── SOUSCRIPTION GRANULAIRE : logs (historique textuel uniquement) ──
     _logsSubscription =
         _currentRoomRef?.child('logs').onValue.listen((event) {
       if (state.room == null) return;
@@ -5074,7 +4867,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       state = state.copyWith(room: state.room!.copyWith(logs: parsedLogs));
     });
 
-    // 7. Écouter son propre rôle secret depuis la source confidentielle
     _secretRoleSubscription = _database
         .ref('rooms/$roomCode/secret_roles/${state.currentUserId}')
         .onValue
@@ -5103,7 +4895,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       }
     });
 
-    // 8. Écouter le canal meute des loups-garous (filtré et déchiffré)
     _wolfPackSubscription = _database
         .ref('rooms/$roomCode/wolf_pack')
         .onValue
@@ -5130,7 +4921,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       }
     });
 
-    // 9. Écouter replay_status_updated
     _replayStatusSubscription = _database
         .ref('rooms/$roomCode/replay_status_updated')
         .onValue
@@ -5146,7 +4936,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
           );
           state = state.copyWith(room: updatedRoom);
 
-          // Seul l'hôte vérifie et déclenche la réinitialisation de partie
           if (state.isHost) {
             _checkReplayQuorum(updatedRoom, roomCode);
           }
@@ -5154,7 +4943,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       }
     });
 
-    // 10. Écouter game_reset_to_lobby
     _gameResetSubscription = _database
         .ref('rooms/$roomCode/game_reset_to_lobby')
         .onValue
@@ -5165,10 +4953,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       }
     });
 
-    // 11. ── SURVEILLANCE DE L'HÔTE (Host-Presence Watchdog) ──
-    // Si l'hôte se déconnecte de façon inattendue (crash, perte réseau),
-    // le premier joueur en ligne par ordre alphabétique de UID prend le relais.
-    // L'idempotence est garantie : seul ce joueur-là exécute l'écriture.
     _hostPresenceSubscription = _database
         .ref('rooms/$roomCode/players')
         .onValue
@@ -5176,17 +4960,13 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       if (state.room == null || _currentRoomRef == null) return;
       final currentRoom = state.room!;
 
-      // Ne déclencher que si l'hôte actuel n'est plus en ligne
       final hostId = currentRoom.hostId;
       final hostPlayer = currentRoom.players[hostId];
       if (hostPlayer == null || hostPlayer.isOnline) return;
 
-      // L'hôte est offline → identifier le successeur
       _triggerHostTransfer(roomCode, hostId, currentRoom);
     });
 
-    // 12. ── SYNCHRONISATION DE L'HÔTE ACTIF (hostId sync) ──
-    // Assure que tous les clients et le nouveau hôte synchronisent leur rôle.
     _hostIdSubscription = _database
         .ref('rooms/$roomCode/hostId')
         .onValue
@@ -5205,31 +4985,26 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     });
   }
 
-  /// Transfère l'hôte au premier joueur online non-hôte (tri UID pour idempotence).
-  /// Cette méthode est appelée par chaque client, mais seul le candidat désigné
-  /// écrit effectivement sur Firebase — les autres détectent l'écart via le snapshot.
   Future<void> _triggerHostTransfer(
     String roomCode,
     String currentHostId,
     GameRoom currentRoom,
   ) async {
-    // Candidats : joueurs online, vivants ou non, sauf l'hôte déconnecté
+
     final candidates = currentRoom.players.values
         .where((p) => p.id != currentHostId && p.isOnline)
         .toList()
-      ..sort((a, b) => a.id.compareTo(b.id)); // Tri déterministe
+      ..sort((a, b) => a.id.compareTo(b.id));
 
     if (candidates.isEmpty) return;
 
     final nextHost = candidates.first;
 
-    // Idempotence : seul le joueur désigné s'auto-sélectionne
     if (nextHost.id != state.currentUserId) return;
 
-    // Vérifier que l'hôte n'a pas déjà été transféré (évite la double écriture)
     try {
       final snap = await _database.ref('rooms/$roomCode/hostId').get();
-      if (snap.value?.toString() != currentHostId) return; // Déjà transféré
+      if (snap.value?.toString() != currentHostId) return;
     } catch (_) {
       return;
     }
@@ -5246,7 +5021,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
         'logs': updatedLogs,
       });
 
-      // Synchronisation locale immédiate pour le nouvel hôte
       final updatedRoom = currentRoom.copyWith(
         hostId: nextHost.id,
         players: {
@@ -5301,7 +5075,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     }
   }
 
-  /// Détermine si un joueur doit avoir son micro coupé selon les règles de la phase en cours.
   static bool calculateShouldMuteForPhase({
     required GamePhase phase,
     required bool isAlive,
@@ -5314,33 +5087,28 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     String? pendingCaptainId,
     String? currentUserId,
   }) {
-    // 0. Si le joueur est un bot, son micro est strictement et invariablement coupé
+
     if (isBot) {
       return true;
     }
 
-    // 1. Lors de la fin de partie (gameOver) : Minute vocale collective (60s)
-    // Tous les joueurs (morts, vivants, ou réduits au silence) peuvent parler tant que la minute n'a pas expiré.
     if (phase == GamePhase.gameOver) {
       return isVictoryVoiceExpired;
     }
 
-    // 2. Morts éliminés du vocal durant la partie
     if (!isAlive) {
       return true;
     }
 
-    // 3. Réduit au silence par le pouvoir du Loup Noir
     if (isSilencedByBlackWolf) {
       return true;
     }
 
-    // 4. Règles spécifiques par phase nocturne / diurne
     if (phase.isNight) {
       if (phase == GamePhase.nightWerewolves) {
-        return !isEvil; // Seuls les loups parlent dans le canal meute
+        return !isEvil;
       }
-      // Toutes les autres sous-phases nocturnes (Voyante, Sorcière, Voleur, Salvateur, Cupidon, etc.) : micro coupé
+
       return true;
     }
 
@@ -5380,10 +5148,9 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     final mainChannel = 'lupus_$roomCode';
     final wolfChannel = 'lupus_${roomCode}_wolves';
 
-    // 1. Joueur éliminé : micro strictement coupé
     if (!me.isAlive && room.phase != GamePhase.gameOver) {
       await _voiceService.setMute(true);
-      // Les morts peuvent écouter les phases de jour mais sont isolés la nuit
+
       if (room.phase.isNight) {
         await _voiceService.muteSpeaker(true);
       } else {
@@ -5404,7 +5171,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       targetChannel = mainChannel;
     }
 
-    // Bascule uniquement si le canal de destination ou la phase a réellement changé
     if (_lastAppliedVoiceChannel != targetChannel || _lastAppliedVoicePhase != room.phase) {
       _lastAppliedVoiceChannel = targetChannel;
       _lastAppliedVoicePhase = room.phase;
@@ -5430,10 +5196,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
 
     await _voiceService.setMute(shouldMute);
 
-    // Contrôle strict du haut-parleur (muteSpeaker / deafen) :
-    // - Nuit des Loups-Garous : seuls les loups et l'espionne (Petite Fille / Admin) écoutent le canal de la meute.
-    // - Autres nuits solitaires (Voyante, Sorcière, etc.) : silence complet pour tous (muteSpeaker = true).
-    // - Phases de jour / Débat / Vote / Aube / GameOver : haut-parleur actif pour tous les survivants (muteSpeaker = false).
     if (room.phase == GamePhase.nightWerewolves) {
       if (isWolf) {
         await _voiceService.muteSpeaker(false);
@@ -5450,10 +5212,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     }
   }
 
-  // ==========================================
-  // --- PANNEAU MAÎTRE DU JEU (MODE DEV / ADMIN) ---
-  // ==========================================
-
   bool unlockAdmin(String pin) {
     if (pin.trim() == '03031994') {
       state = state.copyWith(isAdmin: true, isDevModeActive: true);
@@ -5462,7 +5220,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     return false;
   }
 
-  /// Permet à l'Hôte en Mode Dev d'incarner / basculer sur un joueur ou bot pour agir en son nom
   void impersonatePlayer(String? targetUid) {
     if (!state.isDevMode) return;
     state = state.copyWith(
@@ -5593,7 +5350,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       'logs': currentLogs,
     });
 
-    // En Mode Dev : si le joueur bâillonné avait la parole pendant le débat, on saute immédiatement son tour
     if (newMuted &&
         state.room?.phase == GamePhase.dayDebate &&
         state.room?.currentSpeakerId == playerId) {
@@ -5601,7 +5357,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     }
   }
 
-  /// Mode Dev : Forcer ou réinitialiser la proie nocturne des loups
   Future<void> adminSetNightVictim(String? playerId) async {
     if (_currentRoomRef == null || state.room == null) return;
     final target = playerId != null ? state.room!.players[playerId] : null;
@@ -5616,7 +5371,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     });
   }
 
-  /// Mode Dev : Forcer ou réinitialiser la cible de silence nocturne des loups
   Future<void> adminSetNightSilence(String? playerId) async {
     if (_currentRoomRef == null || state.room == null) return;
     final target = playerId != null ? state.room!.players[playerId] : null;
@@ -5665,7 +5419,7 @@ class GameNotifier extends StateNotifier<LupusGameState> {
   }
 
   Future<void> adminForceRole(String playerId, GameRole newRole) async {
-    // Le Maire est un statut électif (géré via captainId), pas une carte de rôle distribuable
+
     if (newRole == GameRole.mayor) return;
     if (_currentRoomRef == null || state.room == null) return;
     final target = state.room!.players[playerId];
@@ -5734,26 +5488,18 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     }
   }
 
-  // ==========================================
-  // --- SIMULATION SANDBOX AVEC BOTS (DEV-MODE) ---
-  // ==========================================
-
-  /// Génère une composition équilibrée et canonique de rôles selon le nombre de participants (6 à 18)
   static List<GameRole> generateBalancedRoles(int total) {
     final count = total.clamp(6, 18);
     final roles = <GameRole>[];
 
-    // 1. Voyante (indispensable)
     roles.add(GameRole.seer);
 
-    // 2. Loups selon l'effectif (1 à 4)
     final numWolves = count <= 8 ? 1 : (count <= 11 ? 2 : (count <= 14 ? 3 : 4));
     roles.add(GameRole.simpleWerewolf);
     if (numWolves >= 2) roles.add(GameRole.bigBadWolf);
     if (numWolves >= 3) roles.add(GameRole.simpleWerewolf);
     if (numWolves >= 4) roles.add(GameRole.vileFatherOfWolves);
 
-    // 3. Rôles villageois majeurs et rôles spéciaux
     roles.add(GameRole.witch);
     roles.add(GameRole.hunter);
     roles.add(GameRole.defender);
@@ -5767,15 +5513,12 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     if (roles.length < count) roles.add(GameRole.fox);
     if (roles.length < count) roles.add(GameRole.bearTamer);
 
-    // 4. Remplir le reste avec des simples villageois
     while (roles.length < count) {
       roles.add(GameRole.simpleVillager);
     }
     return roles.sublist(0, count);
   }
 
-  /// Lancer une simulation Dev-Mode avec un nombre configurable de participants (6 à 18) et bots passifs
-  /// Exécute STRICTEMENT le moteur de jeu réel multijoueur (minuteurs réels, règles canoniques, quotas, RTDB, tokens chiffrés)
   Future<bool> startSandboxGame({
     int playerCount = 12,
     List<GameRole>? customRoles,
@@ -5864,7 +5607,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
         pool[p.role.id] = (pool[p.role.id] ?? 0) + 1;
       }
 
-      // Détermination de la première phase nocturne canonique selon les rôles présents
       final assignedRoleIds = allPlayers.values.map((p) => p.role.id).toSet();
       GamePhase firstPhase;
       if (assignedRoleIds.contains('thief') ||
@@ -5893,7 +5635,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
         firstPhase = GamePhase.morningAnnouncement;
       }
 
-      // Minuteur authentique réel selon les règles de production (ex: 20s, 30s, 40s) — PAS 999s
       final realTimerSeconds = firstPhase.durationSeconds > 0
           ? firstPhase.durationSeconds
           : (firstPhase.isNight ? 20 : 60);
@@ -5922,7 +5663,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       _currentRoomRef = _database.ref('rooms/$roomCode');
       await _currentRoomRef!.set(newRoom.toMap());
 
-      // Écriture des rôles secrets et de l'ordre des sièges dans RTDB
       try {
         await _currentRoomRef!.child('seatingOrder').set(seatingOrder);
       } catch (_) {}
@@ -5935,7 +5675,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
         } catch (_) {}
       }
 
-      // Si des loups existent, enregistrer la meute chiffrée
       final wolfIds = allPlayers.values
           .where((p) => p.role.isEvil)
           .map((p) => p.id)
@@ -5970,7 +5709,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     }
   }
 
-  /// Remplit le salon actuel avec des bots passifs pour atteindre 12 joueurs
   Future<void> populateRoomWithBots() async {
     if (_currentRoomRef == null || state.room == null) return;
     final currentCount = state.room!.players.length;
@@ -6018,9 +5756,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     await _syncState(updates);
   }
 
-  // ===================== CONTRÔLES MODE DEV (ACTIONS FORCÉES) =====================
-
-  /// Mode Dev : Forcer l'élimination directe avec gestion des mécaniques associées
   Future<void> devKill(String playerId, {String reason = 'décision du Maître du Jeu'}) async {
     if (_currentRoomRef == null || state.room == null) return;
     final target = state.room!.players[playerId];
@@ -6095,7 +5830,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     }
   }
 
-  /// Mode Dev : Ressusciter un joueur
   Future<void> devRevive(String playerId) async {
     if (_currentRoomRef == null || state.room == null) return;
     final target = state.room!.players[playerId];
@@ -6110,13 +5844,10 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     });
   }
 
-  /// Mode Dev : Forcer le rôle d'un joueur
   Future<void> devSetRole(String playerId, GameRole role) => adminForceRole(playerId, role);
 
-  /// Mode Dev : Forcer la proie des loups
   Future<void> devSetNightVictim(String targetId) => adminSetNightVictim(targetId);
 
-  /// Mode Dev : Sonde de la Voyante instantanée
   Future<GameRole?> devSeerInspect(String targetId) async {
     if (_currentRoomRef == null || state.room == null) return null;
     final target = state.room!.players[targetId];
@@ -6132,7 +5863,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     return role;
   }
 
-  /// Mode Dev : Potion de vie de la Sorcière
   Future<void> devWitchHeal() async {
     if (_currentRoomRef == null || state.room == null) return;
     final logs = List<String>.from(state.room!.logs);
@@ -6140,7 +5870,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     await _syncState({'witchHealed': true, 'logs': logs});
   }
 
-  /// Mode Dev : Potion de mort de la Sorcière
   Future<void> devWitchPoison(String targetId) async {
     if (_currentRoomRef == null || state.room == null) return;
     final target = state.room!.players[targetId];
@@ -6149,7 +5878,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     await _syncState({'witchPoisonVictimId': targetId, 'logs': logs});
   }
 
-  /// Mode Dev : Protection du Salvateur
   Future<void> devGuardProtect(String targetId) async {
     if (_currentRoomRef == null || state.room == null) return;
     final target = state.room!.players[targetId];
@@ -6158,7 +5886,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     await _syncState({'currentProtectedPlayerId': targetId, 'logs': logs});
   }
 
-  /// Mode Dev : Liaison des Amoureux par Cupidon
   Future<void> devCupidLink(String p1Id, String p2Id) async {
     if (_currentRoomRef == null || state.room == null || p1Id == p2Id) return;
     final p1 = state.room!.players[p1Id];
@@ -6174,12 +5901,10 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     });
   }
 
-  /// Mode Dev : Tir du Chasseur
   Future<void> devHunterShoot(String targetId) async {
     await devKill(targetId, reason: 'tir de riposte du chasseur');
   }
 
-  /// Mode Dev : Résolution instantanée de l'Aube / Lever du Jour
   Future<void> devResolveNight() async {
     if (_currentRoomRef == null || state.room == null) return;
     final room = state.room!;
@@ -6188,7 +5913,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     final realRoles = await _resolveRealRoles(room);
     final List<String> effectiveDeaths = [];
 
-    // 1. Morsure des Loups
     final wolfVictimId = room.nightVictimId ?? _tallyWerewolfVotes();
     if (wolfVictimId != null) {
       final isProtected = room.currentProtectedPlayerId == wolfVictimId;
@@ -6212,13 +5936,11 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       }
     }
 
-    // 2. Poison Sorcière
     final poisonVictimId = room.witchPoisonVictimId;
     if (poisonVictimId != null && !effectiveDeaths.contains(poisonVictimId)) {
       effectiveDeaths.add(poisonVictimId);
     }
 
-    // 3. Amoureux en chaîne
     final allDeaths = <String>{...effectiveDeaths};
     for (final deadId in effectiveDeaths) {
       final partner = handleLoverDeath(deadId, room.players, logs);
@@ -6272,11 +5994,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     await _syncState(updates);
   }
 
-  // ==========================================
-  // --- REPLAY & RÉINITIALISATION DE PARTIE ---
-  // ==========================================
-
-  /// Algorithme de mélange de Fisher-Yates (Knuth) garanti O(N) et mathématiquement uniforme
   static void fisherYatesShuffle<T>(List<T> list, [Random? random]) {
     final rng = random ?? Random.secure();
     for (int i = list.length - 1; i > 0; i--) {
@@ -6287,32 +6004,28 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     }
   }
 
-  /// Prépare un deck de cartes rôles adapté au nombre de joueurs connectés
-  /// (ex: Loup Blanc, Loup Noir, Voyante, Sorcière, Chasseur, Villageois...)
   static List<GameRole> prepareReplayRoleDeck(int count) {
     if (count <= 0) return [];
 
     final deck = <GameRole>[];
 
-    // Rôles canoniques prioritaires demandés explicitement :
-    // Loup Blanc, Loup Noir, Voyante, Sorcière, Chasseur, Villageois...
     final priorityRoles = <GameRole>[
-      GameRole.whiteWerewolf, // Loup Blanc
-      GameRole.blackWolf, // Loup Noir
-      GameRole.seer, // Voyante
-      GameRole.witch, // Sorcière
-      GameRole.hunter, // Chasseur
-      GameRole.simpleVillager, // Simple Villageois
-      GameRole.cupid, // Cupidon
-      GameRole.littleGirl, // Petite Fille
-      GameRole.defender, // Salvateur / Défenseur
-      GameRole.simpleWerewolf, // Simple Loup-Garou
-      GameRole.thief, // Voleur
-      GameRole.bigBadWolf, // Grand Méchant Loup
-      GameRole.vileFatherOfWolves, // Infect Père des Loups
-      GameRole.angel, // Ange
-      GameRole.piedPiper, // Joueur de Flûte
-      GameRole.pyromaniac, // Pyromane
+      GameRole.whiteWerewolf,
+      GameRole.blackWolf,
+      GameRole.seer,
+      GameRole.witch,
+      GameRole.hunter,
+      GameRole.simpleVillager,
+      GameRole.cupid,
+      GameRole.littleGirl,
+      GameRole.defender,
+      GameRole.simpleWerewolf,
+      GameRole.thief,
+      GameRole.bigBadWolf,
+      GameRole.vileFatherOfWolves,
+      GameRole.angel,
+      GameRole.piedPiper,
+      GameRole.pyromaniac,
     ];
 
     for (final role in priorityRoles) {
@@ -6323,7 +6036,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       }
     }
 
-    // Si la salle compte plus de 16 joueurs, compléter par alternance
     while (deck.length < count) {
       if (deck.length % 4 == 0) {
         deck.add(GameRole.simpleWerewolf);
@@ -6335,11 +6047,10 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     return deck.sublist(0, count);
   }
 
-  /// Vérification sécurisée et idempotente du quorum de Replay (exécutée par l'Hôte uniquement)
   Future<void> _checkReplayQuorum(GameRoom room, String roomCode) async {
     if (!state.isHost) return;
     if (_isResettingReplay) return;
-    // Ne réinitialiser que si le jeu est actuellement en GameOver (évite tout double reset intempestif)
+
     if (room.phase != GamePhase.gameOver) return;
 
     final totalCount = room.playerList.length;
@@ -6358,7 +6069,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     }
   }
 
-  /// Gestion du vote client : Au premier clic, émettre player_ready_replay avec userId et roomId
   Future<void> playerReadyReplay({String? userId, String? roomId}) async {
     final effectiveUserId = userId ?? state.currentUserId;
     final effectiveRoomId = roomId ?? state.room?.roomCode;
@@ -6367,14 +6077,12 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     try {
       final roomRef = _database.ref('rooms/$effectiveRoomId');
 
-      // 1. Écriture sans conflit sur sa propre clé feuille (atomicité garantie par utilisateur)
       await roomRef.update({
         'replay_votes/$effectiveUserId': true,
         'players/$effectiveUserId/isReadyReplay': true,
         'players/$effectiveUserId/wantsRematch': true,
       });
 
-      // 2. Synchroniser la liste globale consolidée depuis la table des votes
       final snapshot = await roomRef.child('replay_votes').get();
       List<String> readyList = [];
       if (snapshot.value is Map) {
@@ -6402,7 +6110,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
         },
       });
 
-      // Synchronisation optimiste locale
       if (state.room != null) {
         final updatedPlayers =
             Map<String, PlayerModel>.from(state.room!.players);
@@ -6419,7 +6126,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
         );
         state = state.copyWith(room: updatedRoom);
 
-        // Seul l'hôte déclenche la réinitialisation
         if (state.isHost) {
           _checkReplayQuorum(updatedRoom, effectiveRoomId);
         }
@@ -6429,7 +6135,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     }
   }
 
-  /// Gestion du vote client : Un second clic annule le vote via player_cancel_replay
   Future<void> playerCancelReplay({String? userId, String? roomId}) async {
     final effectiveUserId = userId ?? state.currentUserId;
     final effectiveRoomId = roomId ?? state.room?.roomCode;
@@ -6438,14 +6143,12 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     try {
       final roomRef = _database.ref('rooms/$effectiveRoomId');
 
-      // 1. Suppression de sa clé feuille individuelle
       await roomRef.update({
         'replay_votes/$effectiveUserId': null,
         'players/$effectiveUserId/isReadyReplay': false,
         'players/$effectiveUserId/wantsRematch': false,
       });
 
-      // 2. Synchroniser la liste consolidée
       final snapshot = await roomRef.child('replay_votes').get();
       List<String> readyList = [];
       if (snapshot.value is Map) {
@@ -6471,7 +6174,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
         },
       });
 
-      // Synchronisation optimiste locale
       if (state.room != null) {
         final updatedPlayers =
             Map<String, PlayerModel>.from(state.room!.players);
@@ -6494,12 +6196,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     }
   }
 
-  /// Réinitialisation et redistribution aléatoire conditionnelle des rôles :
-  /// - Double Fisher-Yates cryptographiquement sécurisé
-  /// - Anti-répétition consécutive des rôles par UID
-  /// - Recalcul dynamique des quotas (visions = max(1, N ~/ 4), potions = max(1, N ~/ 10))
-  /// - PV = 100, isAlive = true, isMuted = false
-  /// - Émission de game_reset_to_lobby
   Future<void> resetGameAndRedistributeRoles(String roomCode) async {
     DeathRegistryService.instance.clearForNewGame();
     final roomRef = _database.ref('rooms/$roomCode');
@@ -6513,18 +6209,15 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     final count = playersMap.length;
     if (count == 0) return;
 
-    // Récupérer les rôles de la manche précédente par UID pour l'anti-répétition
     final Map<String, GameRole> previousRoles = {};
     for (final p in playersMap.values) {
       previousRoles[p.id] = p.trueOriginalRole;
     }
 
-    // Role Pool effectif (salle de dev ou pool par défaut)
     final effectiveRolePool = currentRoom.rolePool.isNotEmpty
         ? currentRoom.rolePool
         : GameNotifier.generateDefaultRolePool(count);
 
-    // Distribution conditionnelle optimisée
     final distribution = ConditionalRoleDistributor.distribute(
       currentPlayers: playersMap,
       rolePool: effectiveRolePool,
@@ -6549,7 +6242,7 @@ class GameNotifier extends StateNotifier<LupusGameState> {
     });
 
     try {
-      // 1. Mettre à jour les rôles secrets et la meute chiffrée sur le chemin canonique de la salle
+
       await _database.ref('rooms/$roomCode/secret_roles').set(secretRolesMap);
       await _database
           .ref('rooms/$roomCode/wolf_pack')
@@ -6560,7 +6253,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
         'La Nuit 1 tombe... Les rôles secrets ont été redistribués.',
       ];
 
-      // 2. Réinitialiser la salle au lobby
       final Map<String, dynamic> roomResetUpdates = {
         'phase': GamePhase.lobby.name,
         'round': 1,
@@ -6585,7 +6277,7 @@ class GameNotifier extends StateNotifier<LupusGameState> {
         'debateQueue': <String>[],
         'tiedPlayerIds': <String>[],
         'isTieBreakActive': false,
-        // ── Événements atomiques inclus dans l'update unique ──
+
         'game_reset_to_lobby': {
           'event': 'game_reset_to_lobby',
           'roomCode': roomCode,
@@ -6599,7 +6291,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
         },
       };
 
-      // ── Écriture atomique unique de réinitialisation : rooms/ ──
       await roomRef.update(roomResetUpdates);
       state = state.copyWith(
         isVictoryVoiceExpired: false,
@@ -6621,7 +6312,6 @@ class GameNotifier extends StateNotifier<LupusGameState> {
       if (currentRoom != null && roomCode != null) {
         final canonicalRef = _database.ref('rooms/$roomCode');
 
-        // ── Annuler les onDisconnect sur le chemin canonique uniquement ──
         try {
           final playerRef = canonicalRef.child('players/$userId');
           await playerRef.child('isOnline').onDisconnect().cancel();
@@ -6629,34 +6319,32 @@ class GameNotifier extends StateNotifier<LupusGameState> {
         } catch (_) {}
 
         if (currentRoom.phase == GamePhase.lobby) {
-          // --- SORTIE EN PHASE DE LOBBY ---
-          // ── Suppression canonique unique : rooms/$roomCode/players/$userId ──
+
           await canonicalRef.child('players/$userId').remove();
 
-          // Déterminer les joueurs restants
           final remainingPlayers = currentRoom.players.values
               .where((p) => p.id != userId)
               .toList();
 
           if (remainingPlayers.isEmpty) {
-            // Salon vidé : suppression définitive
+
             await canonicalRef.remove();
           } else if (currentRoom.hostId == userId) {
-            // L'hôte quitte : passation de l'hôte au prochain joueur de la liste
+
             final nextHost = remainingPlayers.first;
             final updatedLogs = [
               ...currentRoom.logs,
               '🚪 ${state.currentUserName} a quitté le salon.',
               '👑 ${nextHost.name} est devenu le nouvel hôte du village.',
             ];
-            // ── Écriture atomique unique (passation + logs) : rooms/$roomCode ──
+
             await canonicalRef.update({
               'hostId': nextHost.id,
               'players/${nextHost.id}/isHost': true,
               'logs': updatedLogs,
             });
           } else {
-            // Joueur normal quittant le lobby
+
             final updatedLogs = [
               ...currentRoom.logs,
               '🚪 ${state.currentUserName} a quitté le salon.',
@@ -6664,9 +6352,7 @@ class GameNotifier extends StateNotifier<LupusGameState> {
             await canonicalRef.child('logs').set(updatedLogs);
           }
         } else {
-          // --- SORTIE EN JEU (IN-GAME) ---
-          // Passer isOnline = false et horodater lastSeen pour reprise ultérieure.
-          // Si l'hôte quitte, transférer immédiatement l'hôte au prochain joueur en ligne.
+
           final inGameUpdates = <String, dynamic>{
             'players/$userId/isOnline': false,
             'players/$userId/lastSeen': ServerValue.timestamp,
@@ -6701,14 +6387,13 @@ class GameNotifier extends StateNotifier<LupusGameState> {
             ];
           }
 
-          // ── Écriture atomique unique (statut + passation + logs) : rooms/$roomCode ──
           await canonicalRef.update(inGameUpdates);
         }
       }
     } catch (e) {
       debugPrint('[LeaveRoom Error] $e');
     } finally {
-      // Libération des flux et du canal Agora
+
       DeathRegistryService.instance.clearForNewGame();
       _cancelAllRoomSubscriptions();
       _lastAppliedVoiceChannel = null;
@@ -6748,18 +6433,14 @@ final gameNotifierProvider =
   return GameNotifier();
 });
 
-/// Provider isolé pour les utilisateurs qui parlent actuellement
-/// Découplé de GameNotifier.state pour supprimer tout re-render de l'écran d'arène
 final activeSpeakersProvider = ChangeNotifierProvider<ValueNotifier<Set<int>>>((ref) {
   return AgoraVoiceService().speakingUids;
 });
 
-/// Provider pour le statut du micro local
 final isMutedProvider = ChangeNotifierProvider<ValueNotifier<bool>>((ref) {
   return AgoraVoiceService().isMuted;
 });
 
-/// Provider pour la connexion vocale
 final isVoiceConnectedProvider = ChangeNotifierProvider<ValueNotifier<bool>>((ref) {
   return AgoraVoiceService().isConnected;
 });

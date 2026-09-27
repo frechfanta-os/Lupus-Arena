@@ -27,6 +27,7 @@ import '../bento/language_dialog.dart';
 import '../bento/music_mute_button.dart';
 import 'arena_game_screen.dart';
 import '../../services/room_share_service.dart';
+import '../bento/room_report_dialog.dart';
 
 class LobbyScreen extends ConsumerStatefulWidget {
   final LocaleProvider? localeProvider;
@@ -51,7 +52,6 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
     final state = ref.read(gameNotifierProvider);
     _nameController.text = state.currentUserName;
 
-    // Chargement immédiat du pseudo persistant sauvegardé sur le téléphone
     SharedPreferences.getInstance().then((prefs) {
       final savedName = prefs.getString('player_nickname');
       if (savedName != null && savedName.trim().isNotEmpty && mounted) {
@@ -62,7 +62,6 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
       }
     });
 
-    // Dialogue de langue obligatoire au tout premier lancement, puis autorisations
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
       await LanguageDialog.showFirstLaunchIfNeeded(
@@ -73,13 +72,10 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
       LupusPermissionDialog.showIfNeeded(context);
     });
 
-    // Vérification en arrière-plan d'une nouvelle mise à jour GitHub Releases
     _checkForUpdateInBackground();
 
-    // Démarrage de la surveillance globale des permissions en arrière-plan
     LupusPermissionService().startBackgroundPermissionMonitor();
 
-    // Démarrage de la musique d'ambiance selon le contexte (Lobby si pas de salle, Room si salle active)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         if (ref.read(gameNotifierProvider).room == null) {
@@ -102,7 +98,7 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
         });
       }
     } catch (_) {
-      // Ignorer silencieusement pour ne pas bloquer l'expérience utilisateur
+
     } finally {
       _isCheckingUpdate = false;
     }
@@ -129,8 +125,7 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     LobbyAudioManager.instance.stopLobbyMusic();
-    // Ne jamais arrêter la musique de la Room ici : elle doit continuer de jouer
-    // de manière fluide lors de la transition vers ArenaGameScreen avec les autres joueurs.
+
     _nameController.dispose();
     _codeController.dispose();
     super.dispose();
@@ -149,15 +144,14 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
     final gameState = ref.watch(gameNotifierProvider);
     final room = gameState.room;
 
-    // Navigation automatique vers l'arène dès que la partie commence
     if (room != null && room.phase != GamePhase.lobby) {
       if (!_isNavigatingToArena) {
         _isNavigatingToArena = true;
         WidgetsBinding.instance.addPostFrameCallback((_) async {
           final nav = Navigator.of(context);
-          // 1. COUPER D'ABORD PAR FONDU PROPRE ET ATTENDRE LE VERROU
+
           await LobbyAudioManager.instance.fadeOutAndStopLobbyMusic();
-          // 2. NAVIGUER ENSUITE
+
           if (mounted) {
             nav.pushReplacement(
               MaterialPageRoute(builder: (_) => const ArenaGameScreen()),
@@ -189,19 +183,17 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
     );
   }
 
-  /// Écran d'accueil principal (Menu) : Arrière-plan net + Composants natifs Flutter à 100%
   Widget _buildMainMenu(BuildContext context, LupusGameState gameState) {
     final media = MediaQuery.of(context);
     return SizedBox.expand(
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // 1. Image d'arrière-plan officielle plein écran (lobby screen.jpg avec résolution dynamique & fallbacks)
+
           Positioned.fill(
             child: LupusAssets.buildLobbyBackground(),
           ),
 
-          // 2. Déclencheur secret Admin sur le Sceau en haut (Double tap ou Appui long)
           Positioned(
             top: media.padding.top > 0 ? media.padding.top : 24,
             left: 0,
@@ -217,9 +209,6 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
             ),
           ),
 
-          // 3. Boutons d'action positionnés en bas — à l'emplacement exact du "X"
-          // Dégage totalement le corps du loup-garou et son socle rocheux,
-          // positionné juste au-dessus du grand cercle runique violet au sol.
           Positioned(
             bottom: media.viewInsets.bottom > 0
                 ? media.viewInsets.bottom + 16.0
@@ -235,7 +224,6 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
             ),
           ),
 
-          // 4. Message d'erreur éventuel
           if (gameState.errorMessage != null)
             Positioned(
               left: 18,
@@ -280,8 +268,6 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
               ),
             ),
 
-          // 5. Barre supérieure (Top Bar) au PREMIER PLAN absolu du Stack
-          // Capsule Joueur à gauche, Globe & MAJ à droite (au-dessus du ScrollView pour garantir 100% des clics)
           Positioned(
             top: (media.padding.top > 0 ? media.padding.top : 24) + 6,
             left: 18,
@@ -293,7 +279,6 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
     );
   }
 
-  /// Boîte de dialogue pour modifier le pseudo depuis la capsule de la barre supérieure
   void _showNameEditDialog(BuildContext context, String currentName) {
     _nameController.text = currentName;
     showDialog(
@@ -371,15 +356,6 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
     );
   }
 
-  /// 1. Barre supérieure (Top Bar) — styles identiques au HUD de l'Arena (Room)
-  ///
-  /// ┌──────────────────────────────────────────────────────────┐
-  /// │ [Avatar] Pseudo ✏️          [MAJ pill] [🌐 Globe arcaneGold] │
-  /// └──────────────────────────────────────────────────────────┘
-  ///
-  /// • Capsule pseudo  : fond 0xCC12182E, border arcaneGold 0.6, radius 10 → identique à la room
-  /// • Bouton Globe    : cercle 32×32, fond 0xC012182E, border arcaneGold 0.4, icône 16pt → identique à la room
-  /// • Badge version   : pilule sombre 0xCC0D1F1A, liseré emerald runique
   Widget _buildTopBar(BuildContext context, LupusGameState gameState) {
     final displayName = gameState.currentUserName.isNotEmpty
         ? gameState.currentUserName
@@ -388,8 +364,7 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // ── À GAUCHE : Capsule Profil — Logo officiel tête de loup (28x28) + Pseudo ──
-        // Fond 0xCC12182E · border arcaneGold 0.6 w=0.8 · radius 10
+
         GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: () => _showNameEditDialog(context, gameState.currentUserName),
@@ -413,7 +388,7 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // Véritable logo officiel du jeu (icône de tête de loup) précisément en 28x28 dp
+
                 GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onTap: () => _showAvatarSelector(context),
@@ -438,7 +413,7 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
                   ),
                 ),
                 const SizedBox(width: 7),
-                // Nom du joueur en arcaneGold serif
+
                 ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 120),
                   child: Text(
@@ -460,12 +435,11 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
 
         const Spacer(),
 
-        // ── À DROITE : [Badge DEV] + [Pilule MAJ] + [Globe] ──
         Row(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Badge DEV (admin uniquement) — style harmonisé Arena
+
             if (gameState.isAdmin) ...[
               GestureDetector(
                 behavior: HitTestBehavior.opaque,
@@ -502,7 +476,6 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
               const SizedBox(width: 6),
             ],
 
-            // Pilule MAJ — thème sombre runique, liseré doré-émeraude (si mise à jour disponible)
             if (_availableUpdate != null) ...[
               GestureDetector(
                 behavior: HitTestBehavior.opaque,
@@ -566,12 +539,9 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
               const SizedBox(width: 6),
             ],
 
-            // ── Bouton Mute Musique (Isolation totale d'Agora RTC) ──
             const MusicMuteButton(isCompact: true, size: 32),
             const SizedBox(width: 6),
 
-            // ── Bouton Globe — IDENTIQUE au HUD de l'Arena (_buildStitchTopHUD) ──
-            // Cercle 32×32 · fond 0xC012182E · border arcaneGold 0.4 · icône language_rounded 16pt
             GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: () => LanguageDialog.show(
@@ -601,10 +571,6 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
     );
   }
 
-  /// 2. Boutons d'action empilés verticalement dans une Column centrée
-  /// - CRÉER UN SALON : Mauve néon mystique
-  /// - CODE DU SALON : Sombre semi-transparent + bordure subtile
-  /// - REJOINDRE : Vert électrique runique
   Widget _buildActionButtonsColumn(BuildContext context, LupusGameState gameState) {
     return LobbyActionButtons(
       gameState: gameState,
@@ -617,9 +583,8 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
     );
   }
 
-  /// Écran d'attente du Salon quand une partie a été créée ou rejointe
   Widget _buildWaitingLobby(BuildContext context, LupusGameState gameState, GameRoom room) {
-    // Lance la musique d'ambiance de la Room si elle n'est pas déjà en cours
+
     if (!LupusAudioManager.instance.isRoomPlaying) {
       LupusAudioManager.instance.playRoomMusic();
     }
@@ -628,7 +593,7 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // Fond atmosphérique Stitch (Village nocturne sous la pleine lune)
+
           Positioned.fill(
             child: LupusAssets.adaptiveImage(
               assetPath: LupusAssets.villageNightBgAsset,
@@ -637,7 +602,7 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
               alignment: Alignment.topCenter,
             ),
           ),
-          // Vignette sombre
+
           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
@@ -665,7 +630,7 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // Barre supérieure du Salon d'attente : Sélecteur de langue & Quitter
+
                         Padding(
                           padding: const EdgeInsets.only(bottom: 8.0),
                           child: Row(
@@ -738,7 +703,6 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
                           ),
                         ),
 
-                // Sceau / Médaillon du Loup Stitch
                 Center(
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
@@ -800,7 +764,6 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
                   ),
                 ),
 
-                // Message d'erreur éventuel
                 if (gameState.errorMessage != null) ...[
                   Container(
                     padding: const EdgeInsets.all(12),
@@ -825,7 +788,6 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
                   ),
                 ],
 
-                // Bannière Maître du Jeu (DEV-MOD) si actif
                 if (gameState.isAdmin) ...[
                   GestureDetector(
                     onTap: () => AdminControlSheet.show(context),
@@ -875,7 +837,6 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
                   ),
                 ],
 
-                // Carte Code du Salon
                 BentoCard(
                   borderColor: LupusColors.sunAmber.withValues(alpha: 0.5),
                   child: Row(
@@ -936,6 +897,16 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
                               icon: const Icon(Icons.share, size: 20),
                             ),
                           ),
+                          const SizedBox(width: 8),
+                          IconButton.filledTonal(
+                            tooltip: context.tr('report_and_moderation'),
+                            onPressed: () => RoomReportDialog.show(
+                              context,
+                              room: room,
+                              currentUserId: gameState.currentUserId,
+                            ),
+                            icon: const Icon(Icons.shield_outlined, size: 20),
+                          ),
                         ],
                       ),
                     ],
@@ -944,12 +915,10 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
 
                 const SizedBox(height: 14),
 
-                // Contrôles Vocaux en direct dans le Lobby
                 BentoVoiceControls(),
 
                 const SizedBox(height: 14),
 
-                // Liste des Guerriers connectés (12 Joueurs stricts)
                 BentoCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1033,7 +1002,6 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
 
                 const SizedBox(height: 14),
 
-                // Panneau Bento de composition du Deck de rôles (Deck Builder)
                 RoleSelectorBento(
                   room: room,
                   isHost: gameState.isHost,
@@ -1041,7 +1009,6 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
 
                 const SizedBox(height: 16),
 
-                // Boutons d'action du Lobby
                 if (gameState.isHost) ...[
                   Builder(
                     builder: (context) {
@@ -1255,7 +1222,6 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
     );
   }
 
-  /// Sélecteur d'Avatar en modal bottom sheet stylisé Dark Fantasy
   void _showAvatarSelector(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -1454,8 +1420,6 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
   }
 }
 
-/// Widget des boutons d'action du Lobby (Style Dark Fantasy & Runes)
-/// Taille divisée par deux (largeur 110 dp, hauteur 32 dp, sans emoji/icône porte)
 class LobbyActionButtons extends StatelessWidget {
   final LupusGameState gameState;
   final TextEditingController codeController;
@@ -1483,34 +1447,32 @@ class LobbyActionButtons extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // 1. Bouton "CRÉER UN SALON"
-            // Dégradé profond violet/mauve lunaire (obsidienne violacée avec reflets néon mystiques)
-            // Fine bordure ciselée runique dorée/bronze et icône lune nocturne
+
             Container(
               height: buttonHeight,
               decoration: BoxDecoration(
                 borderRadius: borderRadius,
                 gradient: const LinearGradient(
                   colors: [
-                    Color(0xFF5A1E8A), // Reflet néon mystique améthyste
-                    Color(0xFF2E0D4E), // Obsidienne violacée
-                    Color(0xFF16062A), // Profondeur nuit lunaire sombre
+                    Color(0xFF5A1E8A),
+                    Color(0xFF2E0D4E),
+                    Color(0xFF16062A),
                   ],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                 ),
                 border: Border.all(
-                  color: const Color(0xFFE5C158).withValues(alpha: 0.85), // Bordure ciselée or/bronze
+                  color: const Color(0xFFE5C158).withValues(alpha: 0.85),
                   width: 1.2,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF8B25C7).withValues(alpha: 0.38), // Lueur néon violette mystique
+                    color: const Color(0xFF8B25C7).withValues(alpha: 0.38),
                     blurRadius: 10,
                     offset: const Offset(0, 2),
                   ),
                   BoxShadow(
-                    color: const Color(0xFFD4AF37).withValues(alpha: 0.22), // Lueur bronze dorée
+                    color: const Color(0xFFD4AF37).withValues(alpha: 0.22),
                     blurRadius: 4,
                   ),
                   BoxShadow(
@@ -1564,23 +1526,21 @@ class LobbyActionButtons extends StatelessWidget {
 
             const SizedBox(height: 10),
 
-            // 2. Bouton / Champ "CODE DU SALON"
-            // Style pierre runique sombre et sobre
             Container(
               height: buttonHeight,
               decoration: BoxDecoration(
                 borderRadius: borderRadius,
                 gradient: const LinearGradient(
                   colors: [
-                    Color(0xFF1E2330), // Pierre taillée sombre
-                    Color(0xFF121622), // Ardoise runique
-                    Color(0xFF0A0D15), // Pierre noire profonde
+                    Color(0xFF1E2330),
+                    Color(0xFF121622),
+                    Color(0xFF0A0D15),
                   ],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                 ),
                 border: Border.all(
-                  color: const Color(0xFF64748B).withValues(alpha: 0.55), // Fer forgé runique sobre
+                  color: const Color(0xFF64748B).withValues(alpha: 0.55),
                   width: 1.1,
                 ),
                 boxShadow: [
@@ -1631,29 +1591,26 @@ class LobbyActionButtons extends StatelessWidget {
 
             const SizedBox(height: 10),
 
-            // 3. Bouton "REJOINDRE"
-            // Dégradé sombre teinté de vert spectral (sang de loup / foudre runique)
-            // Bordure émeraude/cuivre assortie et icône patte de loup (griffes)
             Container(
               height: buttonHeight,
               decoration: BoxDecoration(
                 borderRadius: borderRadius,
                 gradient: const LinearGradient(
                   colors: [
-                    Color(0xFF14532D), // Reflet vert spectral sombre
-                    Color(0xFF072E1B), // Vert sombre profond
-                    Color(0xFF03190E), // Obsidienne verte spectrale
+                    Color(0xFF14532D),
+                    Color(0xFF072E1B),
+                    Color(0xFF03190E),
                   ],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                 ),
                 border: Border.all(
-                  color: const Color(0xFF34D399).withValues(alpha: 0.80), // Liseré émeraude spectrale runique
+                  color: const Color(0xFF34D399).withValues(alpha: 0.80),
                   width: 1.2,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF10B981).withValues(alpha: 0.35), // Halo vert spectral
+                    color: const Color(0xFF10B981).withValues(alpha: 0.35),
                     blurRadius: 10,
                     offset: const Offset(0, 2),
                   ),

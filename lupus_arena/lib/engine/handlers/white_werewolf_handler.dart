@@ -3,9 +3,6 @@ import '../../models/game_role.dart';
 import '../../models/game_state.dart';
 import 'role_action_handler.dart';
 
-/// Gestionnaire de rôle pour Le Loup-Garou Blanc.
-/// Il se réveille une nuit sur deux (nuits paires) pour éliminer un autre loup en secret,
-/// ou passer son tour pour ne pas éveiller les soupçons.
 class WhiteWerewolfHandler extends RoleActionHandler {
   @override
   GameRole get role => GameRole.whiteWerewolf;
@@ -35,7 +32,6 @@ class WhiteWerewolfHandler extends RoleActionHandler {
     final targetId = actionPayload['targetId'] as String?;
     if (targetId == null || !state.isAlive(targetId)) return state;
 
-    // La cible doit être un loup
     final targetRole = state.playerRoles[targetId];
     final isWolf = targetRole?.camp == Camp.wolves ||
         targetId == state.expandedRolesState.infectedPlayerId;
@@ -53,7 +49,7 @@ class WhiteWerewolfHandler extends RoleActionHandler {
 
   @override
   RoleUIControls getUIControls(GameState state, String playerId) {
-    // Liste des autres loups vivants éligibles
+
     final wolfTargets = state.alivePlayerIds.where((id) {
       if (id == playerId) return false;
       final r = state.playerRoles[id];

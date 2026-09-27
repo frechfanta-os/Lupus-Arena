@@ -2,7 +2,6 @@ import '../../models/game_role.dart';
 import '../../models/game_state.dart';
 import 'role_action_handler.dart';
 
-/// Gestionnaire pour le Voleur standard
 class ThiefHandler extends RoleActionHandler {
   @override
   GameRole get role => GameRole.thief;
@@ -23,20 +22,17 @@ class ThiefHandler extends RoleActionHandler {
 
     final updatedRoles = Map<String, GameRole>.from(state.playerRoles);
 
-    // Option 1 : Choix d'une carte parmi celles non distribuées
     final chosenRole = actionPayload['chosenRole'] as GameRole?;
     if (chosenRole != null) {
       updatedRoles[actorId] = chosenRole;
       return state.copyWith(playerRoles: updatedRoles);
     }
 
-    // Option 2 : Vol d'identité ciblé d'un joueur actif
     final targetId = actionPayload['targetId'] as String?;
     if (targetId == null) return state;
 
     final targetRole = state.playerRoles[targetId] ?? GameRole.simpleVillager;
 
-    // Échange des identités : le voleur prend le rôle dérobé, la victime devient Simple Villageois
     updatedRoles[actorId] = targetRole;
     updatedRoles[targetId] = GameRole.simpleVillager;
 

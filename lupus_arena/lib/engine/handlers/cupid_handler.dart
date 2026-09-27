@@ -3,8 +3,6 @@ import '../../models/game_state.dart';
 import '../../models/player_model.dart';
 import 'role_action_handler.dart';
 
-/// Gestionnaire de rôle pour Cupidon.
-/// Désigne deux amoureux la première nuit dont les destins seront à jamais liés.
 class CupidHandler extends RoleActionHandler {
   @override
   GameRole get role => GameRole.cupid;

@@ -26,7 +26,6 @@ class DevotedServantHandler extends RoleActionHandler {
     final victimRole = state.playerRoles[victimId] ?? GameRole.simpleVillager;
     final updatedRoles = Map<String, GameRole>.from(state.playerRoles);
 
-    // La servante prend le rôle du défunt, le défunt devient Simple Villageois à titre posthume
     updatedRoles[actorId] = victimRole;
     updatedRoles[victimId] = GameRole.simpleVillager;
 

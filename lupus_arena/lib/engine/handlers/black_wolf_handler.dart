@@ -3,8 +3,6 @@ import '../../models/game_role.dart';
 import '../../models/game_state.dart';
 import 'role_action_handler.dart';
 
-/// Gestionnaire de rôle pour Le Loup Noir.
-/// Choisit un joueur chaque nuit pour lui couper la parole au lever du jour.
 class BlackWolfHandler extends RoleActionHandler {
   @override
   GameRole get role => GameRole.blackWolf;
@@ -24,7 +22,7 @@ class BlackWolfHandler extends RoleActionHandler {
   }) {
     final targetId = actionPayload['targetId'] as String?;
     if (targetId == null || !state.isAlive(targetId)) return state;
-    if (targetId == state.nightPrimaryVictimId) return state; // Inutile de réduire au silence la victime dévorée
+    if (targetId == state.nightPrimaryVictimId) return state;
 
     final acknowledged = Set<String>.from(state.nightAcknowledgedPlayerIds)..add(actorId);
     return state.copyWith(

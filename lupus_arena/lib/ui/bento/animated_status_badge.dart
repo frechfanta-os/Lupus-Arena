@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-/// Throttler pour éviter la saturation du moteur haptique lors du montage simultané de badges multiples.
 class HapticThrottler {
   static int _lastHapticTimestamp = 0;
   static const int minIntervalMs = 120;
@@ -15,8 +14,6 @@ class HapticThrottler {
   }
 }
 
-/// Micro-animation d'entrée douce (ScaleTransition + FadeIn, 280ms)
-/// accompagnée d'un retour haptique léger pour l'apparition des badges de statut.
 class AnimatedStatusBadge extends StatefulWidget {
   final Widget child;
   final Duration duration;
@@ -64,7 +61,7 @@ class _AnimatedStatusBadgeState extends State<AnimatedStatusBadge>
     _controller.forward();
 
     if (widget.enableHaptic) {
-      // Retour haptique léger et throttlé pour prévenir la congestion de la file haptique
+
       HapticThrottler.selectionClickThrottled();
     }
   }

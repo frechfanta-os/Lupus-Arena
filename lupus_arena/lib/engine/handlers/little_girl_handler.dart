@@ -3,9 +3,6 @@ import '../../models/game_role.dart';
 import '../../models/game_state.dart';
 import 'role_action_handler.dart';
 
-/// Gestionnaire de rôle pour La Petite Fille.
-/// La Petite Fille s'éveille secrètement durant la chasse des loups (nightWerewolves).
-/// Elle peut espionner leurs délibérations audio et télémétriques, ou fermer les yeux par prudence.
 class LittleGirlHandler extends RoleActionHandler {
   @override
   GameRole get role => GameRole.littleGirl;

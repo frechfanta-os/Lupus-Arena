@@ -72,7 +72,6 @@ void main() {
         'p4': PlayerModel(id: 'p4', name: 'Villager', isAlive: true, role: GameRole.simpleVillager),
       };
 
-      // Tour 2 (nuit paire) : Loup Blanc doit se réveiller après les loups
       final afterWolves = coordinator.getNextNightPhase(
         current: GamePhase.nightBlackWolf,
         round: 2,
@@ -81,7 +80,6 @@ void main() {
       );
       expect(afterWolves, equals(GamePhase.nightWhiteWerewolf));
 
-      // Après Loup Blanc : Renard actif doit se réveiller
       final afterWhiteWolf = coordinator.getNextNightPhase(
         current: GamePhase.nightWhiteWerewolf,
         round: 2,
@@ -90,7 +88,6 @@ void main() {
       );
       expect(afterWhiteWolf, equals(GamePhase.nightFox));
 
-      // Si le renard a perdu son flair, il est sauté
       final afterWhiteWolfNoFox = coordinator.getNextNightPhase(
         current: GamePhase.nightWhiteWerewolf,
         round: 2,
@@ -135,7 +132,6 @@ void main() {
         expandedRolesState: const ExpandedRolesState(foxPowerActive: true),
       );
 
-      // Cible p2 -> trio = p1, p2, p3. p3 est un loup !
       final nextState = handler.executeAction(
         state,
         actorId: 'p1',
@@ -175,7 +171,6 @@ void main() {
         expandedRolesState: const ExpandedRolesState(foxPowerActive: true),
       );
 
-      // Cible p3 -> trio = p2, p3, p4. Aucun loup !
       final nextState = handler.executeAction(
         state,
         actorId: 'p1',
@@ -476,7 +471,6 @@ void main() {
         },
       );
 
-      // Rejet de target1 (protégé la nuit d'avant)
       final rejectedState = handler.executeAction(
         state,
         actorId: 'def',
@@ -484,7 +478,6 @@ void main() {
       );
       expect(rejectedState.currentProtectedPlayerId, isNull);
 
-      // Succès pour target2
       final validState = handler.executeAction(
         state,
         actorId: 'def',
@@ -492,7 +485,6 @@ void main() {
       );
       expect(validState.currentProtectedPlayerId, equals('target2'));
 
-      // UI controls excluent target1
       final controls = handler.getUIControls(state, 'def');
       expect(controls.availableTargetIds, contains('target2'));
       expect(controls.availableTargetIds, isNot(contains('target1')));
@@ -513,7 +505,6 @@ void main() {
         },
       );
 
-      // Refus de cibler devoured
       final rejected = handler.executeAction(
         state,
         actorId: 'bw',
@@ -521,7 +512,6 @@ void main() {
       );
       expect(rejected.blackWolfTargetId, isNull);
 
-      // Succès sur target
       final valid = handler.executeAction(
         state,
         actorId: 'bw',
@@ -929,8 +919,6 @@ void main() {
         },
       );
 
-      // Le chevalier est à l'index 0. À sa gauche (circulaire vers l'arrière) :
-      // index - 1 -> index 3 qui est w2 !
       final nextState = RustySwordKnightHandler.onDevouredByWolves(state, 'k');
       expect(nextState.expandedRolesState.rustyKnightContaminatedWolfId, equals('w2'));
       expect(nextState.expandedRolesState.rustyKnightDeathNight, equals(2));

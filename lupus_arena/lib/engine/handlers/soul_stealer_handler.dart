@@ -26,7 +26,6 @@ class SoulStealerHandler extends RoleActionHandler {
     final targetRole = state.playerRoles[targetId] ?? GameRole.simpleVillager;
     final updatedRoles = Map<String, GameRole>.from(state.playerRoles);
 
-    // Échange des identités secrètes
     updatedRoles[actorId] = targetRole;
     updatedRoles[targetId] = GameRole.simpleVillager;
 

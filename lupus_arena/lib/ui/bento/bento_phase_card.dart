@@ -6,7 +6,6 @@ import '../theme/lupus_theme.dart';
 import 'bento_card.dart';
 import 'server_countdown_timer.dart';
 
-/// Composant Bento affichant la phase actuelle du jeu, la manche et le décompte
 class BentoPhaseCard extends StatelessWidget {
   final GamePhase phase;
   final int round;
@@ -47,7 +46,7 @@ class BentoPhaseCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Badge de Manche
+
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
@@ -80,7 +79,6 @@ class BentoPhaseCard extends StatelessWidget {
                 ),
               ),
 
-              // Timer Circulaire ou Affichage Décompte Réactif
               if (phaseEndsAt != null)
                 ServerCountdownBuilder(
                   phaseEndsAt: phaseEndsAt,
@@ -98,7 +96,6 @@ class BentoPhaseCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
 
-          // Titre et Description de Phase
           Row(
             children: [
               Container(

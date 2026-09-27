@@ -4,7 +4,6 @@ import '../models/player_model.dart';
 import 'expanded_roles_coordinator.dart';
 import 'mayor_coordinator.dart';
 
-/// Résultat de la résolution des morts du matin
 class MorningResolutionResult {
   final List<String> effectiveDeaths;
   final Map<String, dynamic> updates;
@@ -23,7 +22,6 @@ class MorningResolutionResult {
   });
 }
 
-/// Coordinateur d'arbitrage du cycle de vie et des phases de jeu (Automate d'états finis)
 class GamePhaseCoordinator {
   final MayorCoordinator mayorCoordinator;
 
@@ -31,10 +29,6 @@ class GamePhaseCoordinator {
     this.mayorCoordinator = const MayorCoordinator(),
   });
 
-  /// Séquence canonique stricte des nuits :
-  /// 1: Voleur (Nuit 1) -> 2: Cupidon (Nuit 1) -> 3: Salvateur -> 4: Loups-Garous ->
-  /// 5: Loup Noir -> 6: Loup Blanc (Paires) -> 7: Voyante -> 8: Renard -> 9: Sorcière ->
-  /// 10: Joueur de Flûte -> 11: Pyromane -> 12: Aube
   GamePhase getNextNightPhase({
     required GamePhase current,
     required int round,
@@ -50,7 +44,6 @@ class GamePhaseCoordinator {
     bool hasAliveWerewolves() =>
         players.values.any((p) => p.isAlive && getRole(p).isEvil);
 
-    // RÈGLE CANONIQUE : Sorcière active si au moins 1 potion restante
     bool hasActiveWitch() {
       final witch = players.values.cast<PlayerModel?>().firstWhere(
             (p) =>
@@ -66,7 +59,6 @@ class GamePhaseCoordinator {
       return hasVie || hasMort;
     }
 
-    // RÈGLE CANONIQUE : Voyante active si visions restantes > 0
     bool hasActiveSeer() {
       final seer = players.values.cast<PlayerModel?>().firstWhere(
             (p) =>
@@ -79,7 +71,6 @@ class GamePhaseCoordinator {
       return seer != null && seer.visionsRestantes > 0;
     }
 
-    // RÈGLE CANONIQUE : Renard actif si flair encore puissant
     bool hasActiveFox() {
       if (expandedRolesState != null &&
           (!expandedRolesState.foxPowerActive ||
@@ -130,7 +121,6 @@ class GamePhaseCoordinator {
     return findNext(currentIndex);
   }
 
-  /// Vérifie si une transition nocturne viole la règle de monotonie
   bool isNightRegression({
     required GamePhase current,
     required GamePhase next,
@@ -138,7 +128,6 @@ class GamePhaseCoordinator {
     return current.isNight && next.isNight && next.nightOrderIndex <= current.nightOrderIndex;
   }
 
-  /// Évalue les conditions de victoire pour tous les camps
   String? checkWinConditions({
     required Map<String, PlayerModel> players,
     required ExpandedRolesState expandedRolesState,
@@ -149,7 +138,6 @@ class GamePhaseCoordinator {
     final alive = players.values.where((p) => p.isAlive).toList();
     if (alive.isEmpty) return 'draw';
 
-    // 1. Victoire des Amoureux exclusifs
     final aliveLovers = alive.where((p) => p.isLover).toList();
     if (alive.length == 2 && aliveLovers.length == 2) {
       final r1 = getRole(aliveLovers[0]);
@@ -159,7 +147,6 @@ class GamePhaseCoordinator {
       }
     }
 
-    // 2. Victoire de la Secte / Sectaire
     final sectarianWin = ExpandedRolesCoordinator.checkSectarianWin(
       alivePlayers: alive,
       sectarianTeamA: expandedRolesState.sectarianTeamA,
@@ -169,7 +156,6 @@ class GamePhaseCoordinator {
       return sectarianWin;
     }
 
-    // 3. Victoire du Joueur de Flûte
     final piper = alive.firstWhere(
       (p) => getRole(p) == GameRole.piedPiper,
       orElse: () => PlayerModel(id: '', name: '', role: GameRole.simpleVillager),
@@ -181,7 +167,6 @@ class GamePhaseCoordinator {
       }
     }
 
-    // 4. Victoire du Loup Blanc solitaire
     final whiteWolf = alive.firstWhere(
       (p) => getRole(p) == GameRole.whiteWerewolf,
       orElse: () => PlayerModel(id: '', name: '', role: GameRole.simpleVillager),
@@ -190,7 +175,6 @@ class GamePhaseCoordinator {
       return 'whiteWolf';
     }
 
-    // 5. Victoire du Pyromane solitaire
     final pyro = alive.firstWhere(
       (p) => getRole(p) == GameRole.pyromaniac,
       orElse: () => PlayerModel(id: '', name: '', role: GameRole.simpleVillager),
@@ -199,12 +183,10 @@ class GamePhaseCoordinator {
       return 'pyromaniac';
     }
 
-    // 6. Victoire de l'Ange (si lynché au jour 1)
     if (expandedRolesState.angelWon) {
       return 'angel';
     }
 
-    // 7. Camps standards : Village vs Loups
     final evilCount = alive.where((p) => getRole(p).isEvil).length;
     final innocentCount = alive.length - evilCount;
 
@@ -214,7 +196,6 @@ class GamePhaseCoordinator {
     return null;
   }
 
-  /// Ordonnancement automatique des phases diurnes (Maire, Débat, Vote, Résolution)
   GamePhase getNextDayPhase({
     required GamePhase current,
     required int round,
@@ -233,7 +214,6 @@ class GamePhaseCoordinator {
     );
   }
 
-  /// Calcul du poids électoral d'un joueur (+2 pour le Maire / Capitaine, 1 si <= 3 survivants)
   int getVoteWeight({
     required String voterId,
     required String? mayorPlayerId,

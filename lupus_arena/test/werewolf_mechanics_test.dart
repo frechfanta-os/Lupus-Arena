@@ -31,14 +31,12 @@ void main() {
       expect(pool['seer'], equals(1), reason: 'Une voyante requise pour $count joueurs');
     }
 
-    // Vérification spécifique table 4 joueurs
     final pool4 = GameNotifier.generateDefaultRolePool(4);
     expect(pool4['simple_werewolf'], equals(1));
     expect(pool4['seer'], equals(1));
     expect(pool4['witch'], equals(1));
     expect(pool4['simple_villager'], equals(1));
 
-    // Vérification spécifique table officielle 8 joueurs
     final pool8 = GameNotifier.generateDefaultRolePool(8);
     expect(pool8['simple_werewolf'], equals(2));
     expect(pool8['seer'], equals(1));
@@ -47,18 +45,15 @@ void main() {
     expect(pool8['little_girl'], equals(1));
     expect(pool8['simple_villager'], equals(2));
 
-    // Vérification spécifique table officielle 12 joueurs (3 loups)
     final pool12 = GameNotifier.generateDefaultRolePool(12);
     expect(pool12['simple_werewolf'], equals(3));
     expect(pool12['thief'], equals(1));
     expect(pool12['cupid'], equals(1));
 
-    // Vérification spécifique table officielle 16 joueurs (4 loups)
     final pool16 = GameNotifier.generateDefaultRolePool(16);
     expect(pool16['simple_werewolf'], equals(4));
     expect(pool16['simple_villager'], equals(6));
 
-    // Vérification table maximale 30 joueurs
     final pool30 = GameNotifier.generateDefaultRolePool(30);
     expect(pool30.values.fold<int>(0, (a, b) => a + b), equals(30));
     expect(pool30['simple_werewolf'], equals(7));
@@ -101,24 +96,20 @@ void main() {
     final isMeEvil = myPlayer.role.isEvil;
     expect(isMeEvil, isTrue);
 
-    // Le loup reconnaît son allié
     expect(isMeEvil && allyWolf.role.isEvil, isTrue);
 
-    // Le loup ne prend pas le villageois pour un loup
     expect(isMeEvil && villager.role.isEvil, isFalse);
   });
 
   test('La Voyante inspecte le Loup Blanc comme un Simple Villageois', () {
-    // 1. Test via la fonction statique d'inspection
+
     expect(GameNotifier.getSeerPerceivedRole(GameRole.whiteWerewolf), equals(GameRole.simpleVillager));
     expect(GameNotifier.getSeerPerceivedRole(Role.loupBlanc), equals(Role.simpleVillageois));
 
-    // 2. Les autres rôles conservent leur identité
     expect(GameNotifier.getSeerPerceivedRole(GameRole.simpleWerewolf), equals(GameRole.simpleWerewolf));
     expect(GameNotifier.getSeerPerceivedRole(GameRole.witch), equals(GameRole.witch));
     expect(GameNotifier.getSeerPerceivedRole(GameRole.simpleVillager), equals(GameRole.simpleVillager));
 
-    // 3. Test via le getter de perception de rôle
     expect(GameRole.whiteWerewolf.seerPerception, equals(GameRole.simpleVillager));
     expect(Role.loupBlanc.seerPerception, equals(Role.simpleVillageois));
     expect(GameRole.seer.seerPerception, equals(GameRole.seer));
@@ -172,7 +163,7 @@ void main() {
   });
 
   test('Anti-doublon et remplacement de socket lors de la reconnexion d\'un joueur', () {
-    // 1. Joueur initialement connecté avec un premier socket
+
     final initialPlayer = PlayerModel(
       id: 'user_unique_123',
       name: 'Lancelot',
@@ -188,22 +179,19 @@ void main() {
     final initialMap = initialPlayer.toMap();
     expect(initialMap['socketId'], equals('sock_init_abc'));
 
-    // 2. Vérification de présence (hasPlayer) dans le salon
     final room = GameRoom(
       roomCode: 'TEST_ROOM',
       hostId: 'host_1',
       players: {'user_unique_123': initialPlayer},
-      seatingOrder: ['user_unique_123', 'user_unique_123'], // Tentative de doublon de siège
+      seatingOrder: ['user_unique_123', 'user_unique_123'],
     );
 
     expect(room.hasPlayer('user_unique_123'), isTrue);
     expect(room.hasPlayer('user_unknown_999'), isFalse);
 
-    // playerList élimine strictement les doublons
     expect(room.playerList.length, equals(1));
     expect(room.playerList.first.id, equals('user_unique_123'));
 
-    // 3. Reconnexion : remplacement du socket au lieu de dupliquer l'entrée
     const newSocketId = 'sock_reconnected_xyz';
     const newAgoraUid = 1002;
 
@@ -219,19 +207,17 @@ void main() {
       },
     );
 
-    // Le nombre de joueurs n'a pas augmenté (aucune duplication)
     expect(updatedRoom.players.length, equals(1));
     expect(updatedRoom.playerList.length, equals(1));
     expect(updatedRoom.players['user_unique_123']?.socketId, equals(newSocketId));
     expect(updatedRoom.players['user_unique_123']?.agoraUid, equals(newAgoraUid));
-    // Le rôle et l'état de vie sont strictement conservés
+
     expect(updatedRoom.players['user_unique_123']?.role, equals(GameRole.defender));
     expect(updatedRoom.players['user_unique_123']?.isAlive, isTrue);
   });
 
   test('Minute vocale collective à la victoire (60 secondes) : tous les joueurs parlent, puis micros coupés', () {
-    // 1. À la victoire (GamePhase.gameOver), tant que les 60s ne sont pas écoulées (isVictoryVoiceExpired = false) :
-    // Tous les joueurs (morts et vivants, innocents et loups, même réduits au silence) peuvent parler (shouldMute = false)
+
     final aliveVillagerMute = GameNotifier.calculateShouldMuteForPhase(
       phase: GamePhase.gameOver,
       isAlive: true,
@@ -272,8 +258,6 @@ void main() {
     );
     expect(evilDeadWolfMute, isFalse, reason: 'Loup mort également démuté pour débriefer');
 
-    // 2. À la fin de la minute (isVictoryVoiceExpired = true) :
-    // Le micro de TOUS les joueurs est coupé (shouldMute = true)
     final expiredAliveMute = GameNotifier.calculateShouldMuteForPhase(
       phase: GamePhase.gameOver,
       isAlive: true,
@@ -294,7 +278,6 @@ void main() {
     );
     expect(expiredDeadMute, isTrue, reason: 'Micro coupé à la fin de la minute pour le mort');
 
-    // 3. Comparaison avec les phases normales du jeu où les morts restent coupés
     final normalNightDeadMute = GameNotifier.calculateShouldMuteForPhase(
       phase: GamePhase.nightWerewolves,
       isAlive: false,
@@ -305,7 +288,6 @@ void main() {
     );
     expect(normalNightDeadMute, isTrue, reason: 'En jeu normal, un mort a son micro coupé');
 
-    // 4. Étanchéité absolue du micro des bots (isBot: true -> shouldMute = true en toutes circonstances)
     final botMuteInDebate = GameNotifier.calculateShouldMuteForPhase(
       phase: GamePhase.dayDebate,
       isAlive: true,
@@ -330,7 +312,7 @@ void main() {
   });
 
   test('Préparation du deck de cartes rôles adapté au nombre de joueurs et mélange Fisher-Yates', () {
-    // 1. Pour 6 joueurs : Loup Blanc, Loup Noir, Voyante, Sorcière, Chasseur, Villageois
+
     final deck6 = GameNotifier.prepareReplayRoleDeck(6);
     expect(deck6.length, equals(6));
     expect(deck6, contains(GameRole.whiteWerewolf));
@@ -339,24 +321,21 @@ void main() {
     expect(deck6, contains(GameRole.witch));
     expect(deck6, contains(GameRole.hunter));
     expect(deck6, contains(GameRole.simpleVillager));
-    // Tous les rôles sont distincts et différents
+
     expect(deck6.toSet().length, equals(6));
 
-    // 2. Pour différentes tailles de salon (4, 8, 12, 16 joueurs), tous les rôles du deck sont distincts
     for (final count in [4, 8, 12, 16]) {
       final deck = GameNotifier.prepareReplayRoleDeck(count);
       expect(deck.length, equals(count));
       expect(deck.toSet().length, equals(count), reason: 'Rôles distincts pour $count joueurs');
     }
 
-    // 3. Mélange Fisher-Yates : conserve l'ensemble des éléments et produit une permutation valide
     final originalDeck = List<GameRole>.from(deck6);
     final shuffledDeck = List<GameRole>.from(deck6);
     GameNotifier.fisherYatesShuffle(shuffledDeck);
     expect(shuffledDeck.length, equals(originalDeck.length));
     expect(shuffledDeck.toSet(), equals(originalDeck.toSet()));
 
-    // 4. Attribution à chaque joueur d'un rôle distinct et différent
     final players = List.generate(
       6,
       (i) => PlayerModel(id: 'player_$i', name: 'Guerrier_$i'),
@@ -385,7 +364,6 @@ void main() {
     expect(deadSilencedPlayer.pv, equals(0));
     expect(deadSilencedPlayer.isReadyReplay, isTrue);
 
-    // Réinitialisation canonique demandée par le prompt
     final resetPlayer = deadSilencedPlayer.copyWith(
       isAlive: true,
       isMuted: false,
@@ -421,14 +399,12 @@ void main() {
     expect(room.isPlayerReadyReplay('p2'), isTrue);
     expect(room.isPlayerReadyReplay('p3'), isFalse);
 
-    // Annulation du vote par p2
     final updatedRoom = room.copyWith(
       replayReadyUserIds: ['p1'],
     );
     expect(updatedRoom.replayReadyCount, equals(1));
     expect(updatedRoom.isPlayerReadyReplay('p2'), isFalse);
 
-    // Sérialisation et désérialisation
     final map = room.toMap();
     expect(map['replayReadyUserIds'], equals(['p1', 'p2']));
     final restoredRoom = GameRoom.fromMap(map, 'TEST_REPLAY');
@@ -519,31 +495,26 @@ void main() {
 
     test('Débat du village : saut automatique des joueurs bâillonnés (isMuted)', () {
       final p1 = const PlayerModel(id: '1', name: 'Alice', role: GameRole.simpleVillager, isAlive: true, isMuted: false);
-      final p2 = const PlayerModel(id: '2', name: 'Bob', role: GameRole.simpleVillager, isAlive: true, isMuted: true); // Bâillonné
+      final p2 = const PlayerModel(id: '2', name: 'Bob', role: GameRole.simpleVillager, isAlive: true, isMuted: true);
       final p3 = const PlayerModel(id: '3', name: 'Charlie', role: GameRole.simpleVillager, isAlive: true, isMuted: false);
 
       final players = {'1': p1, '2': p2, '3': p3};
 
-      // Simulation de la file de débat
       final queue = List<String>.from(players.values.where((p) => p.isAlive).map((p) => p.id));
       final logs = <String>[];
 
-      // Premier orateur : Alice
       expect(queue.first, equals('1'));
 
-      // Alice termine son tour -> suppression d'Alice
       queue.removeAt(0);
 
-      // Algorithme de saut automatique identique à passTurnDebate & _routeToDayPhase
       while (queue.isNotEmpty && (players[queue.first]?.isMuted ?? false)) {
         final mutedId = queue.removeAt(0);
         final mutedName = players[mutedId]?.name ?? 'Un citoyen';
         logs.add('🔇 $mutedName est bâillonné par les loups ! Son tour de parole est sauté.');
       }
 
-      // Bob a été sauté immédiatement sans temps mort
       expect(logs, contains(contains('Bob est bâillonné par les loups')));
-      // La parole est directement chez Charlie
+
       expect(queue.first, equals('3'));
     });
 
@@ -557,7 +528,6 @@ void main() {
       final queue = ['1', '2', '3', '4'];
       final logs = <String>[];
 
-      // Alice cède sa parole
       queue.removeAt(0);
 
       while (queue.isNotEmpty && (players[queue.first]?.isMuted ?? false)) {
@@ -566,7 +536,6 @@ void main() {
         logs.add('🔇 $mutedName est bâillonné par les loups ! Son tour de parole est sauté.');
       }
 
-      // Bob et Charlie sautés
       expect(logs.length, equals(2));
       expect(queue.first, equals('4'));
     });
@@ -579,7 +548,7 @@ void main() {
       final queue = ['1', '2'];
       final logs = <String>[];
 
-      queue.removeAt(0); // Alice a fini
+      queue.removeAt(0);
 
       while (queue.isNotEmpty && (players[queue.first]?.isMuted ?? false)) {
         final mutedId = queue.removeAt(0);
@@ -590,25 +559,21 @@ void main() {
     });
 
     test('UpdateService : comparaison de versions sémantiques et build numbers', () {
-      // Cas de base
+
       expect(UpdateService.isRemoteVersionGreater('v1.0.22+23', '1.0.21+22'), isTrue);
       expect(UpdateService.isRemoteVersionGreater('1.0.22+23', '1.0.21+22'), isTrue);
       expect(UpdateService.isRemoteVersionGreater('1.0.21+22', '1.0.21+22'), isFalse);
       expect(UpdateService.isRemoteVersionGreater('1.0.20+21', '1.0.21+22'), isFalse);
 
-      // Même version majeure.mineure.patch, build number supérieur
       expect(UpdateService.isRemoteVersionGreater('1.0.21+23', '1.0.21+22'), isTrue);
       expect(UpdateService.isRemoteVersionGreater('1.0.21+21', '1.0.21+22'), isFalse);
 
-      // Version majeure supérieure
       expect(UpdateService.isRemoteVersionGreater('2.0.0+1', '1.0.21+22'), isTrue);
       expect(UpdateService.isRemoteVersionGreater('1.0.0+1', '2.0.0+1'), isFalse);
 
-      // Format sans préfixe ou avec préfixe 'v'
       expect(UpdateService.isRemoteVersionGreater('V1.0.22', '1.0.21'), isTrue);
       expect(UpdateService.isRemoteVersionGreater('v1.0.22+23', 'v1.0.22+23'), isFalse);
 
-      // Version v1.0.23+24, v1.0.24+25 & v1.0.25+26
       expect(UpdateService.isRemoteVersionGreater('v1.0.23+24', '1.0.22+23'), isTrue);
       expect(UpdateService.isRemoteVersionGreater('1.0.23+24', '1.0.22+23'), isTrue);
       expect(UpdateService.isRemoteVersionGreater('v1.0.24+25', '1.0.23+24'), isTrue);
@@ -627,11 +592,9 @@ void main() {
 
       expect(canValidate(victimId, silenceId), isFalse);
 
-      // Invalide si la même personne est ciblée par la mort et le silence
       silenceId = 'v1';
       expect(canValidate(victimId, silenceId), isFalse);
 
-      // Valide si deux cibles distinctes sont choisies
       silenceId = 's1';
       expect(canValidate(victimId, silenceId), isTrue);
     });
@@ -645,13 +608,10 @@ void main() {
         return target.isAlive && target.id != currentVictimId;
       }
 
-      // Auto-mutisme autorisé pour alibi
       expect(canSilence(wolf1, victim.id), isTrue);
 
-      // Ciblage d'un confrère loup autorisé pour bluff intra-meute
       expect(canSilence(wolf2, victim.id), isTrue);
 
-      // Interdiction formelle sur la proie vouée à mourir cette nuit-là
       expect(canSilence(victim, victim.id), isFalse);
     });
 
@@ -692,18 +652,14 @@ void main() {
       const wolfVictim = PlayerModel(id: 'v1', name: 'VictimeDesLoups', role: GameRole.simpleVillager, isAlive: true);
       const randomPlayer = PlayerModel(id: 'r1', name: 'JoueurAleatoire', role: GameRole.simpleVillager, isAlive: true);
 
-      // Règle stricte : la potion de vie ne peut cibler QUE la victime des loups (widget.room.nightVictimId)
       String? getWitchLifePotionTarget(String? nightVictimId) {
-        return nightVictimId; // Aucun fallback manuel autorisé
+        return nightVictimId;
       }
 
-      // Cas 1 : Une victime a été désignée par les loups -> la potion de vie est verrouillée sur cette victime
       expect(getWitchLifePotionTarget(wolfVictim.id), equals('v1'), reason: 'La sorcière peut sauver la victime désignée');
 
-      // Cas 2 : Aucune victime désignée par les loups -> la potion de vie ne peut pas être utilisée
       expect(getWitchLifePotionTarget(null), isNull, reason: 'Impossible d\'utiliser la potion de vie sans victime des loups');
 
-      // Potion de poison : la sorcière conserve le choix libre de la cible vivante
       bool canUsePoison(PlayerModel target, int potionsMort) {
         return potionsMort > 0 && target.isAlive;
       }
@@ -721,25 +677,23 @@ void main() {
 
       void handleWerewolfSelection(String id) {
         if (wolfVictimId == null) {
-          // 1er clic : Dévorer
+
           wolfVictimId = id;
         } else if (wolfVictimId == id) {
-          // Second clic sur la même victime : Dé-sélection pour changer de victime
+
           wolfVictimId = null;
         } else if (wolfMuteId == null) {
-          // 2e clic : Museler + auto-validation
+
           wolfMuteId = id;
           nextPhaseTriggered = true;
         }
       }
 
-      // 1er clic : Sélection de la proie à dévorer
       handleWerewolfSelection(player1.id);
       expect(wolfVictimId, equals('p1'));
       expect(wolfMuteId, isNull);
       expect(nextPhaseTriggered, isFalse);
 
-      // 2e clic sur un joueur différent : Sélection du joueur à museler + auto-validation immédiate
       handleWerewolfSelection(player2.id);
       expect(wolfVictimId, equals('p1'), reason: '1er joueur = Dévoré');
       expect(wolfMuteId, equals('p2'), reason: '2e joueur = Muselé');
@@ -759,7 +713,7 @@ void main() {
         if (wolfVictimId == null) {
           wolfVictimId = id;
         } else if (wolfVictimId == id) {
-          // Second clic sur la même victime -> Dé-sélectionne la victime
+
           wolfVictimId = null;
         } else if (wolfMuteId == null) {
           wolfMuteId = id;
@@ -767,24 +721,20 @@ void main() {
         }
       }
 
-      // 1. Clic sur Joueur 1 -> Devient la victime
       handleWerewolfSelection(player1.id);
       expect(wolfVictimId, equals('p1'));
       expect(wolfMuteId, isNull);
 
-      // 2. Second clic sur Joueur 1 -> Annule la sélection de Joueur 1
       handleWerewolfSelection(player1.id);
       expect(wolfVictimId, isNull, reason: 'Le second clic sur la même victime doit annuler le choix');
       expect(wolfMuteId, isNull);
       expect(nextPhaseTriggered, isFalse);
 
-      // 3. Clic sur Joueur 2 -> Devient la NOUVELLE victime
       handleWerewolfSelection(player2.id);
       expect(wolfVictimId, equals('p2'), reason: 'Joueur 2 est désormais la nouvelle victime');
       expect(wolfMuteId, isNull);
       expect(nextPhaseTriggered, isFalse);
 
-      // 4. Clic sur Joueur 3 -> Devient le joueur muselé et valide le tour
       handleWerewolfSelection(player3.id);
       expect(wolfVictimId, equals('p2'));
       expect(wolfMuteId, equals('p3'));
@@ -798,10 +748,8 @@ void main() {
         const PlayerModel(id: 'p3', name: 'P3', role: GameRole.witch, isAlive: true),
       ];
 
-      // Cas 1 : Aucune sélection manuelle avant la fin du temps imparti -> Résolution automatique garantie
-      // ignore: unnecessary_null_comparison
       String victimId = alivePlayers.isNotEmpty ? alivePlayers.first.id : '';
-      // ignore: unnecessary_null_comparison
+
       String muteId = alivePlayers.length > 1
           ? alivePlayers.firstWhere((p) => p.id != victimId).id
           : '';
@@ -814,14 +762,12 @@ void main() {
     test('Sorcière : Utilisation combinée des deux potions (Vie & Mort) et transition de rôle', () {
       var witch = const PlayerModel(id: 'w1', name: 'Sorciere', role: GameRole.witch, potionsVie: 1, potionsMort: 1, isAlive: true);
 
-      // 1. Utilisation de la potion de vie
       final newVie = witch.potionsVie - 1;
       witch = witch.copyWith(potionsVie: newVie);
       expect(witch.potionsVie, equals(0));
       expect(witch.potionsMort, equals(1));
       expect(witch.role, equals(GameRole.witch), reason: 'Reste Sorcière car il lui reste 1 potion de mort');
 
-      // 2. Utilisation de la potion de mort dans la même nuit
       final newMort = witch.potionsMort - 1;
       final isDechue = newVie == 0 && newMort == 0;
       witch = witch.copyWith(
@@ -838,18 +784,14 @@ void main() {
         return room == null;
       }
 
-      // 1. Sur le menu principal (aucune room)
       expect(shouldPlayLobbyMusic(null), isTrue, reason: 'La musique doit jouer sur le Menu Principal');
 
-      // 2. En salle d'attente / waiting lobby
       const waitingRoom = GameRoom(roomCode: 'TEST1', hostId: 'h1', phase: GamePhase.lobby);
       expect(shouldPlayLobbyMusic(waitingRoom), isFalse, reason: 'La musique doit s\'arrêter immédiatement en salle d\'attente');
 
-      // 3. En partie simulée / Dev Mode
       const devRoom = GameRoom(roomCode: 'DEV01', hostId: 'h1', phase: GamePhase.nightWerewolves, isDevRoom: true);
       expect(shouldPlayLobbyMusic(devRoom), isFalse, reason: 'La musique doit être coupée pendant une partie simulée DevMode');
 
-      // 4. En arène de jeu classique
       const inGameRoom = GameRoom(roomCode: 'TEST2', hostId: 'h1', phase: GamePhase.dayDebate);
       expect(shouldPlayLobbyMusic(inGameRoom), isFalse, reason: 'La musique doit être coupée dans l\'arène de jeu');
     });
@@ -860,7 +802,6 @@ void main() {
         agoraRecovered = true;
       }
 
-      // Simule la détection d'autorisation microphone après retour d'une mise à jour in-app ou paramètres système
       bool isMicGranted = false;
       void onPermissionChanged(bool granted) {
         isMicGranted = granted;
@@ -872,49 +813,43 @@ void main() {
       expect(isMicGranted, isFalse);
       expect(agoraRecovered, isFalse);
 
-      // Le système accorde la permission en arrière-plan
       onPermissionChanged(true);
       expect(isMicGranted, isTrue);
       expect(agoraRecovered, isTrue, reason: 'Agora doit se réarmer automatiquement dès que la permission est actualisée');
     });
 
     test('Fog of War : Règle de visibilité du badge Amoureux (IN_LOVE)', () {
-      // 1. Cible non amoureuse -> Faux pour tous
+
       expect(FogOfWarService.canSeeLoverBadge(
         targetIsLover: false,
         observerRole: GameRole.cupid,
         observerIsLover: true,
       ), isFalse);
 
-      // 2. Observateur est Cupidon -> Vrai
       expect(FogOfWarService.canSeeLoverBadge(
         targetIsLover: true,
         observerRole: GameRole.cupid,
         observerIsLover: false,
       ), isTrue);
 
-      // 3. Observateur est l'un des amoureux -> Vrai
       expect(FogOfWarService.canSeeLoverBadge(
         targetIsLover: true,
         observerRole: GameRole.simpleVillager,
         observerIsLover: true,
       ), isTrue);
 
-      // 4. Observateur est un villageois lambda (non amoureux) -> Faux
       expect(FogOfWarService.canSeeLoverBadge(
         targetIsLover: true,
         observerRole: GameRole.simpleVillager,
         observerIsLover: false,
       ), isFalse);
 
-      // 5. Observateur est un loup (non amoureux) -> Faux
       expect(FogOfWarService.canSeeLoverBadge(
         targetIsLover: true,
         observerRole: GameRole.simpleWerewolf,
         observerIsLover: false,
       ), isFalse);
 
-      // 6. Observateur en mode Dev -> Vrai
       expect(FogOfWarService.canSeeLoverBadge(
         targetIsLover: true,
         observerRole: GameRole.simpleVillager,
@@ -924,28 +859,25 @@ void main() {
     });
 
     test('Fog of War : Règle de visibilité du badge Charmé (CHARMED)', () {
-      // 1. Cible non charmée -> Faux pour tous
+
       expect(FogOfWarService.canSeeCharmedBadge(
         targetIsCharmed: false,
         observerRole: GameRole.piedPiper,
         observerIsCharmed: true,
       ), isFalse);
 
-      // 2. Observateur est le Joueur de Flûte -> Vrai
       expect(FogOfWarService.canSeeCharmedBadge(
         targetIsCharmed: true,
         observerRole: GameRole.piedPiper,
         observerIsCharmed: false,
       ), isTrue);
 
-      // 3. Observateur est lui-même charmé -> Vrai
       expect(FogOfWarService.canSeeCharmedBadge(
         targetIsCharmed: true,
         observerRole: GameRole.simpleVillager,
         observerIsCharmed: true,
       ), isTrue);
 
-      // 4. Observateur non charmé -> Faux
       expect(FogOfWarService.canSeeCharmedBadge(
         targetIsCharmed: true,
         observerRole: GameRole.simpleVillager,
@@ -956,7 +888,6 @@ void main() {
     test('Anti-Résurrection : Seule la potion de vie de la sorcière sur la victime des loups peut sauver', () {
       const deadPlayer = PlayerModel(id: 'p1', name: 'Dead', role: GameRole.simpleVillager, isAlive: false);
 
-      // Simule le garde appliqué dans _playersSubscription et _syncState
       bool canPlayerRevive({
         required bool currentlyAlive,
         required bool incomingAlive,
@@ -968,13 +899,12 @@ void main() {
         if (!currentlyAlive && incomingAlive) {
           final isSavedByWitch = witchHealed && playerId == nightVictimId;
           if (!isSavedByWitch && !isAdmin) {
-            return false; // Verrou anti-résurrection
+            return false;
           }
         }
         return incomingAlive;
       }
 
-      // Snapshot Firebase corrompu ou désynchronisé tentant de réanimer un mort
       expect(canPlayerRevive(
         currentlyAlive: deadPlayer.isAlive,
         incomingAlive: true,
@@ -983,7 +913,6 @@ void main() {
         playerId: deadPlayer.id,
       ), isFalse, reason: 'Un joueur mort ne peut pas être ressuscité par Firebase');
 
-      // Tentative de réanimation après élection du capitaine
       expect(canPlayerRevive(
         currentlyAlive: deadPlayer.isAlive,
         incomingAlive: true,
@@ -992,7 +921,6 @@ void main() {
         playerId: deadPlayer.id,
       ), isFalse, reason: 'Élection du maire ne doit jamais ressusciter un mort');
 
-      // Seule la potion de guérison sur la victime légitime autorise la vie
       expect(canPlayerRevive(
         currentlyAlive: deadPlayer.isAlive,
         incomingAlive: true,
@@ -1050,7 +978,6 @@ void main() {
         return updated;
       }
 
-      // 1. Snapshot réseau prétendant que dead_p1 est vivant (ex: reconnexion ou désynchronisation)
       final incomingZombie = {
         'dead_p1': const PlayerModel(id: 'dead_p1', name: 'Dead P1', role: GameRole.simpleVillager, isAlive: true),
         'alive_p3': const PlayerModel(id: 'alive_p3', name: 'Alive P3', role: GameRole.simpleVillager, isAlive: true),
@@ -1066,7 +993,6 @@ void main() {
       expect(resolved['dead_p1']!.isAlive, isFalse, reason: 'dead_p1 doit RESTER mort malgré le snapshot');
       expect(resolved['alive_p3']!.isAlive, isTrue, reason: 'alive_p3 reste vivant');
 
-      // 2. Utilisation légitime de la potion de la sorcière sur dead_p1
       final resolvedAfterWitch = processIncomingSnapshot(
         incoming: incomingZombie,
         cemetery: cemeteryRegistry,
@@ -1088,26 +1014,22 @@ void main() {
       final registry = DeathRegistryService.instance;
       registry.clearForNewGame();
 
-      // 1. Initialement vide
       expect(registry.isDead('player_x'), isFalse);
       expect(registry.isAlive('player_x'), isTrue);
 
-      // 2. Inscription d'un joueur éliminé
       registry.markDead('player_x');
       expect(registry.isDead('player_x'), isTrue);
       expect(registry.isAlive('player_x'), isFalse);
 
-      // 3. PlayerModel.fromMap force isAlive à false si le joueur est dans le registre
       final incomingZombieMap = {
         'id': 'player_x',
         'name': 'Guerrier X',
         'role': 'simpleVillager',
-        'isAlive': true, // Réseau prétend qu'il est vivant
+        'isAlive': true,
       };
       final zombiePlayer = PlayerModel.fromMap(incomingZombieMap);
       expect(zombiePlayer.isAlive, isFalse, reason: 'PlayerModel.fromMap doit forcer isAlive à false pour tout joueur dans le DeathRegistryService');
 
-      // 4. GameRoom.alivePlayers exclut les défunts
       final room = GameRoom(
         roomCode: 'TEST',
         hostId: 'host',
@@ -1121,13 +1043,11 @@ void main() {
       expect(room.alivePlayers.map((p) => p.id), contains('player_y'));
       expect(room.deadPlayers.map((p) => p.id), contains('player_x'));
 
-      // 5. Seule la sorcière peut réanimer
       registry.allowWitchRevive('player_x');
       expect(registry.isDead('player_x'), isFalse);
       final revivedPlayer = PlayerModel.fromMap(incomingZombieMap);
       expect(revivedPlayer.isAlive, isTrue, reason: 'Après intervention de la Sorcière, le joueur peut être reconstruit vivant');
 
-      // 6. Nettoyage pour nouvelle partie
       registry.clearForNewGame();
       expect(registry.deadPlayerIds.isEmpty, isTrue);
     });
@@ -1138,9 +1058,9 @@ void main() {
       registry.markDead('dead_1');
 
       final players = {
-        'dead_1': const PlayerModel(id: 'dead_1', name: 'Dead 1', isAlive: true), // Prétend vivant
+        'dead_1': const PlayerModel(id: 'dead_1', name: 'Dead 1', isAlive: true),
         'alive_1': const PlayerModel(id: 'alive_1', name: 'Alive 1', isAlive: true),
-        'dead_2': const PlayerModel(id: 'dead_2', name: 'Dead 2', isAlive: false), // Appris comme mort
+        'dead_2': const PlayerModel(id: 'dead_2', name: 'Dead 2', isAlive: false),
       };
 
       final enforced = registry.filterOrEnforce(players);
@@ -1168,12 +1088,10 @@ void main() {
       expect(room.nightVictimId, equals('victim_p1'));
       expect(room.blackWolfTargetId, equals('silenced_p2'));
 
-      // Test sans clear : conserve les valeurs précédentes
       final roomRetained = room.copyWith(round: 2);
       expect(roomRetained.nightVictimId, equals('victim_p1'));
       expect(roomRetained.blackWolfTargetId, equals('silenced_p2'));
 
-      // Test avec purge explicite de l'aube
       final roomCleared = room.copyWith(
         clearNightVictimId: true,
         clearBlackWolfTargetId: true,
@@ -1210,7 +1128,6 @@ void main() {
         'alive_p3': const PlayerModel(id: 'alive_p3', name: 'Vivant P3', isAlive: true),
       };
 
-      // Si nightVictimId dans la room pointe vers un joueur décédé de la nuit précédente
       final room = GameRoom(
         roomCode: 'TEST',
         hostId: 'host',
@@ -1220,7 +1137,6 @@ void main() {
         players: players,
       );
 
-      // Simulation du filtrage actif : un joueur mort ne doit JAMAIS être considéré comme victime valide
       final rawVictimId = room.nightVictimId;
       final victimPlayer = rawVictimId != null ? room.players[rawVictimId] : null;
       final effectiveVictimId = (victimPlayer != null && victimPlayer.isAlive && !registry.isDead(rawVictimId!))
@@ -1242,7 +1158,7 @@ void main() {
 
     group('Synchronisation temporelle, Anti-Rollback et Idempotence des phases', () {
       test('Garde Monotone Strict : Interdiction de rétrograder le tour ou reculer de Nuit vers Jour', () {
-        // État actuel : Tour 2, Phase Nuit des Loups
+
         final currentRoom = GameRoom(
           roomCode: 'TEST_SYNC',
           hostId: 'host',
@@ -1250,50 +1166,44 @@ void main() {
           round: 2,
         );
 
-        // Simulation de la validation anti-rollback de _syncState / public_state
         bool isValidStateUpdate(GameRoom current, Map<String, dynamic> incoming) {
           final incomingRound = incoming['round'] is int ? incoming['round'] as int : current.round;
           if (incomingRound < current.round) {
-            return false; // Rejeté : tour antérieur
+            return false;
           }
           final rawPhase = incoming['phase']?.toString() ?? incoming['currentPhase']?.toString();
           if (rawPhase != null) {
             final incomingPhase = GamePhase.fromString(rawPhase);
             if (incomingRound == current.round) {
               if (current.phase.isNight && incomingPhase.isDay) {
-                return false; // Rejeté : rétrogradation Nuit -> Jour
+                return false;
               }
               if (current.phase.isNight &&
                   incomingPhase.isNight &&
                   incomingPhase.nightOrderIndex < current.phase.nightOrderIndex) {
-                return false; // Rejeté : rétrogradation dans l'ordre nocturne
+                return false;
               }
             }
           }
           return true;
         }
 
-        // Test 1: Paquet retardataire du Tour 1 (ex: verdict ou vote du Jour 1)
         final staleRoundPacket = {'round': 1, 'phase': 'dayResolution'};
         expect(isValidStateUpdate(currentRoom, staleRoundPacket), isFalse,
             reason: 'Un paquet du Tour 1 doit impérativement être rejeté si la salle est au Tour 2');
 
-        // Test 2: Paquet rétrogradant de Nuit vers Jour au sein du Tour 2
         final nightToDayRollbackPacket = {'round': 2, 'phase': 'dayVoting'};
         expect(isValidStateUpdate(currentRoom, nightToDayRollbackPacket), isFalse,
             reason: 'Une phase diurne ne peut pas écraser une phase nocturne au même tour');
 
-        // Test 3: Rétrogradation dans la séquence de nuit (ex: Loups vers Salvateur)
         final nightOrderRollbackPacket = {'round': 2, 'phase': 'nightDefender'};
         expect(isValidStateUpdate(currentRoom, nightOrderRollbackPacket), isFalse,
             reason: 'L\'ordre canonique nocturne ne peut pas reculer');
 
-        // Test 4: Progression valide (Loups vers Voyante)
         final validProgression = {'round': 2, 'phase': 'nightSeer'};
         expect(isValidStateUpdate(currentRoom, validProgression), isTrue,
             reason: 'Une progression normale vers la phase suivante de la nuit doit être acceptée');
 
-        // Test 5: Progression valide vers le tour suivant (Tour 2 Nuit -> Tour 3 Matin / Aube)
         final nextRoundProgression = {'round': 3, 'phase': 'morningAnnouncement'};
         expect(isValidStateUpdate(currentRoom, nextRoundProgression), isTrue,
             reason: 'Une progression vers un tour supérieur doit être acceptée');
@@ -1307,32 +1217,28 @@ void main() {
             return false;
           }
           if (resolvedRounds.contains(round)) {
-            return false; // Déjà résolu (idempotence)
+            return false;
           }
           resolvedRounds.add(round);
           return true;
         }
 
-        // Premier appel au Jour 1 : accepté
         expect(tryResolveDayVote(1, GamePhase.dayVoting), isTrue);
         expect(resolvedRounds.contains(1), isTrue);
 
-        // Deuxième appel intempestif (ex: quorum tardif, timer redondant) : rejeté
         expect(tryResolveDayVote(1, GamePhase.dayVoting), isFalse,
             reason: 'Le vote du Tour 1 ne peut pas être résolu une deuxième fois');
 
-        // Appel pendant une phase non-vote (ex: dayResolution) : rejeté
         expect(tryResolveDayVote(1, GamePhase.dayResolution), isFalse,
             reason: 'La résolution ne peut s\'exécuter que pendant un scrutin diurne');
 
-        // Tour 2 : premier appel accepté
         expect(tryResolveDayVote(2, GamePhase.dayVoting), isTrue,
             reason: 'Le scrutin du Tour 2 doit pouvoir se résoudre normalement');
         expect(resolvedRounds.contains(2), isTrue);
       });
 
       test('Validation de la protection UI de dérive temporelle (drift)', () {
-        // Simule le garde onTimerExpired de arena_game_screen.dart
+
         bool shouldTriggerExpiration({
           required GamePhase widgetPhase,
           required int widgetRound,
@@ -1340,12 +1246,11 @@ void main() {
           required int currentRoomRound,
         }) {
           if (currentRoomPhase != widgetPhase || currentRoomRound != widgetRound) {
-            return false; // Orphelin : la machine à états a déjà changé
+            return false;
           }
           return true;
         }
 
-        // Cas nominal : l'UI et la salle concordent
         expect(
           shouldTriggerExpiration(
             widgetPhase: GamePhase.dayResolution,
@@ -1356,7 +1261,6 @@ void main() {
           isTrue,
         );
 
-        // Cas de race condition vidéo (1:44) : timer UI du Jour 1 expire alors que la salle est en Nuit 2
         expect(
           shouldTriggerExpiration(
             widgetPhase: GamePhase.dayResolution,
@@ -1372,7 +1276,7 @@ void main() {
 
     group('Évaluation synchrone et coupure immédiate de fin de partie (checkGameEnd / evaluateVictoryConditions)', () {
       test('Parité stricte des Loups : totalLoupsVivants >= totalVillageoisVivants accorde la victoire immédiate à la meute', () {
-        // 2 Loups et 2 Villageois vivants (parité 2 >= 2)
+
         final players = {
           'wolf_1': const PlayerModel(id: 'wolf_1', name: 'Loup 1', role: GameRole.simpleWerewolf, isAlive: true),
           'wolf_2': const PlayerModel(id: 'wolf_2', name: 'Loup 2', role: GameRole.simpleWerewolf, isAlive: true),
@@ -1393,7 +1297,7 @@ void main() {
       });
 
       test('Exception du couple mixte : la parité des loups est suspendue tant qu\'un couple mixte survit', () {
-        // 2 Loups et 2 Villageois vivants, mais wolf_1 est en couple avec v_1 (couple mixte)
+
         final players = {
           'wolf_1': const PlayerModel(
             id: 'wolf_1',
@@ -1461,7 +1365,7 @@ void main() {
       });
 
       test('Interruption immédiate du flux : refus d\'enchaîner vers le débat ou l\'élection du maire si victoire acquise', () {
-        // Simule le garde _routeToDayPhase
+
         String routeDayPhase(GameRoom room) {
           final win = GameNotifier.checkWinConditions(room);
           if (win != null) {
@@ -1473,7 +1377,6 @@ void main() {
           return GamePhase.dayDebate.name;
         }
 
-        // Salle au Jour 1, sans maire, mais où les loups ont atteint la parité dès l'aube
         final parityRoom = GameRoom(
           roomCode: 'TEST_ROUTE_STOP',
           hostId: 'host',

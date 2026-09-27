@@ -1,11 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// Bouton Médiéval Fantastique RPG Haut de Gamme (MedievalFantasyButton)
-/// Inspiré des assets graphiques World of Warcraft, Hearthstone et RPG Dark Fantasy :
-/// - Cadre extérieur sculpté en bronze / métal / pierre taillée
-/// - Texture et dégradé intérieur façon gemme taillée (Améthyste, Rubis, Ardoise runique, Or)
-/// - Biseau avec reflet spéculaire supérieur et ombre d'incision inférieure
-/// - Halo magique (Outer Glow) et ombre portée profonde
 class MedievalFantasyButton extends StatefulWidget {
   final Widget? child;
   final VoidCallback? onTap;
@@ -26,8 +20,8 @@ class MedievalFantasyButton extends StatefulWidget {
     this.width,
     this.height,
     required this.gradientColors,
-    this.borderColor = const Color(0xFF8C7A58), // Bronze / Pierre dorée
-    this.glowColor = const Color(0x66A855F7), // Lueur violette magique
+    this.borderColor = const Color(0xFF8C7A58),
+    this.glowColor = const Color(0x66A855F7),
     this.borderRadius = 16.0,
     this.outerBevelColors = const [
       Color(0xFF5A5243),
@@ -38,7 +32,6 @@ class MedievalFantasyButton extends StatefulWidget {
     this.enabled = true,
   });
 
-  /// 1. Bouton Cristal d'Améthyste Majeur (Pour "Créer un Salon" / Action Principale)
   factory MedievalFantasyButton.amethyst({
     Key? key,
     required Widget child,
@@ -71,7 +64,6 @@ class MedievalFantasyButton extends StatefulWidget {
     );
   }
 
-  /// 2. Bouton Rubis Sang / Flamboyant (Pour "Rejoindre un Salon" / Combat)
   factory MedievalFantasyButton.ruby({
     Key? key,
     required Widget child,
@@ -104,7 +96,6 @@ class MedievalFantasyButton extends StatefulWidget {
     );
   }
 
-  /// 3. Bouton Pierre / Ardoise Runique Sombre (Pour Code du salon / Secondaire)
   factory MedievalFantasyButton.stone({
     Key? key,
     required Widget child,
@@ -137,7 +128,6 @@ class MedievalFantasyButton extends StatefulWidget {
     );
   }
 
-  /// 4. Bouton Trésor / Or / Bénédiction (Pour Lancement / Succès)
   factory MedievalFantasyButton.gold({
     Key? key,
     required Widget child,
@@ -170,7 +160,6 @@ class MedievalFantasyButton extends StatefulWidget {
     );
   }
 
-  /// 5. Bouton Ambre / Or Éclatant #F7B831 (Pour Rejoindre un salon)
   factory MedievalFantasyButton.amber({
     Key? key,
     required Widget child,
@@ -229,21 +218,21 @@ class _MedievalFantasyButtonState extends State<MedievalFantasyButton> {
           height: widget.height,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(widget.borderRadius + 3),
-            // Cadre extérieur métallique / sculpté en biseau
+
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: widget.outerBevelColors,
             ),
             boxShadow: [
-              // Lueur magique extérieure (glow)
+
               if (widget.glowColor != Colors.transparent && effectiveEnabled)
                 BoxShadow(
                   color: widget.glowColor,
                   blurRadius: 16,
                   spreadRadius: 1,
                 ),
-              // Ombre portée profonde
+
               const BoxShadow(
                 color: Colors.black87,
                 blurRadius: 10,
@@ -261,7 +250,7 @@ class _MedievalFantasyButtonState extends State<MedievalFantasyButton> {
                     : widget.borderColor.withValues(alpha: 0.35),
                 width: 1.5,
               ),
-              // Dégradé intérieur façon gemme taillée
+
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -277,7 +266,7 @@ class _MedievalFantasyButtonState extends State<MedievalFantasyButton> {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  // Reflet intérieur de biseau (haut lumineux, bas ombré)
+
                   Positioned.fill(
                     child: Container(
                       decoration: BoxDecoration(
@@ -295,7 +284,6 @@ class _MedievalFantasyButtonState extends State<MedievalFantasyButton> {
                     ),
                   ),
 
-                  // Contenu centré
                   if (widget.child != null)
                     Center(child: widget.child!),
                 ],

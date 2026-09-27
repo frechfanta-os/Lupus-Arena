@@ -28,7 +28,7 @@ enum WakePhase {
 }
 
 enum GameRole {
-  // --- CAMP DES VILLAGEOIS ---
+
   simpleVillager,
   seer,
   witch,
@@ -36,38 +36,35 @@ enum GameRole {
   cupid,
   littleGirl,
   thief,
-  defender, // Salvateur
-  elder, // Ancien
-  scapegoat, // Bouc Émissaire
-  idiot, // Idiot du Village
-  twoSisters, // Deux Sœurs
-  threeBrothers, // Trois Frères
-  fox, // Renard
-  bearTamer, // Montreur d'Ours
-  stutteringJudge, // Juge Bègue
-  knightRustySword, // Chevalier à l'Épée Rouillée
-  servantMaid, // Servante Dévouée
-  actor, // Comédien
+  defender,
+  elder,
+  scapegoat,
+  idiot,
+  twoSisters,
+  threeBrothers,
+  fox,
+  bearTamer,
+  stutteringJudge,
+  knightRustySword,
+  servantMaid,
+  actor,
 
-  // --- CAMP DES LOUPS-GAROUS ---
   simpleWerewolf,
-  bigBadWolf, // Grand Méchant Loup
-  whiteWerewolf, // Loup-Garou Blanc
-  blackWolf, // Loup Noir (Réduit un joueur au silence)
-  vileFatherOfWolves, // Infect Père des Loups
-  wolfCub, // Chiot / Enfant Sauvage (mode loup)
+  bigBadWolf,
+  whiteWerewolf,
+  blackWolf,
+  vileFatherOfWolves,
+  wolfCub,
 
-  // --- RÔLES AMBIGUS & SOLITAIRES ---
-  wildChild, // Enfant Sauvage (initial)
-  pyromaniac, // Pyromane
-  raven, // Corbeau
-  angel, // Ange
-  piedPiper, // Joueur de Flûte
-  sectLeader, // Abominable Sectaire
-  thiefOfHearts, // Voleur d'âmes
+  wildChild,
+  pyromaniac,
+  raven,
+  angel,
+  piedPiper,
+  sectLeader,
+  thiefOfHearts,
 
-  // --- RÔLES DE RANG (TITRES) ---
-  mayor; // Capitaine / Maire
+  mayor;
 
   String get id => GameRoleExtension(this).id;
   String get displayName => AppTranslations.getRoleName(id);
@@ -91,7 +88,6 @@ enum GameRole {
   IconData get icon => GameRoleExtension(this).icon;
   GameRole get seerPerception => GameRoleExtension(this).seerPerception;
 
-  // --- ALIAS CANONIQUES ---
   static GameRole get villager => GameRole.simpleVillager;
   static GameRole get simpleVillageois => GameRole.simpleVillager;
   static GameRole get werewolf => GameRole.simpleWerewolf;
@@ -107,11 +103,9 @@ enum GameRole {
   static GameRole get rustySwordKnight => GameRole.knightRustySword;
   static GameRole get devotedServant => GameRole.servantMaid;
 
-  /// Rôles distribuables/sélectionnables au deck (exclut le Maire qui est élu par vote)
   static List<GameRole> get playableRoles =>
       GameRole.values.where((r) => r != GameRole.mayor).toList();
 
-  /// Indique si ce rôle est un rôle distribué au deck
   bool get isPlayableRole => this != GameRole.mayor;
 
   static GameRole fromId(String id) => GameRoleExtension.fromId(id);
@@ -121,7 +115,7 @@ enum GameRole {
 typedef Role = GameRole;
 
 extension GameRoleExtension on GameRole {
-  /// Vision de la Voyante : Le Loup Blanc apparaît comme un Simple Villageois
+
   GameRole get seerPerception {
     if (this == GameRole.whiteWerewolf) {
       return GameRole.simpleVillager;
@@ -348,7 +342,6 @@ extension GameRoleExtension on GameRole {
     }
   }
 
-  /// Ordre séquentiel strict de réveil nocturne
   int get nightExecutionPriority {
     switch (this) {
       case GameRole.thief: return 10;
@@ -437,7 +430,6 @@ extension GameRoleExtension on GameRole {
     }
   }
 
-  /// Ordre chronologique officiel de réveil nocturne (null = pas de réveil actif)
   int? get nightPriority {
     switch (this) {
       case GameRole.thief: return 10;
@@ -451,8 +443,8 @@ extension GameRoleExtension on GameRole {
       case GameRole.seer: return 60;
       case GameRole.fox: return 70;
       case GameRole.actor: return 75;
-      case GameRole.simpleWerewolf: return 100; // Inclut WolfCub & InfectFather
-      case GameRole.vileFatherOfWolves: return 105; // Choix d'infection post-délibération
+      case GameRole.simpleWerewolf: return 100;
+      case GameRole.vileFatherOfWolves: return 105;
       case GameRole.bigBadWolf: return 110;
       case GameRole.blackWolf: return 115;
       case GameRole.witch: return 120;
@@ -469,65 +461,65 @@ extension GameRoleExtension on GameRole {
       case GameRole.bigBadWolf:
       case GameRole.vileFatherOfWolves:
       case GameRole.wolfCub:
-        return const Color(0xFFFF2A55); // Neon crimson
+        return const Color(0xFFFF2A55);
       case GameRole.blackWolf:
-        return const Color(0xFF1E1B4B); // Midnight obsidian
+        return const Color(0xFF1E1B4B);
       case GameRole.whiteWerewolf:
-        return const Color(0xFFE0AAFF); // Mystic white/silver
+        return const Color(0xFFE0AAFF);
       case GameRole.seer:
-        return const Color(0xFF9D4EDD); // Violet mystic
+        return const Color(0xFF9D4EDD);
       case GameRole.witch:
-        return const Color(0xFF06D6A0); // Emerald poison
+        return const Color(0xFF06D6A0);
       case GameRole.hunter:
-        return const Color(0xFFFFB703); // Amber gunfire
+        return const Color(0xFFFFB703);
       case GameRole.cupid:
-        return const Color(0xFFFF70A6); // Rose passion
+        return const Color(0xFFFF70A6);
       case GameRole.littleGirl:
-        return const Color(0xFFFFC6FF); // Soft pink
+        return const Color(0xFFFFC6FF);
       case GameRole.thief:
-        return const Color(0xFF8338EC); // Deep purple
+        return const Color(0xFF8338EC);
       case GameRole.defender:
-        return const Color(0xFF3A86FF); // Protective blue
+        return const Color(0xFF3A86FF);
       case GameRole.elder:
-        return const Color(0xFFE2B714); // Wisdom gold
+        return const Color(0xFFE2B714);
       case GameRole.scapegoat:
-        return const Color(0xFFDDA15E); // Earth ochre
+        return const Color(0xFFDDA15E);
       case GameRole.idiot:
-        return const Color(0xFFF4A261); // Joyful orange
+        return const Color(0xFFF4A261);
       case GameRole.twoSisters:
-        return const Color(0xFFB5E48C); // Spring green
+        return const Color(0xFFB5E48C);
       case GameRole.threeBrothers:
-        return const Color(0xFF76C893); // Mint green
+        return const Color(0xFF76C893);
       case GameRole.fox:
-        return const Color(0xFFFB8500); // Fox bright orange
+        return const Color(0xFFFB8500);
       case GameRole.bearTamer:
-        return const Color(0xFFBC6C25); // Bear brown
+        return const Color(0xFFBC6C25);
       case GameRole.stutteringJudge:
-        return const Color(0xFFE76F51); // Judicial terra-cotta
+        return const Color(0xFFE76F51);
       case GameRole.knightRustySword:
-        return const Color(0xFF9A8C98); // Rusty iron
+        return const Color(0xFF9A8C98);
       case GameRole.servantMaid:
-        return const Color(0xFFC9ADA7); // Velvet dust
+        return const Color(0xFFC9ADA7);
       case GameRole.actor:
-        return const Color(0xFFFFD166); // Theatre yellow
+        return const Color(0xFFFFD166);
       case GameRole.wildChild:
-        return const Color(0xFF52B788); // Forest green
+        return const Color(0xFF52B788);
       case GameRole.pyromaniac:
-        return const Color(0xFFFF4800); // Burning flame
+        return const Color(0xFFFF4800);
       case GameRole.raven:
-        return const Color(0xFF64748B); // Raven slate
+        return const Color(0xFF64748B);
       case GameRole.angel:
-        return const Color(0xFFE9ECEF); // Holy white
+        return const Color(0xFFE9ECEF);
       case GameRole.piedPiper:
-        return const Color(0xFF7209B7); // Hypnotic purple
+        return const Color(0xFF7209B7);
       case GameRole.sectLeader:
-        return const Color(0xFF3F37C9); // Deep cult indigo
+        return const Color(0xFF3F37C9);
       case GameRole.thiefOfHearts:
-        return const Color(0xFFFF0054); // Passion magenta
+        return const Color(0xFFFF0054);
       case GameRole.mayor:
-        return const Color(0xFFFFD700); // Imperial gold
+        return const Color(0xFFFFD700);
       case GameRole.simpleVillager:
-        return const Color(0xFF4CC9F0); // Azure daylight
+        return const Color(0xFF4CC9F0);
     }
   }
 

@@ -4,41 +4,38 @@ import '../services/app_translations.dart';
 enum GamePhase {
   lobby,
 
-  // --- PHASES NOCTURNES (ORDRE SÉQUENTIEL STRICT) ---
-  nightThief, // Voleur (Nuit 1 uniquement)
-  nightCupid, // Cupidon (Nuit 1 uniquement)
-  nightDefender, // Salvateur / Protecteur
-  nightWerewolves, // Loups-Garous & Petite Fille
-  nightBlackWolf, // Loup Noir (Réduit un joueur au silence)
-  nightWhiteWerewolf, // Loup-Garou Blanc (Nuits paires)
-  nightSeer, // Voyante
-  nightFox, // Renard (Flaire un groupe de 3 joueurs)
-  nightWitch, // Sorcière
-  nightPiper, // Joueur de Flûte (Envoûte les villageois)
-  nightPyromaniac, // Pyromane (Asperger ou Brûler)
+  nightThief,
+  nightCupid,
+  nightDefender,
+  nightWerewolves,
+  nightBlackWolf,
+  nightWhiteWerewolf,
+  nightSeer,
+  nightFox,
+  nightWitch,
+  nightPiper,
+  nightPyromaniac,
 
-  // --- MATIN & RÉSOLUTIONS DES DÉCÈS ---
-  morningAnnouncement, // Annonce des morts & mort de chagrin des amoureux
-  hunterDeathChoice, // Ultime tir du Chasseur
-  captainSuccession, // Passation de pouvoir du Capitaine éliminé
-  mayorSuccession, // Testament & passation du Maire éliminé
+  morningAnnouncement,
+  hunterDeathChoice,
+  captainSuccession,
+  mayorSuccession,
 
-  // --- PHASES DIURNES ---
-  captainElection, // Élection du Capitaine (Jour 1 uniquement)
-  mayorElection, // Élection du Maire (Jour 1, post-Aube)
-  mayorSpeechOpening, // Prise de parole prioritaire d'ouverture du Maire
-  dayDebate, // Débat ordonné tour par tour (orateur unique)
-  mayorSpeechClosing, // Clôture solennelle du débat par le Maire avant le vote
-  dayVoting, // Scrutin d'élimination du village
-  dayDefense, // Plaidoirie des accusés en cas d'égalité
-  dayTieBreakVote, // Second vote restreint aux accusés
-  dayResolution, // Exécution du verdict
+  captainElection,
+  mayorElection,
+  mayorSpeechOpening,
+  dayDebate,
+  mayorSpeechClosing,
+  dayVoting,
+  dayDefense,
+  dayTieBreakVote,
+  dayResolution,
 
   gameOver;
 
   static GamePhase fromString(String? phase) {
     if (phase == null) return GamePhase.lobby;
-    // Compatibilité rétroactive et synchronisation State Machine (Kotlin / Firebase)
+
     if (phase == 'JOUR_VOTE' || phase == 'dayVote' || phase == 'dayVoting') return GamePhase.dayVoting;
     if (phase == 'JOUR_DEBAT' || phase == 'dayDebate' || phase == 'dayDiscussion') return GamePhase.dayDebate;
     if (phase == 'CAPITAINE_SUCCESSION' || phase == 'captainSuccession' || phase == 'mayorSuccession' || phase == 'MAYOR_SUCCESSION') return GamePhase.mayorSuccession;
@@ -203,7 +200,6 @@ enum GamePhase {
         this == GamePhase.nightPyromaniac;
   }
 
-  /// Indice d'ordonnancement strict et irréversible pour la phase nocturne (1 à 12)
   int get nightOrderIndex {
     switch (this) {
       case GamePhase.nightThief:
@@ -247,7 +243,6 @@ enum GamePhase {
         this == GamePhase.dayResolution;
   }
 
-  /// Durée canonique en secondes de la phase
   int get durationSeconds {
     switch (this) {
       case GamePhase.lobby:

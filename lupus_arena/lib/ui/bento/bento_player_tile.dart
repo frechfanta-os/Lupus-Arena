@@ -11,7 +11,6 @@ import 'bento_card.dart';
 import 'game_action_visual_effects.dart';
 import 'ghost_death_badge.dart';
 
-/// Tuile individuelle représentant un joueur dans la grille Bento
 class BentoPlayerTile extends StatelessWidget {
   final PlayerModel player;
   final bool isMe;
@@ -68,7 +67,6 @@ class BentoPlayerTile extends StatelessWidget {
     this.onTap,
   });
 
-  // Liste d'avatars thématiques
   static List<IconData> get avatarIcons => LupusAvatars.icons;
 
   @override
@@ -83,12 +81,6 @@ class BentoPlayerTile extends StatelessWidget {
     );
     final effectiveSeerRole = canSeeSeer ? seerDiscoveredRole : null;
 
-    // Seules exceptions autorisées pour afficher le rôle :
-    // 1. Mon propre rôle (isMe)
-    // 2. Joueur éliminé révélé au village (isDead)
-    // 3. Voyante ayant personnellement sondé ce joueur (effectiveSeerRole != null)
-    // 4. Confrère Loup-Garou (isWolfPeer && player.isAlive)
-    // 5. Dev-Mode strict (isDevMode => isDevModeActive && isDevRoom)
     final canSeeRole = isMe ||
         isDead ||
         isDevMode ||
@@ -155,7 +147,7 @@ class BentoPlayerTile extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // 1. Avatar avec badge parole / badge mort et animation spectrale de trépas
+
           GhostDeathBadge(
             playerUid: player.id,
             isAlive: player.isAlive,
@@ -166,7 +158,7 @@ class BentoPlayerTile extends StatelessWidget {
                 alignment: Alignment.center,
                 clipBehavior: Clip.none,
                 children: [
-                  // 0. Halo néon pulsant Flûte
+
                   if (FogOfWarService.canSeeCharmedBadge(
                     targetIsCharmed: player.isCharmed,
                     observerRole: myRole,
@@ -175,7 +167,6 @@ class BentoPlayerTile extends StatelessWidget {
                   ))
                     const CharmedPulsingHalo(size: 44),
 
-                  // Halo lumineux si le joueur parle
                   if (isSpeaking && player.isAlive)
                     Container(
                       width: 44,
@@ -197,7 +188,6 @@ class BentoPlayerTile extends StatelessWidget {
                       ),
                     ),
 
-                  // Rond d'avatar principal stylisé Dark Fantasy
                   Container(
                     width: 36,
                     height: 36,
@@ -236,19 +226,16 @@ class BentoPlayerTile extends StatelessWidget {
                     ),
                   ),
 
-                  // Effet d'impact du Chasseur 🎯
                   if (isHunterImpact)
                     const Positioned.fill(
                       child: HunterImpactEffect(size: 36),
                     ),
 
-                  // Effet de flammes du Pyromane 🔥
                   if (isPyroIgnited)
                     const Positioned.fill(
                       child: PyroFlameBurstEffect(size: 36),
                     ),
 
-                  // Indicateur mort (tête de mort rouge)
                   if (isDead)
                     Positioned(
                       bottom: -2,
@@ -267,7 +254,6 @@ class BentoPlayerTile extends StatelessWidget {
                       ),
                     ),
 
-                  // Indicateur hors ligne (si déconnecté en cours de partie)
                   if (!player.isOnline && player.isAlive)
                     Positioned(
                       top: -2,
@@ -286,7 +272,6 @@ class BentoPlayerTile extends StatelessWidget {
                       ),
                     ),
 
-                  // Indicateur micro actif (ondes vertes)
                   if (isSpeaking && player.isAlive)
                     Positioned(
                       bottom: -2,
@@ -309,7 +294,6 @@ class BentoPlayerTile extends StatelessWidget {
                       ),
                     ),
 
-                  // Indicateur micro barré rouge si bâillonné (silence forcé)
                   if (player.isMuted && player.isAlive)
                     Positioned(
                       bottom: -2,
@@ -332,8 +316,6 @@ class BentoPlayerTile extends StatelessWidget {
                       ),
                     ),
 
-                  // Badges de rôles actifs avec AnimatedStatusBadge
-                  // Renard (Flairage)
                   if (isSniffed && !isMe)
                     Positioned(
                       top: -4,
@@ -354,7 +336,6 @@ class BentoPlayerTile extends StatelessWidget {
                       ),
                     ),
 
-                  // Salvateur (Bouclier)
                   if (isProtected && !isMe)
                     Positioned(
                       top: -4,
@@ -364,7 +345,6 @@ class BentoPlayerTile extends StatelessWidget {
                       ),
                     ),
 
-                  // Sorcière : Sauvé
                   if (isWitchHealed && !isMe)
                     Positioned(
                       bottom: -4,
@@ -374,7 +354,6 @@ class BentoPlayerTile extends StatelessWidget {
                       ),
                     ),
 
-                  // Sorcière : Empoisonné
                   if (isWitchPoisoned && !isMe)
                     Positioned(
                       bottom: -4,
@@ -384,7 +363,6 @@ class BentoPlayerTile extends StatelessWidget {
                       ),
                     ),
 
-                  // Sorcière : Cible des loups
                   if (isWitchVictim && !isMe)
                     Positioned(
                       bottom: -4,
@@ -394,7 +372,6 @@ class BentoPlayerTile extends StatelessWidget {
                       ),
                     ),
 
-                  // Corbeau
                   if (isCrowTarget && !isMe)
                     Positioned(
                       top: -4,
@@ -404,7 +381,6 @@ class BentoPlayerTile extends StatelessWidget {
                       ),
                     ),
 
-                  // Enfant Sauvage : Modèle
                   if (isWildChildModel && !isMe)
                     Positioned(
                       bottom: -4,
@@ -414,7 +390,6 @@ class BentoPlayerTile extends StatelessWidget {
                       ),
                     ),
 
-                  // Chevalier à l'épée rouillée : Contaminé
                   if (isContaminatedWolf && !isMe)
                     Positioned(
                       top: -4,
@@ -424,7 +399,6 @@ class BentoPlayerTile extends StatelessWidget {
                       ),
                     ),
 
-                  // Montreur d'ours : Grognement
                   if (isBearTamerGrowling && !isMe)
                     Positioned(
                       bottom: -4,
@@ -438,7 +412,6 @@ class BentoPlayerTile extends StatelessWidget {
             ),
           ),
 
-          // 2. Nom du joueur et badges de statut
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 2),
             child: Row(
@@ -533,7 +506,6 @@ class BentoPlayerTile extends StatelessWidget {
             ),
           ),
 
-          // 3. Rôle ou État de Vie (Masqué côté client hors exceptions)
           if (canSeeRole) ...[
             Container(
               padding:
@@ -575,7 +547,6 @@ class BentoPlayerTile extends StatelessWidget {
             ),
           ],
 
-          // 4. Badge du nombre de votes reçus (s'il y en a)
           if (votesCount > 0)
             AnimatedStatusBadge(
               child: Container(

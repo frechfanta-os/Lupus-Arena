@@ -1,13 +1,11 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 
-/// Service dédié à la présence temps réel, statut de connectivité et voix (RoomPresenceService)
 class RoomPresenceService {
   final FirebaseDatabase _database;
 
   const RoomPresenceService(this._database);
 
-  /// Met à jour le statut de présence d'un utilisateur sous le sous-nœud `presence`
   Future<void> updatePresence({
     required String roomCode,
     required String userId,
@@ -31,7 +29,6 @@ class RoomPresenceService {
     }
   }
 
-  /// Configure les déclencheurs automatiques de déconnexion réseau (onDisconnect)
   Future<void> setupOnDisconnectHooks({
     required String roomCode,
     required String userId,
@@ -49,7 +46,6 @@ class RoomPresenceService {
     }
   }
 
-  /// Annule les déclencheurs onDisconnect lors d'un départ propre
   Future<void> cancelOnDisconnectHooks({
     required String roomCode,
     required String userId,

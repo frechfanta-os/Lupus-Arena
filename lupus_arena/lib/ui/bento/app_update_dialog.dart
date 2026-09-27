@@ -5,8 +5,6 @@ import '../../services/update_service.dart';
 import '../theme/lupus_theme.dart';
 import 'bento_card.dart';
 
-/// Boîte de dialogue modale présentant les détails d'une nouvelle version
-/// et gérant le téléchargement en temps réel avec installation automatique de l'APK.
 class AppUpdateDialog extends StatefulWidget {
   final AppUpdateInfo updateInfo;
 
@@ -57,7 +55,7 @@ class _AppUpdateDialogState extends State<AppUpdateDialog> {
   }
 
   Future<void> _startDownloadOrInstall() async {
-    // Si l'APK est déjà téléchargé, lancer directement l'installateur
+
     if (_isDownloaded && _downloadedFilePath != null) {
       setState(() {
         _errorMessage = null;
@@ -160,7 +158,7 @@ class _AppUpdateDialogState extends State<AppUpdateDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // En-tête avec icône animée
+
               Row(
                 children: [
                   Container(
@@ -218,7 +216,6 @@ class _AppUpdateDialogState extends State<AppUpdateDialog> {
               ),
               const SizedBox(height: 16),
 
-              // Zone de Changelog / Notes de version
               Container(
                 decoration: BoxDecoration(
                   color: Colors.black.withValues(alpha: 0.4),
@@ -270,7 +267,6 @@ class _AppUpdateDialogState extends State<AppUpdateDialog> {
                 ),
               ),
 
-              // Barre de progression si téléchargement en cours
               if (_isDownloading) ...[
                 const SizedBox(height: 18),
                 Container(
@@ -339,7 +335,6 @@ class _AppUpdateDialogState extends State<AppUpdateDialog> {
                 ),
               ],
 
-              // Message d'information / permission
               if (_infoMessage != null) ...[
                 const SizedBox(height: 12),
                 Container(
@@ -372,7 +367,6 @@ class _AppUpdateDialogState extends State<AppUpdateDialog> {
                 ),
               ],
 
-              // Message d'erreur
               if (_errorMessage != null) ...[
                 const SizedBox(height: 12),
                 Container(
@@ -406,7 +400,6 @@ class _AppUpdateDialogState extends State<AppUpdateDialog> {
 
               const SizedBox(height: 20),
 
-              // Boutons d'action
               Row(
                 children: [
                   if (!_isDownloading)

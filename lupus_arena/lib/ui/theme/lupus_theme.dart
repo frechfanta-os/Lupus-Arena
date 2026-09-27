@@ -1,23 +1,19 @@
 import 'package:flutter/material.dart';
 
-/// Palette chromatique inspirée directement des maquettes Stitch de Lupus Arena
 class LupusColors {
-  // Fond et surfaces sombres d'inspiration gothique nocturne
+
   static const Color background = Color(0xFF05070F);
   static const Color surface = Color(0xFF0A0F1E);
   static const Color surfaceLight = Color(0xFF12172A);
   static const Color surfaceElevated = Color(0xFF1E243D);
 
-  // Verre dépoli et panneaux translucides (Stitch Glass Panels)
   static const Color glassPanel = Color(0xAE0A0F1E);
   static const Color glassButton = Color(0xC012182E);
 
-  // Bordures Bento & Arcanes
-  static const Color border = Color(0x38A855F7); // Violet néon subtil
+  static const Color border = Color(0x38A855F7);
   static const Color borderSubtle = Color(0x1FFFFFFF);
   static const Color borderGlow = Color(0xFF9D4EDD);
 
-  // Couleurs Arcanes Stitch
   static const Color arcanePurple = Color(0xFF9D4EDD);
   static const Color arcaneViolet = Color(0xFF7B2CBF);
   static const Color arcaneGlow = Color(0xFFC77DFF);
@@ -26,7 +22,6 @@ class LupusColors {
   static const Color arcaneGold = Color(0xFFFFB703);
   static const Color arcaneAmber = Color(0xFFFB8500);
 
-  // Aliases rétrocompatibles
   static const Color bloodRed = arcaneCrimson;
   static const Color moonIndigo = Color(0xFF6C63FF);
   static const Color mysticPurple = arcanePurple;
@@ -34,11 +29,9 @@ class LupusColors {
   static const Color sunAmber = arcaneGold;
   static const Color daylightCyan = arcaneCyan;
 
-  // Statuts vocaux
   static const Color voiceActive = Color(0xFF00F5D4);
   static const Color voiceMuted = Color(0xFFFF477E);
 
-  // Textes
   static const Color textPrimary = Color(0xFFF1F5F9);
   static const Color textSecondary = Color(0xFF94A3B8);
   static const Color textMuted = Color(0xFF64748B);
@@ -87,7 +80,6 @@ class LupusTheme {
     );
   }
 
-  /// Décoration Bento classique ou en verre teinté
   static BoxDecoration bentoDecoration({
     Color? color,
     Color? borderColor,
@@ -120,7 +112,6 @@ class LupusTheme {
     );
   }
 
-  /// Décoration en verre dépoli (Glass Panel) fidèle au design Stitch
   static BoxDecoration glassDecoration({
     Color? color,
     Color? borderColor,
@@ -146,7 +137,6 @@ class LupusTheme {
     );
   }
 
-  /// Halos lumineux Stitch
   static List<BoxShadow> glowPurple({double opacity = 0.45}) => [
         BoxShadow(
           color: LupusColors.arcanePurple.withValues(alpha: opacity),

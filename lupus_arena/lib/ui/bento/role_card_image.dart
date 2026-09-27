@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../models/game_role.dart';
 
-/// Helper associant chaque rôle du jeu à sa carte d'illustration officielle
-/// issue du dossier 'assets/cards/'.
 class RoleAssetMap {
-  /// Fond de carte officiel (dos de carte)
   static const String cardBackPath = 'assets/cards/Fond.jpg';
-  static const String cardBackFallback = 'assets/cards/card_back.png';
+  static const String cardBackFallback = 'assets/cards/Fond.jpg';
 
-  /// Vérifie si un rôle possède une illustration de carte dédiée
   static bool hasCardAsset(GameRole role) => getImagePath(role) != null;
 
   static String? getImagePath(GameRole role) {
@@ -78,13 +74,11 @@ class RoleAssetMap {
       case GameRole.thiefOfHearts:
         return 'assets/cards/Gitan.jpg';
       case GameRole.mayor:
-        return null; // Titre honorifique électif (aucun asset carte requis)
+        return null;
     }
   }
 }
 
-/// Widget affichant l'illustration officielle haute définition d'un rôle
-/// avec gestion de cache et fallback gracieux.
 class RoleCardImage extends StatelessWidget {
   final GameRole role;
   final double? width;

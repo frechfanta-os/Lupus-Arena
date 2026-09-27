@@ -6,8 +6,6 @@ import '../../services/app_translations.dart';
 import '../theme/lupus_theme.dart';
 import 'role_card_image.dart';
 
-/// Modale holographique confidentielle réservée exclusivement à la Voyante.
-/// Révèle l'identité et la carte officielle de la cible pendant 6 secondes ou jusqu'à confirmation.
 class SeerVisionModal extends StatefulWidget {
   final PlayerModel target;
   final VoidCallback onConfirmed;
@@ -112,7 +110,7 @@ class _SeerVisionModalState extends State<SeerVisionModal>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // En-tête : Oeil omniscient & Titre
+
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -155,7 +153,6 @@ class _SeerVisionModalState extends State<SeerVisionModal>
 
             const SizedBox(height: 16),
 
-            // Nom de la cible
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
               decoration: BoxDecoration(
@@ -175,7 +172,6 @@ class _SeerVisionModalState extends State<SeerVisionModal>
 
             const SizedBox(height: 16),
 
-            // Carte d'illustration officielle issue de assets/cards/
             RoleCardImage(
               role: role,
               width: 140,
@@ -185,7 +181,6 @@ class _SeerVisionModalState extends State<SeerVisionModal>
 
             const SizedBox(height: 14),
 
-            // Rôle & Badge de camp
             Text(
               role.displayName,
               style: TextStyle(
@@ -236,7 +231,6 @@ class _SeerVisionModalState extends State<SeerVisionModal>
 
             const SizedBox(height: 16),
 
-            // Barre animée de compte à rebours
             ClipRRect(
               borderRadius: BorderRadius.circular(6),
               child: AnimatedBuilder(
@@ -254,7 +248,6 @@ class _SeerVisionModalState extends State<SeerVisionModal>
 
             const SizedBox(height: 14),
 
-            // Bouton de confirmation immédiate
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(

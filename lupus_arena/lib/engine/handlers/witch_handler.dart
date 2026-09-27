@@ -3,8 +3,6 @@ import '../../models/game_role.dart';
 import '../../models/game_state.dart';
 import 'role_action_handler.dart';
 
-/// Gestionnaire de rôle pour La Sorcière.
-/// Possède deux potions : une de vie (sauver la victime des loups) et une de mort (empoisonner un suspect).
 class WitchHandler extends RoleActionHandler {
   @override
   GameRole get role => GameRole.witch;

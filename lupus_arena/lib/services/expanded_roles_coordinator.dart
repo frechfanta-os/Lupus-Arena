@@ -1,9 +1,7 @@
 import '../models/player_model.dart';
 
-/// Coordinateur et Arbitre pour les 17 Rôles Élargis de Lupus Arena
-/// Contient l'ensemble des algorithmes purs d'arbitrage canonique
 class ExpandedRolesCoordinator {
-  /// 1. CONSTRUCTION DE LA SÉQUENCE NOCTURNE DYNAMIQUE
+
   static List<GameRole> computeNightSequence({
     required int currentTurn,
     required List<GameRole> activeRolesInGame,
@@ -15,12 +13,10 @@ class ExpandedRolesCoordinator {
     for (final role in GameRole.values) {
       if (!activeRolesInGame.contains(role)) continue;
 
-      // Filtrage des rôles jouables uniquement la nuit 1
       if (role.actionType == ActionType.firstNightOnly && currentTurn > 1) {
         continue;
       }
 
-      // Grand Méchant Loup ne joue plus si un loup est mort
       if (role == GameRole.bigBadWolf && hasDeadWolves) {
         continue;
       }
@@ -34,7 +30,6 @@ class ExpandedRolesCoordinator {
     return sequence;
   }
 
-  /// 2. POUVOIR DU RENARD : Vérifie si un loup est dans le trio (cible + ses 2 voisins vivants)
   static List<String> getFoxTrioIds({
     required String targetPlayerId,
     required List<String> alivePlayerIdsInOrder,
@@ -67,14 +62,13 @@ class ExpandedRolesCoordinator {
     });
   }
 
-  /// 3. MONTREUR D'OURS : Déclenché à l'aube
   static bool shouldBearGrowl({
     required String bearTamerPlayerId,
     required List<String> alivePlayerIdsInOrder,
     required Map<String, GameRole> playerRoles,
     required String? infectedPlayerId,
   }) {
-    if (bearTamerPlayerId == infectedPlayerId) return true; // Infecté -> Grognement
+    if (bearTamerPlayerId == infectedPlayerId) return true;
 
     final index = alivePlayerIdsInOrder.indexOf(bearTamerPlayerId);
     if (index == -1) return false;
@@ -92,7 +86,6 @@ class ExpandedRolesCoordinator {
     return false;
   }
 
-  /// Alias de compatibilité pour le Montreur d'Ours
   static bool resolveBearTamerGrowl({
     required String bearTamerPlayerId,
     required List<String> alivePlayerIdsInOrder,
@@ -107,7 +100,6 @@ class ExpandedRolesCoordinator {
     );
   }
 
-  /// 4. DÉPOUILLEMENT DU VOTE DU JOUR : Intégration Corbeau & Bouc Émissaire
   static Map<String, int> applyCrowBonusVotes({
     required Map<String, int> baseVoteCounts,
     required String? crowTargetId,
@@ -119,7 +111,6 @@ class ExpandedRolesCoordinator {
     return result;
   }
 
-  /// Arbitrage de l'égalité : si un Bouc Émissaire est vivant, il est sacrifié
   static String? resolveScapegoatTie({
     required List<PlayerModel> alivePlayers,
     Map<String, GameRole>? realRoles,
@@ -134,7 +125,7 @@ class ExpandedRolesCoordinator {
   }
 
   static Map<String, dynamic> tallyDayVotes({
-    required Map<String, String> playerVotes, // voterId -> targetId
+    required Map<String, String> playerVotes,
     required String? crowTargetId,
     required String? scapegoatPlayerId,
     required List<String> alivePlayerIds,
@@ -144,19 +135,16 @@ class ExpandedRolesCoordinator {
       scores[id] = 0;
     }
 
-    // Report des votes standards
     playerVotes.forEach((_, target) {
       if (scores.containsKey(target)) {
         scores[target] = scores[target]! + 1;
       }
     });
 
-    // Bonus de 2 voix du Corbeau
     if (crowTargetId != null && scores.containsKey(crowTargetId)) {
       scores[crowTargetId] = scores[crowTargetId]! + 2;
     }
 
-    // Détermination de l'éliminé
     int highestScore = -1;
     final candidates = <String>[];
 
@@ -172,7 +160,7 @@ class ExpandedRolesCoordinator {
     });
 
     if (candidates.length > 1) {
-      // ÉGALITÉ : Si le Bouc Émissaire est en vie, c'est lui qui trépasse immédiatement
+
       if (scapegoatPlayerId != null && alivePlayerIds.contains(scapegoatPlayerId)) {
         return {
           'eliminatedPlayerId': scapegoatPlayerId,
@@ -194,20 +182,18 @@ class ExpandedRolesCoordinator {
     };
   }
 
-  /// 5. MORT DE L'ANCIEN : Déchéance des pouvoirs du village
   static bool checkElderDeathConsequences({
     required String killedPlayerId,
     required GameRole killedRole,
-    required String eliminationSource, // 'vote', 'witch', 'hunter', 'wolves'
+    required String eliminationSource,
   }) {
     if (killedRole == GameRole.elder && eliminationSource != 'wolves') {
-      // Tué par le village : tous les villageois perdent leurs pouvoirs
+
       return true;
     }
     return false;
   }
 
-  /// 6. CHEVALIER À L'ÉPÉE ROUparameters : Contamination du premier loup à gauche
   static String? findWolfToContaminate({
     required String knightPlayerId,
     required List<String> alivePlayerIdsInOrder,
@@ -218,7 +204,7 @@ class ExpandedRolesCoordinator {
     if (startIndex == -1) return null;
 
     final n = alivePlayerIdsInOrder.length;
-    // Parcours circulaire vers la gauche (indices décroissants)
+
     for (int i = 1; i < n; i++) {
       final candidateId = alivePlayerIdsInOrder[(startIndex - i + n) % n];
       final role = playerRoles[candidateId];
@@ -229,7 +215,6 @@ class ExpandedRolesCoordinator {
     return null;
   }
 
-  /// 7. GESTION DE LA CONDITION DE VICTOIRE DE L'ABOMINABLE SECTAIRE
   static bool checkSectarianVictory({
     required String sectarianPlayerId,
     required List<String> alivePlayerIds,
@@ -243,11 +228,9 @@ class ExpandedRolesCoordinator {
     final isSectarianInA = teamA.contains(sectarianPlayerId);
     final opposingTeam = isSectarianInA ? teamB : teamA;
 
-    // Victoire si aucun membre de l'équipe adverse n'est en vie
     return opposingTeam.every((id) => !alivePlayerIds.contains(id));
   }
 
-  /// Vérifie la victoire de la secte via les joueurs en vie
   static String? checkSectarianWin({
     required List<PlayerModel> alivePlayers,
     required List<String> sectarianTeamA,

@@ -2,8 +2,6 @@ import '../../models/game_role.dart';
 import '../../models/game_state.dart';
 import 'role_action_handler.dart';
 
-/// Gestionnaire de rôle pour L'Ange.
-/// Remporte la victoire s'il est éliminé par le village lors du vote du premier jour.
 class AngelHandler extends RoleActionHandler {
   @override
   GameRole get role => GameRole.angel;

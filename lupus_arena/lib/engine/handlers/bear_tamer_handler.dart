@@ -7,7 +7,7 @@ class BearTamerHandler extends RoleActionHandler {
   GameRole get role => GameRole.bearTamer;
 
   @override
-  bool canAct(GameState state, String playerId) => false; // Automatisé à l'aube
+  bool canAct(GameState state, String playerId) => false;
 
   @override
   GameState executeAction(
@@ -16,7 +16,6 @@ class BearTamerHandler extends RoleActionHandler {
     required Map<String, dynamic> actionPayload,
   }) => state;
 
-  /// Méthode d'arbitrage appelée lors de la résolution de l'aube
   static GameState resolveMorningGrowl(GameState state) {
     final bearTamerEntry = state.playerRoles.entries
         .firstWhere((e) => e.value == GameRole.bearTamer && state.isAlive(e.key),

@@ -2,14 +2,6 @@ import 'package:flutter/material.dart';
 import '../../services/audio_manager.dart';
 import '../theme/lupus_theme.dart';
 
-/// Bouton de bascule "Mute Musique" garantissant l'isolation totale avec Agora RTC.
-///
-/// RÈGLE ABSOLUE D'INDÉPENDANCE AGORA RTC :
-/// - Ce widget n'appelle JAMAIS le SDK Agora (`RtcEngine`).
-/// - Aucune méthode Agora telle que `muteLocalAudioStream`, `muteAllRemoteAudioStreams`,
-///   `adjustPlaybackSignalVolume` ou `adjustRecordingSignalVolume` n'est invoquée.
-/// - La capture du microphone de l'utilisateur et la réception vocale des autres
-///   joueurs restent 100% actives et intactes, quel que soit l'état de ce bouton.
 class MusicMuteButton extends StatelessWidget {
   final double size;
   final bool isCompact;

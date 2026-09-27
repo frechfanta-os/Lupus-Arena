@@ -2,7 +2,6 @@ import 'dart:math';
 import '../models/game_phase.dart';
 import '../models/player_model.dart';
 
-/// Résultat de l'élection du Maire
 class MayorElectionResult {
   final String mayorId;
   final String mayorName;
@@ -17,7 +16,6 @@ class MayorElectionResult {
   });
 }
 
-/// Résultat du traitement du décès du Maire
 class MayorDeathResult {
   final bool isSuccessionTriggered;
   final String? deceasedMayorId;
@@ -34,17 +32,9 @@ class MayorDeathResult {
   });
 }
 
-/// Coordinateur et Arbitre Officiel du Maire / Capitaine du Village
-/// Conforme aux règles canoniques du jeu Loup-Garou :
-/// 1. Élection au matin du Jour 1 (15s)
-/// 2. Double prise de parole (Ouverture & Clôture du débat)
-/// 3. Vote double (+2 voix lors des scrutins de jour)
-/// 4. Succession testamentaire (15s) avec passation automatique sur timeout
-/// 5. Résolution du Silence du Loup Noir (procédures UI garanties)
 class MayorCoordinator {
   const MayorCoordinator();
 
-  /// 1. Élection du premier Maire parmi les vivants au matin du Jour 1
   MayorElectionResult electMayor({
     required Map<String, PlayerModel> players,
     required Map<String, String> electionVotes,
@@ -74,7 +64,7 @@ class MayorCoordinator {
     }
 
     if (tally.isNotEmpty) {
-      // Trouver le candidat ayant reçu le plus de suffrages
+
       final maxVotes = tally.values.reduce(max);
       final topCandidates = tally.entries
           .where((e) => e.value == maxVotes)
@@ -93,7 +83,6 @@ class MayorCoordinator {
       );
     }
 
-    // Fallback automatique si aucun vote exprimé
     final fallbackWinner = (fallbackId != null && players[fallbackId]?.isAlive == true)
         ? players[fallbackId]!
         : livingPlayers.first;
@@ -107,7 +96,6 @@ class MayorCoordinator {
     );
   }
 
-  /// 2. Interception du décès du Maire (de nuit ou au bûcher)
   MayorDeathResult handleMayorDeath({
     required String deadPlayerId,
     required String? currentMayorId,
@@ -145,7 +133,6 @@ class MayorCoordinator {
     );
   }
 
-  /// 3. Passation testamentaire officielle du titre de Maire
   String? passMayorTitle({
     required String mayorId,
     required String successorId,
@@ -157,7 +144,6 @@ class MayorCoordinator {
     return successor.id;
   }
 
-  /// 4. Passation automatique de secours à l'expiration du chrono testamentaire (15s)
   String autoPassOnTimeout({
     required Map<String, PlayerModel> players,
     required String deceasedMayorId,
@@ -181,7 +167,6 @@ class MayorCoordinator {
     return candidates[random.nextInt(candidates.length)].id;
   }
 
-  /// 5. Calcul de la valeur du vote d'un joueur (+2 pour le Maire, 1 pour les autres ; s'il reste <= 3 survivants dont le maire, sa voix redevient 1)
   int calculateVoteWeight({
     required String voterId,
     required String? mayorPlayerId,
@@ -196,7 +181,6 @@ class MayorCoordinator {
     return 1;
   }
 
-  /// 6. Ordonnancement automatique des phases diurnes intégrant le Maire
   GamePhase getNextDayPhase({
     required GamePhase current,
     required int round,
@@ -209,11 +193,11 @@ class MayorCoordinator {
 
     switch (current) {
       case GamePhase.morningAnnouncement:
-        // Tour 1 : Élection du Maire avant les débats
+
         if (round == 1 && mayorId == null) {
           return GamePhase.mayorElection;
         }
-        // Si le Maire est vivant et n'a pas encore ouvert les débats
+
         if (isMayorAlive && !mayorOpeningDone) {
           return GamePhase.mayorSpeechOpening;
         }
@@ -221,22 +205,22 @@ class MayorCoordinator {
 
       case GamePhase.mayorElection:
       case GamePhase.captainElection:
-        // Après l'élection : Prise de parole d'ouverture
+
         return GamePhase.mayorSpeechOpening;
 
       case GamePhase.mayorSpeechOpening:
-        // Après le discours d'ouverture : Débat général ordonné
+
         return GamePhase.dayDebate;
 
       case GamePhase.dayDebate:
-        // Clôture solennelle par le Maire avant le vote si le Maire est vivant
+
         if (isMayorAlive && !mayorClosingDone) {
           return GamePhase.mayorSpeechClosing;
         }
         return GamePhase.dayVoting;
 
       case GamePhase.mayorSpeechClosing:
-        // Après le mot de clôture : Scrutin du bûcher
+
         return GamePhase.dayVoting;
 
       case GamePhase.dayVoting:
@@ -250,7 +234,7 @@ class MayorCoordinator {
 
       case GamePhase.mayorSuccession:
       case GamePhase.captainSuccession:
-        // Reprendre la phase diurne normale ou l'annonce du matin
+
         if (round == 1 && mayorId == null) {
           return GamePhase.mayorElection;
         }
@@ -261,13 +245,12 @@ class MayorCoordinator {
     }
   }
 
-  /// 7. Vérifie et garantit les droits procéduraux du Maire même s'il est sous silence du Loup Noir
   bool isProceduralActionAllowed({
     required String playerId,
     required String? mayorId,
     required bool isMuted,
   }) {
-    // Les actions procédurales (transmission du titre, conclusion du discours) restent toujours permises
+
     return true;
   }
 }

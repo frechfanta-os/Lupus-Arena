@@ -3,9 +3,6 @@ import '../../models/game_state.dart';
 import '../../models/player_model.dart';
 import 'role_action_handler.dart';
 
-/// Gestionnaire de rôle pour Le Joueur de Flûte.
-/// Chaque nuit, il charme deux joueurs vivants.
-/// S'il parvient à charmer l'intégralité des survivants, il remporte la partie seul.
 class PiedPiperHandler extends RoleActionHandler {
   @override
   GameRole get role => GameRole.piedPiper;
@@ -28,7 +25,6 @@ class PiedPiperHandler extends RoleActionHandler {
 
     final acknowledged = Set<String>.from(state.nightAcknowledgedPlayerIds)..add(actorId);
 
-    // Mettre à jour les joueurs charmés dans l'état
     final updatedPlayers = Map<String, PlayerModel>.from(state.players);
     for (final tid in targets) {
       if (updatedPlayers.containsKey(tid)) {

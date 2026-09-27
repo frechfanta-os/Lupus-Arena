@@ -1,5 +1,3 @@
-// ignore_for_file: file_names
-
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
@@ -10,9 +8,6 @@ import 'package:flutter/foundation.dart';
 
 import 'services/lupus_permission_service.dart';
 
-/// Service gérant les communications vocales temps-réel via Agora RTC.
-/// Contrôle l'état du micro, le mode sourdine, les permissions et la détection
-/// des joueurs en train de parler pour animer l'interface Bento.
 class AgoraVoiceService {
   static final AgoraVoiceService _instance = AgoraVoiceService._internal();
   factory AgoraVoiceService() => _instance;
@@ -23,7 +18,6 @@ class AgoraVoiceService {
   RtcEngine? _engine;
   bool _isInitialized = false;
 
-  // Notifiers pour l'UI réactive
   final ValueNotifier<bool> isConnected = ValueNotifier(false);
   final ValueNotifier<bool> isMuted = ValueNotifier(false);
   final ValueNotifier<bool> isDeafened = ValueNotifier(false);
@@ -37,8 +31,8 @@ class AgoraVoiceService {
       ValueNotifier(ConnectionStateType.connectionStateDisconnected);
   final ValueNotifier<String?> lastErrorMessage = ValueNotifier(null);
   final ValueNotifier<String?> connectionError = ValueNotifier(null);
+  final ValueNotifier<Set<int>> locallyMutedUids = ValueNotifier({});
 
-  // Machine d'état anti-boucle de reconnexion
   bool _isConnecting = false;
   bool get isConnecting => _isConnecting;
   bool _hasFailed = false;
@@ -50,7 +44,6 @@ class AgoraVoiceService {
   int? _lastUid;
   bool _lastInitialMute = false;
 
-  // Mutex et file d'attente pour sérialiser switchChannel et éviter les conflits Agora
   bool _isSwitching = false;
   bool get isSwitching => _isSwitching;
   String? _pendingSwitchChannelId;
@@ -75,17 +68,15 @@ class AgoraVoiceService {
     diagnosticLogs.value = [];
   }
 
-  // Configuration Agora RTC (Injectable via --dart-define ou repli par défaut)
   static const String defaultAppId = String.fromEnvironment(
     'AGORA_APP_ID',
     defaultValue: 'fba9116dce4648a8966952d7f4eba209',
   );
   static const String appCertificate = String.fromEnvironment(
     'AGORA_APP_CERTIFICATE',
-    defaultValue: '9263c2350773468991e500b63e61d6e1',
+    defaultValue: '',
   );
 
-  /// Initialise le moteur Agora RTC avec gestion des permissions microphone
   Future<bool> initialize({String appId = defaultAppId}) async {
     if (_isInitialized && _engine != null) {
       addLog('Moteur déjà initialisé.');
@@ -204,7 +195,7 @@ class AgoraVoiceService {
                   }
                 }
                 userVolumes.value = volMap;
-                // Isole strictement les mises à jour : ne notifie QUE si la liste a réellement changé
+
                 if (!setEquals(speakingUids.value, active)) {
                   speakingUids.value = active;
                 }
@@ -244,8 +235,6 @@ class AgoraVoiceService {
         scenario: AudioScenarioType.audioScenarioGameStreaming,
       );
 
-      // Maintien strict de l'AEC (Acoustic Echo Cancellation) pour éviter tout retour sonore
-      // de la musique de fond dans le micro du joueur
       try {
         await _engine!.setParameters('{"che.audio.enable.aec":true}');
         await _engine!.setParameters('{"che.audio.enable.agc":true}');
@@ -273,13 +262,11 @@ class AgoraVoiceService {
     }
   }
 
-  /// Calcule un UID 32-bit entier positif déterministe et stable à partir de l'identifiant utilisateur unique
   static int deriveUid(String userId) {
     final hash = userId.hashCode.abs() % 100000000;
     return hash == 0 ? 1 : hash;
   }
 
-  /// Rejoindre un canal vocal de jeu (UID int ou String userAccount) avec anti-boucle et purge des sessions fantômes
   Future<bool> joinChannel({
     required String channelId,
     int? uid,
@@ -287,23 +274,20 @@ class AgoraVoiceService {
     String? token,
     bool initialMute = false,
   }) async {
-    // Calcul ou résolution de l'UID 32-bit stable dérivé du userId
+
     int effectiveUid = (uid != null && uid > 0) ? uid : 0;
     if (effectiveUid <= 0 && userAccount != null && userAccount.isNotEmpty) {
       effectiveUid = deriveUid(userAccount);
     }
 
-    // 1. Éviter toute reconnexion si déjà connecté sur ce salon précis avec le même UID
     if (isConnected.value && currentChannel.value == channelId && (localUid.value == effectiveUid || effectiveUid == 0)) {
       return true;
     }
 
-    // 2. Éviter les tentatives concurrentes vers le même canal
     if (_isConnecting && _targetChannelId == channelId) {
       return false;
     }
 
-    // 3. Temporisation anti-flood : si ce canal a échoué il y a moins de 8 secondes, ne pas boucler
     if (_failedChannelId == channelId && _hasFailed && _lastFailureTime != null) {
       final elapsed = DateTime.now().difference(_lastFailureTime!);
       if (elapsed.inSeconds < 8) {
@@ -312,8 +296,6 @@ class AgoraVoiceService {
       }
     }
 
-    // 4. PURGE DES SESSIONS FANTÔMES :
-    // Vérifier si un canal est actif avant de forcer leaveChannel()
     try {
       if (currentChannel.value != null || isConnected.value) {
         addLog('Purge préalable d\'une session Agora active/fantôme (${currentChannel.value ?? "antérieure"})...');
@@ -416,7 +398,6 @@ class AgoraVoiceService {
     }
   }
 
-  /// Relance manuelle de la connexion vocale au salon actuel
   Future<void> retryJoin() async {
     if (_lastChannelId != null && _lastUid != null) {
       addLog('🔄 Relance manuelle de la connexion vocale...');
@@ -428,7 +409,6 @@ class AgoraVoiceService {
     }
   }
 
-  /// Rafraîchit les autorisations en arrière-plan et répare/réarme le moteur Agora
   Future<void> refreshAndRecover() async {
     try {
       final isMicOk = await LupusPermissionService().isMicGranted();
@@ -444,7 +424,6 @@ class AgoraVoiceService {
           } catch (_) {}
         }
 
-        // Si une connexion précédente avait échoué, réinitialiser l'état d'échec
         if (_hasFailed) {
           _hasFailed = false;
           _failedChannelId = null;
@@ -452,7 +431,6 @@ class AgoraVoiceService {
           lastErrorMessage.value = null;
         }
 
-        // Si nous avons un canal cible mais que nous sommes déconnectés
         if (_lastChannelId != null && !isConnected.value && !_isConnecting) {
           addLog('🔄 Reconnexion automatique au canal vocal $_lastChannelId...');
           await retryJoin();
@@ -463,7 +441,6 @@ class AgoraVoiceService {
     }
   }
 
-  /// Bascule propre et cadencée vers un autre canal avec mutex de concurrence
   Future<void> switchChannel({
     required String newChannelId,
     int? uid,
@@ -547,13 +524,10 @@ class AgoraVoiceService {
     }
   }
 
-  /// Active ou coupe le microphone local
   Future<void> muteMicrophone(bool mute) async => setMute(mute);
 
-  /// Réactive immédiatement le microphone local
   Future<void> unmuteMicrophone() async => setMute(false);
 
-  /// Coupe ou réactive la réception audio distante (Haut-parleur)
   Future<void> muteSpeaker(bool mute) async {
     try {
       await _engine?.muteAllRemoteAudioStreams(mute);
@@ -575,6 +549,30 @@ class AgoraVoiceService {
       addLog('❌ Erreur toggleDeafen: $e');
       debugPrint('[AgoraVoiceService] Erreur toggleDeafen: $e');
     }
+  }
+
+  bool isUserLocallyMuted(int uid) => locallyMutedUids.value.contains(uid);
+
+  Future<void> muteRemoteAudioStream(int uid, bool mute) async {
+    try {
+      await _engine?.muteRemoteAudioStream(uid: uid, mute: mute);
+      final updated = Set<int>.from(locallyMutedUids.value);
+      if (mute) {
+        updated.add(uid);
+      } else {
+        updated.remove(uid);
+      }
+      locallyMutedUids.value = updated;
+      addLog(mute ? 'Joueur UID $uid rendu muet localement' : 'Joueur UID $uid rétabli localement');
+    } catch (e) {
+      addLog('❌ Erreur muteRemoteAudioStream: $e');
+      debugPrint('[AgoraVoiceService] Erreur muteRemoteAudioStream: $e');
+    }
+  }
+
+  Future<void> toggleMuteRemoteUser(int uid) async {
+    final currentlyMuted = isUserLocallyMuted(uid);
+    await muteRemoteAudioStream(uid, !currentlyMuted);
   }
 
   Future<void> setEchoTest(bool enable) async {
@@ -603,6 +601,7 @@ class AgoraVoiceService {
       currentChannel.value = null;
       speakingUids.value = {};
       remoteUids.value = {};
+      locallyMutedUids.value = {};
       userVolumes.value = {};
       connectionState.value = ConnectionStateType.connectionStateDisconnected;
     } catch (e) {
@@ -623,7 +622,6 @@ class AgoraVoiceService {
   }
 }
 
-/// Générateur de jeton RTC Agora (Format 006 HMAC-SHA256)
 class AgoraTokenBuilder {
   static const int kJoinChannel = 1;
   static const int kPublishAudioStream = 2;

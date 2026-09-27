@@ -3,8 +3,6 @@ import '../../models/game_role.dart';
 import '../../models/game_state.dart';
 import 'role_action_handler.dart';
 
-/// Gestionnaire de rôle pour Le Chasseur.
-/// S'il est éliminé, tire immédiatement une ultime balle sur un joueur de son choix.
 class HunterHandler extends RoleActionHandler {
   @override
   GameRole get role => GameRole.hunter;

@@ -3,11 +3,9 @@ import 'dart:math';
 import '../models/player_model.dart';
 import 'expanded_roles_coordinator.dart';
 
-/// Stratégie et exécution des pouvoirs spécifiques de la Voyante
 class SeerActionHandler {
   const SeerActionHandler();
 
-  /// Quota de visions scalant selon le nombre total de joueurs
   int calculateInitialVisions(int totalPlayers) {
     if (totalPlayers <= 4) return 1;
     if (totalPlayers <= 9) return 2;
@@ -15,7 +13,6 @@ class SeerActionHandler {
     return totalPlayers ~/ 4;
   }
 
-  /// Masquage canonique absolu : le Loup Blanc apparaît comme Simple Villageois
   GameRole getPerceivedRole(GameRole realRole) {
     if (realRole == GameRole.whiteWerewolf) {
       return GameRole.simpleVillager;
@@ -29,11 +26,9 @@ class SeerActionHandler {
   }
 }
 
-/// Stratégie et exécution des pouvoirs spécifiques de la Sorcière
 class WitchActionHandler {
   const WitchActionHandler();
 
-  /// Quota de potions scalant selon le nombre total de joueurs : max(1, N ÷ 10)
   int calculateInitialPotions(int totalPlayers) {
     return max(1, totalPlayers ~/ 10);
   }
@@ -63,11 +58,9 @@ class WitchActionHandler {
   }
 }
 
-/// Stratégie de gestion de la mort des Amoureux (Cupidon)
 class LoverActionHandler {
   const LoverActionHandler();
 
-  /// Si le joueur décédé est en couple, retourne l'ID de son partenaire qui meurt de chagrin
   String? handleLoverDeath(
     String deadPlayerId,
     Map<String, PlayerModel> players,
@@ -88,7 +81,6 @@ class LoverActionHandler {
   }
 }
 
-/// Dispatcher central des actions de rôles (Strategy Pattern)
 class RoleActionDispatcher {
   final SeerActionHandler seer = const SeerActionHandler();
   final WitchActionHandler witch = const WitchActionHandler();
@@ -96,7 +88,6 @@ class RoleActionDispatcher {
 
   const RoleActionDispatcher();
 
-  /// Résout le flair du Renard
   bool resolveFoxSniff({
     required String targetPlayerId,
     required List<String> alivePlayerIdsInOrder,
@@ -111,7 +102,6 @@ class RoleActionDispatcher {
     );
   }
 
-  /// Résout le grognement du Montreur d'Ours
   bool resolveBearTamerGrowl({
     required String bearTamerPlayerId,
     required List<String> alivePlayerIdsInOrder,

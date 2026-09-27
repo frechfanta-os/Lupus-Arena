@@ -68,7 +68,6 @@ class RoleHandlersRegistry {
 
   static RoleActionHandler? getHandlerFor(GameRole role) => _handlers[role];
 
-  /// Dispatch générique sécurisé pour appliquer l'action d'un rôle
   static GameState dispatchAction(
     GameState state, {
     required GameRole role,
@@ -82,7 +81,6 @@ class RoleHandlersRegistry {
     return state;
   }
 
-  /// Récupération des contrôles UI du rôle actif
   static RoleUIControls getControls(GameState state, String playerId) {
     final role = state.playerRoles[playerId];
     if (role == null) return RoleUIControls.empty;

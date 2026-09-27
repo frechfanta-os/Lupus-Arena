@@ -7,7 +7,7 @@ class WolfCubHandler extends RoleActionHandler {
   GameRole get role => GameRole.wolfCub;
 
   @override
-  bool canAct(GameState state, String playerId) => false; // Passif
+  bool canAct(GameState state, String playerId) => false;
 
   @override
   GameState executeAction(
@@ -17,7 +17,6 @@ class WolfCubHandler extends RoleActionHandler {
   }) =>
       state;
 
-  /// Déclenché lors du trépas du chiot loup
   static GameState onCubDeath(GameState state) {
     final updatedExpanded = state.expandedRolesState.copyWith(cubDiedYesterday: true);
     return state.copyWith(expandedRolesState: updatedExpanded);

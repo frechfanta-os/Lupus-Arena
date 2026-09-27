@@ -10,9 +10,6 @@ import '../theme/lupus_theme.dart';
 import 'bento_card.dart';
 import 'bento_player_tile.dart';
 
-/// Panneau d'actions Bento contextuel compact pour chaque rôle.
-/// Format compact sans overflow, sans narrations superflues,
-/// avec boutons d'actions directs et brefs.
 class BentoActionPanel extends StatefulWidget {
   final GameRoom room;
   final String currentUserId;
@@ -50,7 +47,6 @@ class BentoActionPanel extends StatefulWidget {
   final ValueListenable<int>? countdownListenable;
   final ValueChanged<String>? onSelectTarget;
 
-  // Paramètres injectables pour les tests et la modularité
   final bool? isCaptain;
   final bool? isAlive;
   final GamePhase? phase;
@@ -188,22 +184,18 @@ class BentoActionPanel extends StatefulWidget {
 }
 
 class _BentoActionPanelState extends State<BentoActionPanel> {
-  // Sélection des deux amoureux par Cupidon
+
   String? _cupidLover1Id;
   String? _cupidLover2Id;
 
-  // Sélection des deux cibles par le Joueur de Flûte
   String? _piperTarget1Id;
   String? _piperTarget2Id;
 
-  // Sélection des deux cibles par les Loups (1er: Dévorer, 2ème: Museler)
   String? _wolfVictimId;
   String? _wolfMuteId;
 
-  // Sélection du successeur par le Capitaine défunt (Testament)
   String? _selectedCaptainSuccessorId;
 
-  // État d'espionnage de la Petite Fille
   bool _littleGirlEyesClosed = false;
 
   GameRoom get effectiveRoom => widget.room;
@@ -266,24 +258,24 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
         : null;
 
     if (victimId == null) {
-      // 1ère sélection : Dévorer (la proie des loups)
+
       setState(() => _wolfVictimId = id);
       widget.onVote(id);
     } else if (victimId == id) {
-      // Second clic sur la même victime : Dé-sélection / annulation pour choisir une autre victime
+
       setState(() => _wolfVictimId = null);
       widget.onVote(null);
     } else if (muteId == null) {
-      // 2ème sélection : Museler (Loup Noir / silence)
+
       setState(() => _wolfMuteId = id);
       widget.onBlackWolfSilence?.call(id);
-      // Auto-validation directe dès que les 2 cibles sont sélectionnées !
+
       widget.onNextPhase();
     } else if (muteId == id) {
-      // Dé-sélection de la 2ème cible
+
       setState(() => _wolfMuteId = null);
     } else {
-      // Remplacement de la 2ème cible et auto-validation directe
+
       setState(() => _wolfMuteId = id);
       widget.onBlackWolfSilence?.call(id);
       widget.onNextPhase();
@@ -293,7 +285,7 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
   @override
   void didUpdateWidget(covariant BentoActionPanel oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Nettoyage impératif des sous-états lors des transitions de phase ou de round
+
     final oldPhase = oldWidget.phase ?? oldWidget.room.phase;
     final newPhase = widget.phase ?? widget.room.phase;
     final oldRound = oldWidget.room.round;
@@ -319,7 +311,7 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
           _handleWerewolfSelection(widget.selectedTargetId!);
         }
       } else if (oldWidget.selectedTargetId != null) {
-        // Désélection déclenchée par un second clic sur la même carte (selectedTargetId repasse à null)
+
         final unselectedId = oldWidget.selectedTargetId!;
         if (newPhase == GamePhase.nightWerewolves && isEvil) {
           if (_wolfVictimId == unselectedId || widget.room.nightVictimId == unselectedId) {
@@ -374,7 +366,7 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // En-tête compact avec badge de décompte et badge de la cible sélectionnée
+
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -456,7 +448,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
             ),
             const SizedBox(height: 6),
 
-            // Zone d'action standardisée et stabilisée (hauteur minimale calibrée sur la Sorcière)
             Container(
               constraints: const BoxConstraints(minHeight: 120),
               alignment: Alignment.center,
@@ -505,7 +496,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
     }
   }
 
-  /// Dispatcher d'action stratégique selon la phase et le rôle actif
   Widget _buildRoleActionDispatcher({
     required BuildContext context,
     required GamePhase phase,
@@ -517,7 +507,7 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
     required bool isDyingCaptain,
   }) {
     try {
-      // 1. CHASSEUR AU DERNIER SOUFFLE
+
       if (phase == GamePhase.hunterDeathChoice) {
         if (widget.room.pendingHunterId == widget.currentUserId || isDevMode) {
           return _buildHunterSection(selectedTarget);
@@ -526,7 +516,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
         }
       }
 
-      // 2. CAPITAINE / MAIRE DÉFUNT (TESTAMENT) OU SPECTATEUR
       if (phase == GamePhase.captainSuccession || phase == GamePhase.mayorSuccession) {
         if (isDyingCaptain || isDevMode) {
           return _buildCaptainSuccessionSection(selectedTarget);
@@ -535,12 +524,10 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
         }
       }
 
-      // 3. JOUEUR ÉLIMINÉ SANS ACTION PARTICULIÈRE (HORS DEV-MODE)
       if (!isAlive && !isDevMode) {
         return _buildEliminatedSection();
       }
 
-      // 4. VOLEUR (NUIT 1)
       if (phase == GamePhase.nightThief) {
         if (role == GameRole.thief || role == GameRole.thiefOfHearts || isDevMode) {
           return _buildThiefSection(selectedTarget);
@@ -549,7 +536,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
         }
       }
 
-      // 5. CUPIDON (NUIT 1)
       if (phase == GamePhase.nightCupid) {
         if (role == GameRole.cupid || isDevMode) {
           return _buildCupidSection(selectedTarget);
@@ -558,7 +544,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
         }
       }
 
-      // 6. VOYANTE
       if (phase == GamePhase.nightSeer) {
         if (role == GameRole.seer || isDevMode) {
           return _buildSeerSection(selectedTarget);
@@ -567,7 +552,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
         }
       }
 
-      // 7. SALVATEUR
       if (phase == GamePhase.nightDefender) {
         if (role == GameRole.defender || isDevMode) {
           return _buildDefenderSection(selectedTarget);
@@ -576,7 +560,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
         }
       }
 
-      // 8. LOUPS-GAROUS & LOUP NOIR
       if (phase == GamePhase.nightWerewolves || phase == GamePhase.nightBlackWolf) {
         if (role.isEvil || isDevMode) {
           return _buildWerewolvesSection(me, selectedTarget);
@@ -587,7 +570,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
         }
       }
 
-      // 8.B LOUP-GAROU BLANC (NUIT DU LOUP BLANC)
       if (phase == GamePhase.nightWhiteWerewolf) {
         if (role == GameRole.whiteWerewolf || isDevMode) {
           return _buildWhiteWerewolfSection(selectedTarget);
@@ -596,7 +578,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
         }
       }
 
-      // 8.C RENARD (NUIT DU RENARD)
       if (phase == GamePhase.nightFox) {
         if (role == GameRole.fox || isDevMode) {
           return _buildFoxSection(selectedTarget);
@@ -605,7 +586,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
         }
       }
 
-      // 9. SORCIÈRE
       if (phase == GamePhase.nightWitch) {
         if (role == GameRole.witch || me.roleInitial == GameRole.witch || isDevMode) {
           final witchPlayer = widget.room.playerList.firstWhere(
@@ -618,7 +598,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
         }
       }
 
-      // 9.B PYROMANE
       if (phase == GamePhase.nightPyromaniac) {
         if (role == GameRole.pyromaniac || isDevMode) {
           return _buildPyromaniacSection(selectedTarget);
@@ -627,7 +606,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
         }
       }
 
-      // 9.C JOUEUR DE FLÛTE
       if (phase == GamePhase.nightPiper) {
         if (role == GameRole.piedPiper || isDevMode) {
           return _buildPiperSection(selectedTarget);
@@ -636,42 +614,34 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
         }
       }
 
-      // 10. ÉLECTION DU CAPITAINE / MAIRE
       if (phase == GamePhase.captainElection || phase == GamePhase.mayorElection) {
         return _buildCaptainElectionSection(selectedTarget);
       }
 
-      // 10.B DISCOURS D'OUVERTURE DU MAIRE
       if (phase == GamePhase.mayorSpeechOpening) {
         return _buildMayorSpeechOpeningSection();
       }
 
-      // 11. DÉBAT TOUR PAR TOUR
       if (phase == GamePhase.dayDebate) {
         return _buildDebateSection();
       }
 
-      // 11.B DISCOURS DE CLÔTURE DU MAIRE
       if (phase == GamePhase.mayorSpeechClosing) {
         return _buildMayorSpeechClosingSection();
       }
 
-      // 12. SCRUTIN DU BÛCHER & SECOND VOTE
       if (phase == GamePhase.dayVoting || phase == GamePhase.dayTieBreakVote) {
         return _buildVotingSection(me, selectedTarget);
       }
 
-      // 13. EXÉCUTION DU VERDICT (« Le Verdict Tombe ») / PLAIDOIRIE
       if (phase == GamePhase.dayResolution || phase == GamePhase.dayDefense) {
         return _buildVotesClosedBanner();
       }
 
-      // 14. AUBE / ANNONCE DES MORTS (joueurs attendent la résolution)
       if (phase == GamePhase.morningAnnouncement) {
         return _buildNightSleepingSection();
       }
 
-      // PAR DÉFAUT : NUIT OU JOUR
       if (phase.isNight) {
         if (role == GameRole.raven) {
           return _buildRavenSection(selectedTarget);
@@ -688,12 +658,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
     }
   }
 
-  // ==========================================
-  // --- MODULES DE RÔLES COMPACTS SANS OVERFLOW ---
-  // ==========================================
-
-  /// Module Sorcière : Utilisation combinée possible des deux potions (Vie & Mort) dans la même nuit
-  /// Vérification continue des stocks et rétrogradation en Simple Villageois si les 2 stocks sont épuisés
   Widget _buildWitchSection(PlayerModel witch, PlayerModel? selectedTarget) {
     final wolfVictimId = widget.room.nightVictimId;
     final wolfVictim = wolfVictimId != null ? widget.room.players[wolfVictimId] : null;
@@ -707,7 +671,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
     final hasActed = isHealed || poisonVictim != null;
     final isDechue = witch.potionsVie == 0 && witch.potionsMort == 0 && !widget.isAdmin;
 
-    // ÉTAT 1 : Déchue en simple villageoise (0 potions restantes)
     if (isDechue) {
       return Column(
         key: const ValueKey('action_witch_exhausted'),
@@ -756,7 +719,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
       );
     }
 
-    // ÉTAT 2 : Toutes les actions ont été validées (sauvé et/ou empoisonné, plus de potion utilisable)
     if (hasActed && (!hasHeal || wolfVictim == null) && (!hasPoison || poisonVictim != null)) {
       return Column(
         key: ValueKey('action_witch_confirmed_${isHealed}_${poisonVictimId ?? "none"}'),
@@ -805,13 +767,12 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
       );
     }
 
-    // ÉTAT 3 : En action active avec choix disponibles
     return Column(
       key: ValueKey('action_witch_active_${selectedTarget?.id ?? "none"}_${isHealed}_$hasPoison'),
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Bandeau stocks
+
         Container(
           margin: const EdgeInsets.only(bottom: 4),
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -843,7 +804,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
           ),
         ),
 
-        // Section Guérison
         if (isHealed)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -940,7 +900,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
             ),
           ),
 
-        // Section Poison & Passer
         Row(
           children: [
             if (poisonVictim != null)
@@ -1041,7 +1000,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
     );
   }
 
-  /// Module Loups-Garous : Sélection multi-cibles séquentielle (1er: Dévorer, 2e: Museler) + Auto-Validation
   Widget _buildWerewolvesSection(PlayerModel me, PlayerModel? selectedTarget) {
     final rawVictimId = _wolfVictimId ?? widget.room.nightVictimId ?? me.targetVoteId;
     final victimPlayer = rawVictimId != null ? widget.room.players[rawVictimId] : null;
@@ -1083,7 +1041,7 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // 1. Bandeau de statut réactif
+
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           margin: const EdgeInsets.only(bottom: 6),
@@ -1120,15 +1078,14 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
           ),
         ),
 
-        // 2. Deux emplacements côte à côte (1er: Dévorer, 2e: Museler)
         Row(
           children: [
-            // Emplacement 1 : DÉVORER (Rouge Sang)
+
             Expanded(
               child: GestureDetector(
                 onTap: () {
                   if (effectiveVictimId != null) {
-                    // Si une proie est déjà sélectionnée, un clic sur le slot l'annule pour choisir une autre victime
+
                     if (selectedTarget != null && selectedTarget.id != effectiveVictimId && selectedTarget.isAlive && !DeathRegistryService.instance.isDead(selectedTarget.id)) {
                       setState(() => _wolfVictimId = selectedTarget.id);
                       widget.onVote(selectedTarget.id);
@@ -1181,7 +1138,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
             ),
             const SizedBox(width: 6),
 
-            // Emplacement 2 : MUSELER (Violet Silence)
             Expanded(
               child: GestureDetector(
                 onTap: () {
@@ -1242,7 +1198,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
               ),
             ),
 
-            // Optionnel : Bouton Infection de l'Infect Père des Loups
             if (canInfect && victim != null) ...[
               const SizedBox(width: 6),
               SizedBox(
@@ -1267,7 +1222,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
           ],
         ),
 
-        // 3. Optionnel : Bouton Dénicher l'espionne (Petite Fille) si un villageois est sélectionné
         if (selectedTarget != null &&
             selectedTarget.isAlive &&
             !selectedTarget.isWolf &&
@@ -1298,7 +1252,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
     );
   }
 
-  /// Module Voyante : 3 états étanches (Épuisé / Révélé / Enquête)
   Widget _buildSeerSection(PlayerModel? selectedTarget) {
     final me = widget.room.players[widget.currentUserId] ??
         widget.room.playerList.first;
@@ -1308,7 +1261,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
     );
     final visionsLeft = seerPlayer.visionsRestantes;
 
-    // ÉTAT 1 : Épuisé / Déchue en simple villageois (0 visions restantes)
     if (visionsLeft == 0 && !widget.isAdmin) {
       return Column(
         key: const ValueKey('action_seer_exhausted'),
@@ -1357,7 +1309,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
       );
     }
 
-    // ÉTAT 2 : Révélation de l'identité / Rôle inspecté
     if (widget.inspectedRole != null) {
       final role = widget.inspectedRole!;
       return Column(
@@ -1409,7 +1360,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
       );
     }
 
-    // ÉTAT 3 : Sélection de la cible à sonder
     final canInspect = (visionsLeft > 0 || widget.isAdmin) &&
         selectedTarget != null &&
         selectedTarget.isAlive &&
@@ -1424,7 +1374,7 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Indicateur quota dynamique de visions Voyante
+
         Container(
           margin: const EdgeInsets.only(bottom: 6),
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -1513,14 +1463,12 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
     );
   }
 
-  /// Module Salvateur : 3 états exclusifs (Déjà protégé / Interdit consécutif / Sélection active)
   Widget _buildDefenderSection(PlayerModel? selectedTarget) {
     final currentProtectedId = widget.room.currentProtectedPlayerId;
     final currentProtected = (currentProtectedId != null && currentProtectedId.isNotEmpty)
         ? widget.room.players[currentProtectedId]
         : null;
 
-    // ÉTAT 1 : Déjà sous protection cette nuit
     if (currentProtected != null) {
       return Column(
         key: ValueKey('action_defender_confirmed_${currentProtected.id}'),
@@ -1674,9 +1622,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
     );
   }
 
-
-
-  /// Module Chasseur au dernier souffle : Tir de vengeance ultime
   Widget _buildHunterSection(PlayerModel? selectedTarget) {
     final bool canShoot = selectedTarget != null &&
         selectedTarget.isAlive &&
@@ -1770,7 +1715,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
     );
   }
 
-  /// Module Spectateur : Le Chasseur prend sa décision ultime
   Widget _buildHunterSpectatorSection() {
     return Container(
       key: const ValueKey('action_hunter_spectator'),
@@ -1803,14 +1747,12 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
     );
   }
 
-  /// Module Corbeau : Malédiction nocturne (+2 voix d'office le lendemain)
   Widget _buildRavenSection(PlayerModel? selectedTarget) {
     final crowTargetId = widget.room.expandedRolesState.crowTargetId;
     final crowTarget = (crowTargetId != null && crowTargetId.isNotEmpty)
         ? widget.room.players[crowTargetId]
         : null;
 
-    // ÉTAT 1 : Malédiction déjà posée
     if (crowTarget != null) {
       return Column(
         key: ValueKey('action_raven_confirmed_${crowTarget.id}'),
@@ -1859,7 +1801,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
       );
     }
 
-    // ÉTAT 2 : Sélection de la cible à maudire
     final bool canDesignate = selectedTarget != null &&
         selectedTarget.isAlive &&
         selectedTarget.id != widget.currentUserId;
@@ -1924,7 +1865,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
     );
   }
 
-  /// Module Nuit : Sommeil du village pendant le tour des autres rôles
   Widget _buildNightSleepingSection() {
     return Container(
       key: const ValueKey('action_night_sleeping'),
@@ -1957,7 +1897,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
     );
   }
 
-  /// Module Spectateur : Joueur éliminé observant la partie
   Widget _buildEliminatedSection() {
     return Container(
       key: const ValueKey('action_spectator_dead'),
@@ -1990,7 +1929,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
     );
   }
 
-  /// Bandeau d'état solennel lorsque les votes sont clos (Verdict du tribunal)
   Widget _buildVotesClosedBanner({String? message}) {
     return Container(
       key: ValueKey('action_votes_closed_${message ?? "default"}'),
@@ -2028,7 +1966,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
     );
   }
 
-  /// Module Scrutin du Bûcher : Flux conditionnel strict et mutuellement exclusif
   Widget _buildVotingSection(PlayerModel me, PlayerModel? selectedTarget) {
     final phase = widget.room.phase;
     final isTieBreak = phase == GamePhase.dayTieBreakVote;
@@ -2038,7 +1975,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
     final totalVoted = widget.room.alivePlayers.where((p) => p.targetVoteId != null).length;
     final allVoted = totalAlive > 0 && totalVoted >= totalAlive;
 
-    // Tous les survivants ont voté : affichage du bandeau de dépouillement immédiat
     if (allVoted) {
       return Container(
         key: const ValueKey('action_voting_all_voted'),
@@ -2079,7 +2015,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
       );
     }
 
-    // ÉTAT 2 : L'utilisateur a déjà voté et peut annuler
     if (currentVoteTargetId != null) {
       final votedTarget = widget.room.players[currentVoteTargetId];
       final votedName = votedTarget?.name ?? context.tr('suspect');
@@ -2156,7 +2091,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
       );
     }
 
-    // ÉTAT 3 : L'utilisateur n'a pas encore voté
     final String voteText;
     if (selectedTarget != null) {
       voteText = '${context.tr("vote_against_target", {"name": selectedTarget.name})}${me.isCaptain ? " (x2)" : ""}';
@@ -2199,7 +2133,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
     );
   }
 
-  /// Module Capitaine (Testament du Capitaine) : Vue dédiée pour le Capitaine mourant
   Widget _buildCaptainSuccessionSection(PlayerModel? selectedTarget) {
     final countdownListenable = widget.countdownListenable ??
         ValueNotifier<int>(widget.timerSeconds ?? (effectiveRoom.timerSeconds > 0 ? effectiveRoom.timerSeconds : 10));
@@ -2275,7 +2208,7 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // En-tête : « Testament du Capitaine » + Compte à rebours circulaire de 10s
+
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
@@ -2325,7 +2258,7 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
                       ],
                     ),
                   ),
-                  // Compte à rebours circulaire de 10 secondes
+
                   SizedBox(
                     width: 30,
                     height: 30,
@@ -2360,7 +2293,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
             ),
             const SizedBox(height: 6),
 
-            // Liste interactive des survivants
             if (survivors.isEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 6),
@@ -2448,7 +2380,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
               ),
             const SizedBox(height: 6),
 
-            // Bouton doré : « Léguer l'écharpe à [Nom] »
             Row(
               children: [
                 Expanded(
@@ -2527,7 +2458,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
     );
   }
 
-  /// Module Spectateur / Village : Bandeau immersif non interactif avec compte à rebours synchronisé de 10s
   Widget _buildCaptainSuccessionSpectatorSection() {
     final countdownListenable = widget.countdownListenable ??
         ValueNotifier<int>(widget.timerSeconds ?? (effectiveRoom.timerSeconds > 0 ? effectiveRoom.timerSeconds : 10));
@@ -2597,7 +2527,7 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
                 ),
               ),
               const SizedBox(width: 8),
-              // Compte à rebours synchronisé de 10s
+
               SizedBox(
                 width: 28,
                 height: 28,
@@ -2634,7 +2564,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
     );
   }
 
-  /// Module Élection du Capitaine
   Widget _buildCaptainElectionSection(PlayerModel? selectedTarget) {
     return SizedBox(
       key: ValueKey('action_captain_election_${selectedTarget?.id ?? "none"}'),
@@ -2663,7 +2592,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
     );
   }
 
-  /// Module Discours d'Ouverture du Maire
   Widget _buildMayorSpeechOpeningSection() {
     final mayorId = widget.room.captainId ?? widget.room.expandedRolesState.mayorPlayerId ?? widget.room.currentSpeakerId;
     final isMayor = mayorId == widget.currentUserId || widget.isAdmin;
@@ -2726,7 +2654,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
     );
   }
 
-  /// Module Débat tour par tour
   Widget _buildDebateSection() {
     final isSpeaker = widget.room.currentSpeakerId == widget.currentUserId;
     if (isSpeaker || widget.isAdmin) {
@@ -2787,7 +2714,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
     );
   }
 
-  /// Module Discours de Clôture du Maire
   Widget _buildMayorSpeechClosingSection() {
     final mayorId = widget.room.captainId ?? widget.room.expandedRolesState.mayorPlayerId ?? widget.room.currentSpeakerId;
     final isMayor = mayorId == widget.currentUserId || widget.isAdmin;
@@ -2850,7 +2776,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
     );
   }
 
-  /// Module Voleur / Voleur d'Âmes (Nuit 1) : Choix entre cartes non attribuées ou vol d'identité
   Widget _buildThiefSection(PlayerModel? selectedTarget) {
     final available = widget.room.thiefAvailableRoles;
     final myPlayer = widget.room.players[widget.currentUserId];
@@ -2858,7 +2783,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
         (!widget.room.players.values.any((p) => p.role == GameRole.thief && p.isAlive) &&
             widget.room.players.values.any((p) => p.role == GameRole.thiefOfHearts && p.isAlive));
 
-    // Détermination de l'ID effectif du voleur (pour empêcher de voler sa propre carte)
     String thiefActorId = widget.currentUserId;
     if (myPlayer?.role != GameRole.thief && myPlayer?.role != GameRole.thiefOfHearts) {
       final activeThief = widget.room.players.values.cast<PlayerModel?>().firstWhere(
@@ -2972,7 +2896,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
     );
   }
 
-  /// Module Cupidon (Nuit 1) : Sélection multi-cibles en 2 clics directs (sans bouton Valider)
   Widget _buildCupidSection(PlayerModel? selectedTarget) {
     final lover1 = _cupidLover1Id != null ? widget.room.players[_cupidLover1Id] : null;
     final lover2 = _cupidLover2Id != null ? widget.room.players[_cupidLover2Id] : null;
@@ -3113,7 +3036,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
     );
   }
 
-  /// Module Pyromane : Asperger d'huile ou brûler
   Widget _buildPyromaniacSection(PlayerModel? selectedTarget) {
     final dousedPlayers = widget.room.alivePlayers.where((p) => p.isDoused).toList();
     final isTargetDoused = selectedTarget?.isDoused == true;
@@ -3187,7 +3109,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
     );
   }
 
-  /// Module Joueur de Flûte : Sélection multi-cibles en 2 clics directs (sans bouton Valider)
   Widget _buildPiperSection(PlayerModel? selectedTarget) {
     final target1 = _piperTarget1Id != null ? widget.room.players[_piperTarget1Id] : null;
     final target2 = _piperTarget2Id != null ? widget.room.players[_piperTarget2Id] : null;
@@ -3333,7 +3254,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
     );
   }
 
-  /// Module Petite Fille : Télémétrie de la chasse des loups et espionnage secret
   Widget _buildLittleGirlSection(PlayerModel? selectedTarget) {
     final rawVictimId = _wolfVictimId ?? widget.room.nightVictimId;
     final victimPlayer = (rawVictimId != null && rawVictimId.isNotEmpty)
@@ -3488,7 +3408,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
     );
   }
 
-  /// Module Le Renard : Flairer un groupe de 3 joueurs adjacents ou passer son tour
   Widget _buildFoxSection(PlayerModel? selectedTarget) {
     final foxActive = widget.room.expandedRolesState.foxPowerActive &&
         !widget.room.expandedRolesState.ancientPowerLost;
@@ -3622,7 +3541,6 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
     return actionRow;
   }
 
-  /// Module Loup-Garou Blanc : Élimination solitaire d'un loup ou passer son tour
   Widget _buildWhiteWerewolfSection(PlayerModel? selectedTarget) {
     final isTargetWolf = selectedTarget != null &&
         selectedTarget.isAlive &&
@@ -3677,6 +3595,3 @@ class _BentoActionPanelState extends State<BentoActionPanel> {
     );
   }
 }
-
-
-

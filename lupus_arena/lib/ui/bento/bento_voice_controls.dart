@@ -7,7 +7,6 @@ import '../theme/lupus_theme.dart';
 import 'bento_card.dart';
 import 'music_mute_button.dart';
 
-/// Barre de contrôle vocal Bento pour Agora RTC
 class BentoVoiceControls extends StatelessWidget {
   final AgoraVoiceService voiceService = AgoraVoiceService();
   final bool isAlive;
@@ -52,7 +51,7 @@ class BentoVoiceControls extends StatelessWidget {
                     return ValueListenableBuilder<bool>(
                       valueListenable: voiceService.isDeafened,
                       builder: (context, deafened, _) {
-                        // Calcul des couleurs et libellés selon les priorités du jeu
+
                         Color statusColor;
                         Color borderColor;
                         String statusText;
@@ -125,7 +124,7 @@ class BentoVoiceControls extends StatelessWidget {
                           statusText = context.tr('wolves_night_total_silence');
                           subtitleText = context.tr('mic_and_listen_cut');
                         } else {
-                          // Phases normales (Lobby, Votes, etc.)
+
                           if (connected) {
                             statusColor = muted
                                 ? LupusColors.sunAmber
@@ -159,7 +158,7 @@ class BentoVoiceControls extends StatelessWidget {
                               (isGameOver && !muted && !isVictoryVoiceExpired),
                           child: Row(
                             children: [
-                              // Indicateur LED de statut
+
                               Container(
                                 width: 10,
                                 height: 10,
@@ -177,7 +176,6 @@ class BentoVoiceControls extends StatelessWidget {
                               ),
                               const SizedBox(width: 12),
 
-                              // Libellé d'état
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -220,7 +218,6 @@ class BentoVoiceControls extends StatelessWidget {
                                 ),
                               ),
 
-                              // Bouton Réessayer si déconnecté ou erreur
                               if (!connected)
                                 IconButton.filled(
                                   style: IconButton.styleFrom(
@@ -242,7 +239,6 @@ class BentoVoiceControls extends StatelessWidget {
 
                               if (!connected) const SizedBox(width: 8),
 
-                              // Bouton Activer / Couper Micro
                               IconButton.filled(
                                 style: IconButton.styleFrom(
                                   backgroundColor: canToggleMic
@@ -283,7 +279,6 @@ class BentoVoiceControls extends StatelessWidget {
                               ),
                               const SizedBox(width: 8),
 
-                              // Bouton Couper le son des autres (Deafen)
                               IconButton.filled(
                                 style: IconButton.styleFrom(
                                   backgroundColor: deafened
@@ -309,7 +304,6 @@ class BentoVoiceControls extends StatelessWidget {
                               ),
                               const SizedBox(width: 8),
 
-                              // Bouton Mute Musique (Strictement indépendant du SDK Agora RTC)
                               const MusicMuteButton(),
                             ],
                           ),

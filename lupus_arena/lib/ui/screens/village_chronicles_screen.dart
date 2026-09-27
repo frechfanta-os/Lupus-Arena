@@ -6,7 +6,6 @@ import '../../services/app_translations.dart';
 import '../bento/bento_card.dart';
 import '../theme/lupus_theme.dart';
 
-/// Page distincte et immersive dédiée aux Chroniques et événements du Village
 class VillageChroniclesScreen extends ConsumerStatefulWidget {
   final List<String> logs;
   final String roomCode;
@@ -30,7 +29,7 @@ class VillageChroniclesScreen extends ConsumerStatefulWidget {
 }
 
 class _VillageChroniclesScreenState extends ConsumerState<VillageChroniclesScreen> {
-  String _selectedFilter = 'all'; // 'all', 'deaths', 'night', 'debate', 'powers'
+  String _selectedFilter = 'all';
 
   List<String> get _currentLogs {
     final liveLogs = ref.watch(gameNotifierProvider.select((s) => s.room?.logs));
@@ -67,7 +66,7 @@ class _VillageChroniclesScreenState extends ConsumerState<VillageChroniclesScree
       backgroundColor: LupusColors.background,
       body: Stack(
         children: [
-          // Fond atmosphérique
+
           Positioned.fill(
             child: Container(
               decoration: const BoxDecoration(
@@ -87,15 +86,13 @@ class _VillageChroniclesScreenState extends ConsumerState<VillageChroniclesScree
           SafeArea(
             child: Column(
               children: [
-                // En-tête de navigation
+
                 _buildHeader(context),
 
-                // Filtres thématiques
                 _buildFilters(),
 
                 const SizedBox(height: 10),
 
-                // Liste chronologique des chroniques
                 Expanded(
                   child: displayLogs.isEmpty
                       ? Center(
@@ -143,7 +140,7 @@ class _VillageChroniclesScreenState extends ConsumerState<VillageChroniclesScree
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Bouton retour
+
           GestureDetector(
             onTap: () => Navigator.of(context).pop(),
             child: Container(
@@ -170,7 +167,6 @@ class _VillageChroniclesScreenState extends ConsumerState<VillageChroniclesScree
             ),
           ),
 
-          // Titre central
           Column(
             children: [
               Row(
@@ -201,7 +197,6 @@ class _VillageChroniclesScreenState extends ConsumerState<VillageChroniclesScree
             ],
           ),
 
-          // Bouton fermer / croix
           GestureDetector(
             onTap: () => Navigator.of(context).pop(),
             child: Container(

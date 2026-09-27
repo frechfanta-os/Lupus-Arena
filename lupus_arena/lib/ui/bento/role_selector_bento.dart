@@ -9,9 +9,8 @@ import '../theme/lupus_theme.dart';
 import 'bento_card.dart';
 import 'role_card_image.dart';
 
-/// Données d'affichage UI canoniques pour les 30 rôles
 final Map<GameRole, Map<String, dynamic>> roleUIData = {
-  // Rôles existants préservés
+
   GameRole.villager: {'name': 'Simple Villageois', 'camp': Camp.village, 'desc': 'Ne possède aucun pouvoir particulier. Utilise sa déduction.'},
   GameRole.werewolf: {'name': 'Loup-Garou', 'camp': Camp.wolves, 'desc': 'Dévore un villageois chaque nuit en meute.'},
   GameRole.seer: {'name': 'Voyante', 'camp': Camp.village, 'desc': 'Découvre l\'identité secrète d\'un joueur chaque nuit.'},
@@ -26,7 +25,6 @@ final Map<GameRole, Map<String, dynamic>> roleUIData = {
   GameRole.villageIdiot: {'name': 'Idiot du Village', 'camp': Camp.village, 'desc': 'Gracié par le village mais perd son droit de vote.'},
   GameRole.angel: {'name': 'Ange', 'camp': Camp.neutral, 'desc': 'Gagne immédiatement s\'il est éliminé au premier vote.'},
 
-  // Rôles ajoutés :
   GameRole.twoSisters: {'name': 'Deux Sœurs', 'camp': Camp.village, 'desc': 'Se réveillent ensemble la première nuit.'},
   GameRole.threeBrothers: {'name': 'Trois Frères', 'camp': Camp.village, 'desc': 'Se concertent ensemble la première nuit.'},
   GameRole.fox: {'name': 'Renard', 'camp': Camp.village, 'desc': 'Flairera un loup parmi un groupe de trois joueurs.'},
@@ -46,9 +44,6 @@ final Map<GameRole, Map<String, dynamic>> roleUIData = {
   GameRole.soulStealer: {'name': 'Voleur d\'Âmes', 'camp': Camp.neutral, 'desc': 'Échange son destin avec un joueur en début de partie.'},
 };
 
-/// Panneau Bento Grid de Composition du Deck de Rôles (Deck Builder)
-/// Permet à l'Hôte d'ajuster les quantités de chaque carte en temps réel sur Firebase.
-/// Affiche pour tous les joueurs le compteur d'équilibre (Cartes / Joueurs connectés).
 class RoleSelectorBento extends ConsumerStatefulWidget {
   final GameRoom room;
   final bool isHost;
@@ -64,7 +59,7 @@ class RoleSelectorBento extends ConsumerStatefulWidget {
 }
 
 class _RoleSelectorBentoState extends ConsumerState<RoleSelectorBento> {
-  // Filtre de camp actif : 0 = Tous, 1 = Loups, 2 = Village, 3 = Solitaires
+
   int _activeFilter = 0;
 
   @override
@@ -75,7 +70,6 @@ class _RoleSelectorBentoState extends ConsumerState<RoleSelectorBento> {
     final playersCount = room.playerList.length;
     final isBalanced = totalRoles == playersCount;
 
-    // Rôles filtrés
     final filteredRoles = _getFilteredRoles(_activeFilter);
 
     return BentoCard(
@@ -85,7 +79,7 @@ class _RoleSelectorBentoState extends ConsumerState<RoleSelectorBento> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. En-tête : Titre + Badge Hôte / Invité
+
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -160,7 +154,6 @@ class _RoleSelectorBentoState extends ConsumerState<RoleSelectorBento> {
 
           const SizedBox(height: 12),
 
-          // 2. Compteur Global d'Équilibre (Cartes choisies : X / Y joueurs connectés)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
@@ -242,7 +235,6 @@ class _RoleSelectorBentoState extends ConsumerState<RoleSelectorBento> {
 
           const SizedBox(height: 12),
 
-          // 3. Filtres rapides de Camp (Tous, Loups, Village, Neutres)
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
@@ -260,7 +252,6 @@ class _RoleSelectorBentoState extends ConsumerState<RoleSelectorBento> {
 
           const SizedBox(height: 10),
 
-          // 4. Liste / Grille des Rôles
           ConstrainedBox(
             constraints: const BoxConstraints(maxHeight: 340),
             child: ListView.separated(
@@ -351,7 +342,7 @@ class _RoleSelectorBentoState extends ConsumerState<RoleSelectorBento> {
       ),
       child: Row(
         children: [
-          // Illustration miniature (zoomable au tap)
+
           RoleCardImage(
             role: role,
             width: 38,
@@ -360,7 +351,6 @@ class _RoleSelectorBentoState extends ConsumerState<RoleSelectorBento> {
           ),
           const SizedBox(width: 10),
 
-          // Nom et badge de camp
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -415,12 +405,11 @@ class _RoleSelectorBentoState extends ConsumerState<RoleSelectorBento> {
             ),
           ),
 
-          // Sélecteur numérique [-] [ Quantité ] [+]
           if (isHost) ...[
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Bouton Décrémenter [-]
+
                 _buildQuantityButton(
                   icon: Icons.remove_rounded,
                   enabled: quantity > 0,
@@ -429,7 +418,6 @@ class _RoleSelectorBentoState extends ConsumerState<RoleSelectorBento> {
                       .updateRolePool(role.id, -1),
                 ),
 
-                // Quantité affichée
                 Container(
                   constraints: const BoxConstraints(minWidth: 26),
                   alignment: Alignment.center,
@@ -444,7 +432,6 @@ class _RoleSelectorBentoState extends ConsumerState<RoleSelectorBento> {
                   ),
                 ),
 
-                // Bouton Incrémenter [+]
                 _buildQuantityButton(
                   icon: Icons.add_rounded,
                   enabled: isMultiple || quantity < 1,
@@ -455,7 +442,7 @@ class _RoleSelectorBentoState extends ConsumerState<RoleSelectorBento> {
               ],
             ),
           ] else ...[
-            // Mode Invité : Badge lecture seule
+
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
@@ -516,13 +503,13 @@ class _RoleSelectorBentoState extends ConsumerState<RoleSelectorBento> {
 
   List<GameRole> _getFilteredRoles(int filter) {
     switch (filter) {
-      case 1: // Loups
+      case 1:
         return GameRole.values.where((r) => r.isEvil && r != GameRole.mayor).toList();
-      case 2: // Village
+      case 2:
         return GameRole.values
             .where((r) => !r.isEvil && r.defaultTeam == Team.village && r != GameRole.mayor)
             .toList();
-      case 3: // Solitaires / Neutres
+      case 3:
         return GameRole.values
             .where((r) => !r.isEvil && r.defaultTeam != Team.village && r != GameRole.mayor)
             .toList();

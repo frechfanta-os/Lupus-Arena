@@ -5,19 +5,17 @@ import 'game_engine_models.dart';
 import '../services/death_registry_service.dart';
 
 class GameController extends ChangeNotifier {
-  // --- ÉTAT DU JEU ---
+
   GamePhase _currentPhase = GamePhase.initialization;
   int _currentTurn = 0;
   final List<Player> _players = [];
   final Queue<GameStep> _stepQueue = Queue<GameStep>();
   GameStep? _activeStep;
 
-  // --- ACTIONS & BUFFERS ---
   final NightActionBuffer _nightBuffer = NightActionBuffer();
   List<String> _pendingDeathsAnnouncement = [];
-  final Map<String, String> _votes = {}; // voterId -> targetId
+  final Map<String, String> _votes = {};
 
-  // --- ÉTATS PERSISTANTS DES RÔLES ---
   String? _lastBodyguardProtectedId;
   bool _foxPowerActive = true;
   String? _crowTargetId;
@@ -28,11 +26,9 @@ class GameController extends ChangeNotifier {
   bool _stutteringJudgeTriggeredThisDay = false;
   int _wolvesCasualtiesCount = 0;
 
-  // --- TIMERS ---
   Timer? _turnTimer;
   int _secondsRemaining = 0;
 
-  // --- GETTERS PUBLICS ---
   GamePhase get currentPhase => _currentPhase;
   int get currentTurn => _currentTurn;
   List<Player> get players => List.unmodifiable(_players);
@@ -40,10 +36,6 @@ class GameController extends ChangeNotifier {
   int get secondsRemaining => _secondsRemaining;
   List<String> get pendingDeathsAnnouncement => List.unmodifiable(_pendingDeathsAnnouncement);
   String? get crowTargetId => _crowTargetId;
-
-  // ===========================================================================
-  // 1. GESTION DU CYCLE DE VIE ET DES TIMERS
-  // ===========================================================================
 
   void _startTimer(int seconds, VoidCallback onTimeout) {
     _turnTimer?.cancel();
@@ -68,11 +60,6 @@ class GameController extends ChangeNotifier {
     _turnTimer = null;
   }
 
-  // ===========================================================================
-  // 2. VÉRIFICATION DE PRÉSENCE & SURVIE (Moteur d'initiation)
-  // ===========================================================================
-
-  /// Vérifie si un rôle est configuré dans la partie ET qu'au moins un détenteur est vivant.
   bool _isRolePresentAndAlive(RoleType role) {
     return _players.any((p) =>
         p.role == role &&
@@ -80,7 +67,6 @@ class GameController extends ChangeNotifier {
         !DeathRegistryService.instance.isDead(p.id));
   }
 
-  /// Vérifie si au moins un membre de la meute des loups est vivant
   bool _areWerewolvesPresentAndAlive() {
     return _players.any((p) =>
         (p.role == RoleType.werewolf ||
@@ -91,15 +77,11 @@ class GameController extends ChangeNotifier {
         !DeathRegistryService.instance.isDead(p.id));
   }
 
-  // ===========================================================================
-  // 3. CONSTRUCTION DYNAMIQUE DE LA FILE D'ATTENTE DE NUIT
-  // ===========================================================================
-
   void _buildNightStepQueue() {
     _stepQueue.clear();
 
     if (_currentTurn == 0) {
-      // Nuit préliminaire
+
       if (_isRolePresentAndAlive(RoleType.stealer)) {
         _stepQueue.add(GameStep.preStealer);
       }
@@ -109,7 +91,6 @@ class GameController extends ChangeNotifier {
       return;
     }
 
-    // Nuit Régulière : Ordre strict d'activation
     if (_isRolePresentAndAlive(RoleType.actor)) {
       _stepQueue.add(GameStep.roleActor);
     }
@@ -131,11 +112,11 @@ class GameController extends ChangeNotifier {
     if (_areWerewolvesPresentAndAlive()) {
       _stepQueue.add(GameStep.roleWerewolves);
     }
-    // Grand Méchant Loup : vivant ET aucun loup n'est mort depuis le début
+
     if (_isRolePresentAndAlive(RoleType.bigBadWolf) && _wolvesCasualtiesCount == 0) {
       _stepQueue.add(GameStep.roleBigBadWolf);
     }
-    // Loup Blanc : vivant ET nuit paire
+
     if (_isRolePresentAndAlive(RoleType.whiteWolf) && (_currentTurn % 2 == 0)) {
       _stepQueue.add(GameStep.roleWhiteWolf);
     }
@@ -143,10 +124,6 @@ class GameController extends ChangeNotifier {
       _stepQueue.add(GameStep.roleWitch);
     }
   }
-
-  // ===========================================================================
-  // 4. TRANSITIONS DE PHASES & DÉPILAGE DE LA FILE
-  // ===========================================================================
 
   void startGame(List<Player> initialPlayers) {
     _players.clear();
@@ -181,7 +158,7 @@ class GameController extends ChangeNotifier {
   void _executeNextNightStep() {
     if (_stepQueue.isNotEmpty) {
       _activeStep = _stepQueue.removeFirst();
-      // Timeout automatique de 20s par sous-phase
+
       _startTimer(20, () => actionPass());
       notifyListeners();
     } else {
@@ -195,15 +172,10 @@ class GameController extends ChangeNotifier {
     }
   }
 
-  /// Passe l'étape actuelle par défaut (fallback en cas d'expiration du timer)
   void actionPass() {
     _stopTimer();
     _executeNextNightStep();
   }
-
-  // ===========================================================================
-  // 5. ACTIONS DES RÔLES PENDANT LA NUIT (BUFFERISATION)
-  // ===========================================================================
 
   void actionStealerStealRole(String stealerId, String targetPlayerId) {
     if (_activeStep != GameStep.preStealer) return;
@@ -239,7 +211,6 @@ class GameController extends ChangeNotifier {
   void actionFoxSmell(String centerPlayerId) {
     if (_activeStep != GameStep.roleFox) return;
 
-    // Identification de la cible et de ses voisins vivants
     final aliveList = _players.where((p) => p.isAlive).toList();
     final index = aliveList.indexWhere((p) => p.id == centerPlayerId);
 
@@ -257,7 +228,7 @@ class GameController extends ChangeNotifier {
           p.role == RoleType.whiteWolf);
 
       if (!wolfFound) {
-        _foxPowerActive = false; // Pouvoir perdu définitivement
+        _foxPowerActive = false;
       }
     }
     _executeNextNightStep();
@@ -272,7 +243,7 @@ class GameController extends ChangeNotifier {
   void actionBodyguardProtect(String targetId) {
     if (_activeStep != GameStep.roleBodyguard) return;
     if (targetId == _lastBodyguardProtectedId) {
-      return; // Interdiction de cibler le même joueur 2 nuits de suite
+      return;
     }
     _nightBuffer.protectedPlayerId = targetId;
     _lastBodyguardProtectedId = targetId;
@@ -330,7 +301,7 @@ class GameController extends ChangeNotifier {
     if (_activeStep != GameStep.roleWitch) return;
 
     if (useLifePotion && !_witchLifePotionUsed) {
-      // Sauve la victime principale des loups
+
       final wolfVictim = _nightBuffer.killIntents
           .where((k) => k.source == KillSource.werewolves)
           .map((k) => k.targetPlayerId)
@@ -351,14 +322,9 @@ class GameController extends ChangeNotifier {
     _executeNextNightStep();
   }
 
-  // ===========================================================================
-  // 6. ACTION BUFFER & RÉSOLUTION DU MATIN
-  // ===========================================================================
-
   void _resolveNightActionsAndWakeUp() {
     final Set<String> resolvedDeaths = {};
 
-    // 1. Traitement de l'Infection
     String? infectedVictimId;
     if (_nightBuffer.isInfected) {
       final wolfAttack = _nightBuffer.killIntents.firstWhere(
@@ -374,22 +340,18 @@ class GameController extends ChangeNotifier {
       }
     }
 
-    // 2. Traitement des attaques et protections
     for (final intent in _nightBuffer.killIntents) {
       final targetId = intent.targetPlayerId;
       if (targetId.isEmpty) continue;
 
-      // Si le joueur est infecté, il ne meurt pas de l'attaque des loups
       if (intent.source == KillSource.werewolves && targetId == infectedVictimId) {
         continue;
       }
 
-      // Si guéri par la Sorcière
       if (_nightBuffer.healedPlayerId == targetId) {
         continue;
       }
 
-      // Bouclier du Salvateur : annule les attaques des loups uniquement
       if (_nightBuffer.protectedPlayerId == targetId &&
           (intent.source == KillSource.werewolves ||
            intent.source == KillSource.bigBadWolf ||
@@ -397,11 +359,9 @@ class GameController extends ChangeNotifier {
         continue;
       }
 
-      // Poison Sorcière, Feu Pyromane ou Attaque physique non bloquée
       resolvedDeaths.add(targetId);
     }
 
-    // 3. Propagation du Chagrin d'Amour
     final loversDying = <String>{};
     for (final victimId in resolvedDeaths) {
       final victim = _players.where((p) => p.id == victimId).firstOrNull;
@@ -411,7 +371,6 @@ class GameController extends ChangeNotifier {
     }
     resolvedDeaths.addAll(loversDying);
 
-    // 4. Application effective de l'élimination (inviolable)
     for (final p in _players) {
       if (resolvedDeaths.contains(p.id) && p.isAlive) {
         p.isAlive = false;
@@ -429,15 +388,10 @@ class GameController extends ChangeNotifier {
     _startDayAnnouncements();
   }
 
-  // ===========================================================================
-  // 7. PHASES DE JOUR & VOTE
-  // ===========================================================================
-
   void _startDayAnnouncements() {
     _currentPhase = GamePhase.dayAnnounceDeaths;
     notifyListeners();
 
-    // Hook Servante Dévouée : si vivante et qu'il y a des morts
     if (_isRolePresentAndAlive(RoleType.dedicatedMaid) && _pendingDeathsAnnouncement.isNotEmpty) {
       _activeStep = GameStep.hookDedicatedMaid;
       _startTimer(10, () => _endAnnouncementsAndDiscuss());
@@ -461,7 +415,7 @@ class GameController extends ChangeNotifier {
   void _endAnnouncementsAndDiscuss() {
     _activeStep = null;
     _currentPhase = GamePhase.dayDiscussion;
-    // Débat : 120 secondes
+
     _startTimer(120, () => startDayVoting());
     notifyListeners();
   }
@@ -470,7 +424,7 @@ class GameController extends ChangeNotifier {
     _stopTimer();
     _currentPhase = GamePhase.dayVoting;
     _votes.clear();
-    // Vote : 30 secondes
+
     _startTimer(30, () => resolveVotesAndExecute());
     notifyListeners();
   }
@@ -478,19 +432,16 @@ class GameController extends ChangeNotifier {
   void castVote(String voterId, String targetId) {
     if (_currentPhase != GamePhase.dayVoting) return;
 
-    // Règle inviolable : Un joueur mort ne peut pas voter
     if (DeathRegistryService.instance.isDead(voterId)) return;
     final voter = _players.where((p) => p.id == voterId).firstOrNull;
     if (voter == null || !voter.isAlive) return;
 
-    // Règle inviolable : Impossible de voter contre un joueur mort
     if (DeathRegistryService.instance.isDead(targetId)) return;
     final target = _players.where((p) => p.id == targetId).firstOrNull;
     if (target == null || !target.isAlive) return;
 
     _votes[voterId] = targetId;
 
-    // Si tous les joueurs vivants ont voté, résolution immédiate
     final aliveCount = _players.where((p) => p.isAlive).length;
     if (_votes.length >= aliveCount) {
       resolveVotesAndExecute();
@@ -501,18 +452,15 @@ class GameController extends ChangeNotifier {
     _stopTimer();
     _currentPhase = GamePhase.dayExecution;
 
-    // Calcul des scores
     final Map<String, int> scores = {};
     for (var p in _players.where((p) => p.isAlive)) {
       scores[p.id] = 0;
     }
 
-    // Corbeau : +2 votes automatiques sur la cible
     if (_crowTargetId != null && scores.containsKey(_crowTargetId)) {
       scores[_crowTargetId!] = scores[_crowTargetId!]! + 2;
     }
 
-    // Dépouillement avec prise en compte du Capitaine (2 voix)
     _votes.forEach((voterId, targetId) {
       if (scores.containsKey(targetId)) {
         final voter = _players.where((p) => p.id == voterId).firstOrNull;
@@ -522,7 +470,6 @@ class GameController extends ChangeNotifier {
       }
     });
 
-    // Recherche de la majorité
     int highestScore = -1;
     List<String> highestVotedIds = [];
 
@@ -539,7 +486,7 @@ class GameController extends ChangeNotifier {
     if (highestVotedIds.length == 1 && highestScore > 0) {
       executedPlayerId = highestVotedIds.first;
     } else if (highestVotedIds.length > 1) {
-      // Égalité stricte : choix arbitré par le Capitaine s'il est vivant
+
       final captain = _players.where((p) => p.isCaptain && p.isAlive).firstOrNull;
       if (captain != null) {
         final captainVote = _votes[captain.id];
@@ -549,7 +496,6 @@ class GameController extends ChangeNotifier {
       }
     }
 
-    // Élimination et mort par amour si applicable
     if (executedPlayerId != null) {
       final executed = _players.where((p) => p.id == executedPlayerId).firstOrNull;
       if (executed != null) {
@@ -568,10 +514,8 @@ class GameController extends ChangeNotifier {
       }
     }
 
-    // Reset du Corbeau pour le jour suivant
     _crowTargetId = null;
 
-    // Hook Juge Bègue : Si signe déclenché ce jour-là, on relance un vote
     if (_stutteringJudgeTriggeredThisDay) {
       _stutteringJudgeTriggeredThisDay = false;
       startDayVoting();
@@ -589,23 +533,17 @@ class GameController extends ChangeNotifier {
     }
   }
 
-  // ===========================================================================
-  // 8. CONDITIONS DE VICTOIRE
-  // ===========================================================================
-
   void _checkWinConditionsOrContinue() {
     _currentPhase = GamePhase.checkWinConditions;
     notifyListeners();
 
     final alivePlayers = _players.where((p) => p.isAlive).toList();
 
-    // 1. Victoire Loup Blanc (seul survivant)
     if (alivePlayers.length == 1 && alivePlayers.first.role == RoleType.whiteWolf) {
       _endGame(Faction.whiteWolf);
       return;
     }
 
-    // 2. Victoire des Amoureux (seuls survivants du jeu)
     if (alivePlayers.length == 2 &&
         alivePlayers.first.loversIds.contains(alivePlayers.last.id)) {
       _endGame(Faction.lovers);
@@ -621,19 +559,16 @@ class GameController extends ChangeNotifier {
 
     final aliveVillagers = alivePlayers.length - aliveWolves;
 
-    // 3. Victoire des Loups
     if (aliveWolves >= aliveVillagers && aliveWolves > 0) {
       _endGame(Faction.werewolves);
       return;
     }
 
-    // 4. Victoire du Village
     if (aliveWolves == 0) {
       _endGame(Faction.village);
       return;
     }
 
-    // La partie continue -> cycle suivant (Nuit)
     _startRegularNight();
   }
 

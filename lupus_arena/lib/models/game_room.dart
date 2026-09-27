@@ -10,7 +10,6 @@ class GameRoom {
   final int round;
   final Map<String, PlayerModel> players;
 
-  // Rôles & Capacités de Nuit
   final String? captainId;
   final String? lastProtectedPlayerId;
   final String? currentProtectedPlayerId;
@@ -22,36 +21,30 @@ class GameRoom {
   final String? seerInspectedRole;
   final String? blackWolfTargetId;
 
-  // Nuits Spéciales Avancées (Voleur, Flûte, Loup Infect)
   final List<GameRole> thiefAvailableRoles;
   final bool vileFatherInfectionUsed;
   final String? infectedPlayerId;
   final List<String> charmedPlayerIds;
 
-  // Résolutions de Morts & Successions
   final List<String> morningVictims;
   final String? pendingHunterId;
   final String? pendingCaptainId;
   final Map<String, dynamic>? lastDeathFlip;
   final List<Map<String, dynamic>> deathAnnouncementQueue;
 
-  // Débat & Vote
   final String? currentSpeakerId;
   final List<String> debateQueue;
   final List<String> tiedPlayerIds;
   final bool isTieBreakActive;
 
-  // Fin & Vainqueur
   final String? winner;
   final int timerSeconds;
   final List<String> logs;
 
-  // Horloge Serveur & Synchronisation Absolue (Firebase RTDB)
-  final int? phaseEndsAt; // Timestamp Epoch (ms) d'expiration de la phase courante
-  final int? phaseStartedAt; // Timestamp Epoch (ms) de début de la phase courante
-  final int? phaseDurationMs; // Durée totale allouée à la phase en millisecondes
+  final int? phaseEndsAt;
+  final int? phaseStartedAt;
+  final int? phaseDurationMs;
 
-  // Configuration du Deck de Rôles & Disposition des Sièges
   final Map<String, int> rolePool;
   final bool isDevRoom;
   final List<String> seatingOrder;
@@ -100,7 +93,6 @@ class GameRoom {
     this.expandedRolesState = const ExpandedRolesState(),
   });
 
-  /// Temps restant en millisecondes calculé de manière pure par rapport à l'heure serveur estimée
   int remainingTimeMs(int currentServerEstimatedTime) {
     if (phaseEndsAt == null) {
       return timerSeconds * 1000;
@@ -109,7 +101,6 @@ class GameRoom {
     return diff > 0 ? diff : 0;
   }
 
-  /// Temps restant en secondes calculé de manière pure
   int remainingSeconds(int currentServerEstimatedTime) {
     return (remainingTimeMs(currentServerEstimatedTime) / 1000.0).ceil();
   }
@@ -148,7 +139,6 @@ class GameRoom {
     return all;
   }
 
-  /// Vérifie si un joueur avec cet identifiant unique est déjà présent dans le salon (Anti-doublon)
   bool hasPlayer(String userId) {
     if (players.containsKey(userId)) return true;
     for (final p in players.values) {
@@ -187,11 +177,9 @@ class GameRoom {
     return counts;
   }
 
-  /// Unification du titre de Maire
   String? get mayorId => captainId ?? expandedRolesState.mayorPlayerId;
   String? get pendingMayorId => pendingCaptainId;
 
-  /// Retourne l'identifiant du suspect ciblé par le vote du Maire, s'il existe et a voté
   String? get mayorTargetVoteId => captainTargetVoteId;
   String? get captainTargetVoteId {
     for (final player in alivePlayers) {
@@ -447,18 +435,16 @@ class GameRoom {
       }
     }
 
-    // Synchronisation et application du DeathRegistryService (Anti-Résurrection absolue)
     DeathRegistryService.instance.syncFromFirebase(map['cemetery'], map['morningVictims']);
     final enforcedPlayers = DeathRegistryService.instance.filterOrEnforce(parsedPlayers);
     parsedPlayers.clear();
     parsedPlayers.addAll(enforcedPlayers);
 
-    // Merge sharded votes
     final rawVotes = map['votes'];
     if (rawVotes is Map) {
       rawVotes.forEach((voterId, targetId) {
         final vid = voterId.toString();
-        // Un joueur mort ne peut pas avoir de vote actif
+
         if (parsedPlayers.containsKey(vid) && !DeathRegistryService.instance.isDead(vid)) {
           parsedPlayers[vid] = parsedPlayers[vid]!.copyWith(
             targetVoteId: targetId?.toString(),
@@ -467,7 +453,6 @@ class GameRoom {
       });
     }
 
-    // Merge sharded presence
     final rawPresence = map['presence'];
     if (rawPresence is Map) {
       rawPresence.forEach((uid, pData) {
@@ -596,7 +581,7 @@ class GameRoom {
       final p2 = rawCurrent != null ? GamePhase.fromString(rawCurrent) : null;
       if (p1 != null && p2 != null) {
         if (p1.isNight && p2.isNight) {
-          // Progression monotone : privilégier systématiquement la phase la plus avancée
+
           resolvedPhase = p1.nightOrderIndex >= p2.nightOrderIndex ? p1 : p2;
         } else {
           resolvedPhase = p1 != GamePhase.lobby ? p1 : p2;

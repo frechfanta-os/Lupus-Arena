@@ -10,7 +10,6 @@ import '../bento/bento_card.dart';
 import '../bento/role_card_image.dart';
 import '../theme/lupus_theme.dart';
 
-/// Configuration visuelle du vainqueur
 class VictoryThemeConfig {
   final String title;
   final String subtitle;
@@ -29,8 +28,6 @@ class VictoryThemeConfig {
   });
 }
 
-/// Écran complet de Fin de Partie (« GameOver / Débriefing » de 60 secondes)
-/// Respecte rigoureusement la charte graphique officielle de Lupus Arena (thème obsidienne, or, carmin, verre teinté).
 class GameOverScreen extends ConsumerStatefulWidget {
   final GameRoom room;
   final LupusGameState gameState;
@@ -57,7 +54,6 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
   void initState() {
     super.initState();
 
-    // Animation cinématique d'apparition du bandeau vainqueur
     _bannerAnimController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1200),
@@ -70,14 +66,12 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
 
     _bannerAnimController.forward();
 
-    // Démarrage du compte à rebours de 60 secondes
     _secondsRemaining = widget.room.timerSeconds > 0 && widget.room.timerSeconds <= 60
         ? widget.room.timerSeconds
         : 60;
 
     _startDebriefingTimer();
 
-    // Rejoindre le salon vocal global pour tous les joueurs
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _joinGlobalVoiceChannel();
     });
@@ -102,14 +96,14 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
   }
 
   void _onTimeExpired() {
-    // Redirection automatique vers le lobby à l'expiration des 60 secondes
+
     ref.read(gameNotifierProvider.notifier).leaveRoom();
   }
 
   Future<void> _joinGlobalVoiceChannel() async {
     final roomCode = widget.room.roomCode;
     final uid = widget.gameState.agoraUid;
-    // Canal global ouvert à tous les UIDs (morts et vivants)
+
     final globalChannel = 'lupus_$roomCode';
 
     try {
@@ -118,7 +112,7 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
         uid: uid > 0 ? uid : null,
         initialMute: false,
       );
-      // S'assurer que le son entrant est actif pour entendre tout le monde
+
       _voiceService.muteSpeaker(false);
     } catch (e) {
       debugPrint('[GameOverVoice] Erreur connexion canal global: $e');
@@ -132,16 +126,15 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
     super.dispose();
   }
 
-  /// Détermine la configuration visuelle du camp vainqueur
   VictoryThemeConfig _resolveVictoryConfig(BuildContext context, String? winner) {
     final w = winner?.toLowerCase().trim() ?? '';
 
     if (w == 'werewolves' || w == 'wolves') {
       return VictoryThemeConfig(
         title: 'VICTOIRE DE LA MEUTE !',
-        subtitle: 'Les loups ont dévoré Thiercelieux dans un bain de sang.',
+        subtitle: 'Les loups ont dévoré Le Village dans un bain de sang.',
         icon: Icons.pets_rounded,
-        primaryColor: const Color(0xFFDC2626), // Rouge carmin
+        primaryColor: const Color(0xFFDC2626),
         secondaryColor: const Color(0xFF7F1D1D),
         glowShadows: [
           const BoxShadow(
@@ -161,7 +154,7 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
         title: 'VICTOIRE DES AMOUREUX !',
         subtitle: 'Leur passion triomphe de la mort et transcende toutes les allégeances.',
         icon: Icons.favorite_rounded,
-        primaryColor: const Color(0xFFF43F5E), // Rose pourpre
+        primaryColor: const Color(0xFFF43F5E),
         secondaryColor: const Color(0xFF881337),
         glowShadows: [
           const BoxShadow(
@@ -176,7 +169,7 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
         title: 'VICTOIRE DU JOUEUR DE FLÛTE !',
         subtitle: 'La mélodie mystique a subjugué la totalité des survivants.',
         icon: Icons.music_note_rounded,
-        primaryColor: const Color(0xFFA855F7), // Violet spectral
+        primaryColor: const Color(0xFFA855F7),
         secondaryColor: const Color(0xFF581C87),
         glowShadows: [
           const BoxShadow(
@@ -191,7 +184,7 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
         title: 'VICTOIRE DU LOUP BLANC !',
         subtitle: 'L\'unique bête solitaire a massacré meute et village sans pitié.',
         icon: Icons.nightlight_round,
-        primaryColor: const Color(0xFFE2E8F0), // Blanc lune glacial
+        primaryColor: const Color(0xFFE2E8F0),
         secondaryColor: const Color(0xFF64748B),
         glowShadows: [
           const BoxShadow(
@@ -211,7 +204,7 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
         title: 'VICTOIRE DE L\'ANGE !',
         subtitle: 'Son martyre immaculé dès l\'aube lui ouvre les cieux divins.',
         icon: Icons.auto_awesome_rounded,
-        primaryColor: const Color(0xFFF59E0B), // Or divin
+        primaryColor: const Color(0xFFF59E0B),
         secondaryColor: const Color(0xFFB45309),
         glowShadows: [
           const BoxShadow(
@@ -226,7 +219,7 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
         title: 'VICTOIRE DU PYROMANE !',
         subtitle: 'Le village entier n\'est plus qu\'un tas de cendres fumantes.',
         icon: Icons.local_fire_department_rounded,
-        primaryColor: const Color(0xFFF97316), // Orange ardent
+        primaryColor: const Color(0xFFF97316),
         secondaryColor: const Color(0xFF9A3412),
         glowShadows: [
           const BoxShadow(
@@ -241,7 +234,7 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
         title: 'VICTOIRE DE LA SECTE !',
         subtitle: 'Les hérétiques ont été purgés sous le signe de l\'Abominable Sectaire.',
         icon: Icons.all_inclusive_rounded,
-        primaryColor: const Color(0xFF10B981), // Vert sombre
+        primaryColor: const Color(0xFF10B981),
         secondaryColor: const Color(0xFF064E3B),
         glowShadows: [
           const BoxShadow(
@@ -256,7 +249,7 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
         title: 'ÉGALITÉ FUNESTE !',
         subtitle: 'Aucun survivant n\'a réchappé au massacre. Le silence règne sur les ruines.',
         icon: Icons.balance_rounded,
-        primaryColor: const Color(0xFF94A3B8), // Gris acier
+        primaryColor: const Color(0xFF94A3B8),
         secondaryColor: const Color(0xFF334155),
         glowShadows: [
           const BoxShadow(
@@ -267,12 +260,12 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
         ],
       );
     } else {
-      // Victoire par défaut : Village
+
       return VictoryThemeConfig(
         title: 'VICTOIRE DU VILLAGE !',
         subtitle: 'Les ténèbres ont été repoussées. Les villageois célèbrent la paix retrouvée.',
         icon: Icons.shield_rounded,
-        primaryColor: const Color(0xFF06B6D4), // Cyan / Émeraude
+        primaryColor: const Color(0xFF06B6D4),
         secondaryColor: const Color(0xFF0E7490),
         glowShadows: [
           const BoxShadow(
@@ -290,7 +283,6 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
     }
   }
 
-  /// Vérifie si un joueur fait partie du camp victorieux
   bool _isPlayerInWinningCamp(PlayerModel player, String? winner) {
     final w = winner?.toLowerCase().trim() ?? '';
     final role = player.trueOriginalRole;
@@ -333,11 +325,11 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
     final progress = (_secondsRemaining / 60.0).clamp(0.0, 1.0);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0612), // Obsidienne pure
+      backgroundColor: const Color(0xFF0A0612),
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // 1. Arrière-plan gothique avec dégradés mystiques profonds
+
           Positioned.fill(
             child: Container(
               decoration: const BoxDecoration(
@@ -345,9 +337,9 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
                   center: Alignment(0.0, -0.4),
                   radius: 1.2,
                   colors: [
-                    Color(0xFF1E1035), // Violet nuit profond
+                    Color(0xFF1E1035),
                     Color(0xFF120A24),
-                    Color(0xFF0A0612), // Obsidienne
+                    Color(0xFF0A0612),
                   ],
                 ),
               ),
@@ -357,22 +349,20 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
           SafeArea(
             child: Column(
               children: [
-                // En-tête HUD avec Compte à Rebours 60s & Audio Bar
+
                 _buildTopHeader(timeFormatted, progress),
 
-                // Contenu scrollable : Bannière de Victoire + Tableau d'Honneur (Rôles & UIDs)
                 Expanded(
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                     child: Column(
                       children: [
-                        // 2. BANNIÈRE CINÉMATIQUE DU VAINQUEUR
+
                         _buildCinematicVictoryBanner(victoryConfig),
 
                         const SizedBox(height: 16),
 
-                        // 3. TABLEAU D'HONNEUR & RÉVÉLATION TOTALE DES RÔLES (par UID)
                         _buildHonorBoard(allPlayers, winner, gameState.currentUserId),
 
                         const SizedBox(height: 16),
@@ -381,7 +371,6 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
                   ),
                 ),
 
-                // 4. BARRE INFÉRIEURE : BOUTON REJOUER & ACTIONS IMMÉDIATES
                 _buildBottomActionDock(
                   context: context,
                   isMeReady: isMeReady,
@@ -398,21 +387,20 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
     );
   }
 
-  /// En-tête HUD avec Compte à Rebours doré et Contrôles Vocaux Globaux
   Widget _buildTopHeader(String timeFormatted, double progress) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Capsule de minuteur 60s (Design identique aux timers de phase)
+
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: const Color(0xCC140E24), // Glassmorphism sombre
+              color: const Color(0xCC140E24),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: const Color(0xFFF59E0B).withValues(alpha: 0.6), // Bordure dorée
+                color: const Color(0xFFF59E0B).withValues(alpha: 0.6),
                 width: 1.2,
               ),
               boxShadow: [
@@ -439,14 +427,13 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
                     fontSize: 14,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 1.2,
-                    color: Color(0xFFFDE68A), // Or clair
+                    color: Color(0xFFFDE68A),
                   ),
                 ),
               ],
             ),
           ),
 
-          // Titre central subtil
           const Row(
             children: [
               Icon(
@@ -467,7 +454,6 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
             ],
           ),
 
-          // Bouton flottant autonome de Microphone
           ValueListenableBuilder<bool>(
             valueListenable: _voiceService.isMuted,
             builder: (context, isMuted, _) {
@@ -507,7 +493,6 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
     );
   }
 
-  /// 2. Bandeau Cinématique Imposant du Vainqueur
   Widget _buildCinematicVictoryBanner(VictoryThemeConfig config) {
     return ScaleTransition(
       scale: _bannerScaleAnimation,
@@ -515,7 +500,7 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
         decoration: BoxDecoration(
-          color: const Color(0xE6160F2B), // Verre sombre teinté
+          color: const Color(0xE6160F2B),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: config.primaryColor.withValues(alpha: 0.8),
@@ -526,7 +511,7 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Icône avec cercle radiant
+
             Container(
               width: 64,
               height: 64,
@@ -551,7 +536,6 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
             ),
             const SizedBox(height: 12),
 
-            // Titre Solennel de la Victoire
             Text(
               config.title,
               textAlign: TextAlign.center,
@@ -571,7 +555,6 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
             ),
             const SizedBox(height: 8),
 
-            // Sous-titre narratif
             Text(
               config.subtitle,
               textAlign: TextAlign.center,
@@ -588,7 +571,6 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
     );
   }
 
-  /// 3. Tableau d'Honneur : Révélation de tous les Rôles et UIDs
   Widget _buildHonorBoard(
     List<PlayerModel> players,
     String? winner,
@@ -629,7 +611,6 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
           ),
           const SizedBox(height: 14),
 
-          // Grille responsive des cartes joueurs (jusqu'à 16 joueurs)
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -663,7 +644,6 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
     );
   }
 
-  /// Tuile individuelle pour un joueur révélé
   Widget _buildPlayerHonorTile({
     required PlayerModel player,
     required GameRole originalRole,
@@ -672,7 +652,7 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
     required bool isDegraded,
   }) {
     final borderColor = isWinner
-        ? const Color(0xFFF59E0B) // Or pour les vainqueurs
+        ? const Color(0xFFF59E0B)
         : (player.isAlive
             ? const Color(0x38A855F7)
             : const Color(0x22FFFFFF));
@@ -682,7 +662,7 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
       decoration: BoxDecoration(
         color: isWinner
             ? const Color(0x26F59E0B)
-            : const Color(0x99130D24), // Glassmorphism sombre
+            : const Color(0x99130D24),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: borderColor,
@@ -700,7 +680,7 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
       ),
       child: Row(
         children: [
-          // Carte miniature haute définition
+
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
             child: SizedBox(
@@ -729,13 +709,12 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
           ),
           const SizedBox(width: 8),
 
-          // Informations détaillées du joueur
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Nom + Badge Vainqueur / Vous
+
                 Row(
                   children: [
                     Flexible(
@@ -766,7 +745,6 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
                 ),
                 const SizedBox(height: 3),
 
-                // Rôle véritable révélé
                 Text(
                   originalRole.displayName,
                   maxLines: 1,
@@ -778,7 +756,6 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
                   ),
                 ),
 
-                // Statut de déchéance (ex: Sorcière sans potions)
                 if (isDegraded) ...[
                   const SizedBox(height: 2),
                   Container(
@@ -798,7 +775,6 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
                   ),
                 ],
 
-                // Statut de survie
                 const SizedBox(height: 3),
                 Row(
                   children: [
@@ -833,7 +809,6 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
     );
   }
 
-  /// 4. Barre d'Action Inférieure (Boutons Rejouer & Quitter)
   Widget _buildBottomActionDock({
     required BuildContext context,
     required bool isMeReady,
@@ -856,15 +831,15 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Bouton Principal REJOUER (Or / Ambre Impérial)
+
           SizedBox(
             width: double.infinity,
             height: 48,
             child: ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 backgroundColor: isMeReady
-                    ? const Color(0xFF10B981) // Vert émeraude validé
-                    : const Color(0xFFD97706), // Or ambré
+                    ? const Color(0xFF10B981)
+                    : const Color(0xFFD97706),
                 foregroundColor: Colors.white,
                 elevation: 6,
                 shadowColor: const Color(0xFFF59E0B).withValues(alpha: 0.5),
@@ -912,7 +887,6 @@ class _GameOverScreenState extends ConsumerState<GameOverScreen>
           ),
           const SizedBox(height: 8),
 
-          // Bouton secondaire Retour au Salon
           SizedBox(
             width: double.infinity,
             height: 40,

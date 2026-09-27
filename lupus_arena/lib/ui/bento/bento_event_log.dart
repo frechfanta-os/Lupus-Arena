@@ -3,7 +3,6 @@ import '../../services/app_translations.dart';
 import '../theme/lupus_theme.dart';
 import 'bento_card.dart';
 
-/// Journal des événements et chroniques de la partie
 class BentoEventLog extends StatelessWidget {
   final List<String> logs;
 

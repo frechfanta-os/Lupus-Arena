@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// Définition d'un avatar thématique Dark Fantasy pour Lupus Arena
 class LupusAvatarItem {
   final int id;
   final String name;
@@ -21,7 +20,6 @@ class LupusAvatarItem {
   });
 }
 
-/// Collection officielle des 12 Avatars Dark Fantasy du jeu
 class LupusAvatars {
   static const List<LupusAvatarItem> all = [
     LupusAvatarItem(
@@ -134,7 +132,6 @@ class LupusAvatars {
     ),
   ];
 
-  /// Récupère un avatar par index avec boucle circulaire sécurisée
   static LupusAvatarItem getByIndex(int index) {
     if (all.isEmpty) {
       return const LupusAvatarItem(
@@ -151,6 +148,5 @@ class LupusAvatars {
     return all[safeIndex];
   }
 
-  /// Liste des icônes pour compatibilité descendante
   static List<IconData> get icons => all.map((a) => a.icon).toList();
 }

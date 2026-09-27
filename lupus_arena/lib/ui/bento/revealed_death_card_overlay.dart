@@ -7,7 +7,6 @@ import '../../services/app_translations.dart';
 import '../theme/lupus_theme.dart';
 import 'role_card_image.dart';
 
-/// Modèle représentant un événement d'annonce de mort pour la file d'attente cinématique.
 class DeathAnnouncementEvent {
   final String playerId;
   final String playerName;
@@ -106,15 +105,6 @@ class DeathAnnouncementEvent {
   }
 }
 
-/// Séquence cinématique 3D de révélation des défunts au centre de la table mystique.
-///
-/// Spécifications & Anti-bouclage Firebase :
-/// 1. Confinement strict au centre du cercle pour ne jamais masquer les pastilles/avatars.
-/// 2. Traitement FIFO séquentiel avec traçabilité stricte des clés déjà affichées ([_playedKeys]).
-/// 3. Les snapshots et updates Firebase (speakerId, audio Agora) ne relancent JAMAIS les cartes déjà jouées.
-/// 4. Animation de retournement 3D (0° à 180°) avec perspective (setEntry(3, 2, 0.002)).
-/// 5. Temporisation d'exposition de 2.5 secondes par carte (3.5s durée totale par mort).
-/// 6. Disparition fluide et clôture définitive via [onSequenceCompleted] dès épuisement de la file.
 class RevealedDeathCardOverlay extends StatefulWidget {
   final List<DeathAnnouncementEvent> queue;
   final VoidCallback? onSequenceCompleted;
@@ -140,7 +130,6 @@ class _RevealedDeathCardOverlayState extends State<RevealedDeathCardOverlay>
   final Set<String> _playedKeys = {};
   DeathAnnouncementEvent? _currentEvent;
 
-  // Contrôleurs d'animation pour le cycle de vie de chaque carte
   late AnimationController _flipController;
   late Animation<double> _flipAnimation;
 
@@ -174,7 +163,6 @@ class _RevealedDeathCardOverlayState extends State<RevealedDeathCardOverlay>
       }
     }
 
-    // 1. Retournement 3D (0° -> 180°) en 700ms avec courbe fluide
     _flipController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 700),
@@ -183,7 +171,6 @@ class _RevealedDeathCardOverlayState extends State<RevealedDeathCardOverlay>
       CurvedAnimation(parent: _flipController, curve: Curves.easeInOutCubic),
     );
 
-    // 2. Sortie (Fade out & scale down) en 280ms
     _exitController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 280),
@@ -197,26 +184,25 @@ class _RevealedDeathCardOverlayState extends State<RevealedDeathCardOverlay>
 
     _flipController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
-        // La carte est à 180° : Démarrage du gel d'exposition de 2.5 secondes
+
         _startTwoSecondsFreeze();
       }
     });
 
     _exitController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
-        // La carte s'est effacée : passer à la suivante dans la file
+
         _advanceQueue();
       }
     });
 
-    // Lancer la première carte de la file
     _playNextCard();
   }
 
   @override
   void didUpdateWidget(RevealedDeathCardOverlay oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Filtrage strict : Ne JAMAIS réinjecter les défunts déjà joués ou en cours de lecture
+
     for (final ev in widget.queue) {
       final isAlreadyHandled = _playedKeys.contains(ev.key) ||
           _playedKeys.contains(ev.playerId) ||
@@ -257,7 +243,7 @@ class _RevealedDeathCardOverlayState extends State<RevealedDeathCardOverlay>
 
   void _startTwoSecondsFreeze() {
     _freezeTimer?.cancel();
-    // Temporisation de 2.5 secondes pour une lecture claire et posée
+
     _freezeTimer = Timer(const Duration(milliseconds: 2500), () {
       if (_isDisposed || !mounted) return;
       _exitController.forward(from: 0.0);
@@ -313,16 +299,16 @@ class _RevealedDeathCardOverlayState extends State<RevealedDeathCardOverlay>
                   mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // CARTE 3D AVEC EFFET FLIP ET PERSPECTIVE
+
                     Transform(
                       alignment: Alignment.center,
                       transform: Matrix4.identity()
-                        ..setEntry(3, 2, 0.002) // Perspective 3D
+                        ..setEntry(3, 2, 0.002)
                         ..rotateY(angle),
                       child: isFront
                           ? Transform(
                               alignment: Alignment.center,
-                              transform: Matrix4.identity()..rotateY(math.pi), // Inverse pour affichage à l'endroit
+                              transform: Matrix4.identity()..rotateY(math.pi),
                               child: _buildCardFront(event, cardWidth, cardHeight),
                             )
                           : _buildCardBack(cardWidth, cardHeight),
@@ -330,7 +316,6 @@ class _RevealedDeathCardOverlayState extends State<RevealedDeathCardOverlay>
 
                     const SizedBox(height: 4),
 
-                    // INFORMATIONS DU DÉFUNT (Visibles dès que la face est révélée)
                     AnimatedOpacity(
                       duration: const Duration(milliseconds: 200),
                       opacity: isFront ? 1.0 : 0.0,
@@ -346,7 +331,6 @@ class _RevealedDeathCardOverlayState extends State<RevealedDeathCardOverlay>
     );
   }
 
-  /// Face arrière : Dos de carte mystique (assets/cards/Fond.jpg ou assets/cards/card_back.png)
   Widget _buildCardBack(double width, double height) {
     return Container(
       width: width,
@@ -373,14 +357,14 @@ class _RevealedDeathCardOverlayState extends State<RevealedDeathCardOverlay>
           height: height,
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) {
-            // Fallback 1 : card_back.png alternatif
+
             return Image.asset(
               RoleAssetMap.cardBackFallback,
               width: width,
               height: height,
               fit: BoxFit.cover,
               errorBuilder: (ctx, err, st) {
-                // Fallback 2 : Sceau arcanique procédural
+
                 return Container(
                   width: width,
                   height: height,
@@ -412,7 +396,6 @@ class _RevealedDeathCardOverlayState extends State<RevealedDeathCardOverlay>
     );
   }
 
-  /// Face avant : Rôle d'origine révélé avec halo adapté au camp
   Widget _buildCardFront(
     DeathAnnouncementEvent event,
     double width,
@@ -443,7 +426,7 @@ class _RevealedDeathCardOverlayState extends State<RevealedDeathCardOverlay>
         child: Stack(
           fit: StackFit.expand,
           children: [
-            // Illustration officielle du rôle (assets/cards/)
+
             RoleCardImage(
               role: role,
               width: width,
@@ -452,7 +435,6 @@ class _RevealedDeathCardOverlayState extends State<RevealedDeathCardOverlay>
               fit: BoxFit.cover,
             ),
 
-            // Filtre dégradé subtil en bas pour lisibilité
             Align(
               alignment: Alignment.bottomCenter,
               child: Container(
@@ -475,7 +457,6 @@ class _RevealedDeathCardOverlayState extends State<RevealedDeathCardOverlay>
     );
   }
 
-  /// Section d'informations typographiques compactes sous la carte
   Widget _buildVictimInfo(DeathAnnouncementEvent event, double maxWidth) {
     return Container(
       width: maxWidth,
@@ -484,7 +465,7 @@ class _RevealedDeathCardOverlayState extends State<RevealedDeathCardOverlay>
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // 1. Nom du joueur
+
           Text(
             event.playerName,
             maxLines: 1,
@@ -503,7 +484,6 @@ class _RevealedDeathCardOverlayState extends State<RevealedDeathCardOverlay>
 
           const SizedBox(height: 1),
 
-          // 2. Rôle d'origine révélé
           Text(
             event.role.getDisplayName(context),
             maxLines: 1,
@@ -523,7 +503,6 @@ class _RevealedDeathCardOverlayState extends State<RevealedDeathCardOverlay>
 
           const SizedBox(height: 2),
 
-          // 3. Badge Cause d'élimination compact
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
             decoration: BoxDecoration(

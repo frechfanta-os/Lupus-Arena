@@ -70,7 +70,7 @@ void main() {
     });
 
     test('Tous les assets déclarés peuvent être chargés avec succès via rootBundle', () async {
-      // Test du dos de carte
+
       final backData = await rootBundle.load(RoleAssetMap.cardBackPath);
       expect(backData.lengthInBytes, greaterThan(0),
           reason: 'L\'asset ${RoleAssetMap.cardBackPath} doit pouvoir être chargé');
@@ -79,7 +79,6 @@ void main() {
       expect(fallbackData.lengthInBytes, greaterThan(0),
           reason: 'L\'asset ${RoleAssetMap.cardBackFallback} doit pouvoir être chargé');
 
-      // Test de chaque rôle
       for (final role in GameRole.values) {
         final path = RoleAssetMap.getImagePath(role);
         if (path != null) {

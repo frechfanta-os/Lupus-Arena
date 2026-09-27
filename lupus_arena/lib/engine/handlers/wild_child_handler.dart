@@ -26,7 +26,6 @@ class WildChildHandler extends RoleActionHandler {
     return state.copyWith(expandedRolesState: updatedExpanded);
   }
 
-  /// Déclenché lors de n'importe quelle élimination pour vérifier la mutation
   static GameState checkModelDeath(GameState state, String deadPlayerId) {
     if (state.expandedRolesState.wildChildModelId == deadPlayerId &&
         !state.expandedRolesState.wildChildTransformed) {

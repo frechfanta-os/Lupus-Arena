@@ -11,7 +11,6 @@ import 'game_action_visual_effects.dart';
 import 'ghost_death_badge.dart';
 import 'revealed_death_card_overlay.dart';
 
-/// Dimensions calculées dynamiquement pour l'agencement radial de la table
 class _TableDimensions {
   final double radius;
   final double innerRadius;
@@ -36,13 +35,6 @@ class _TableDimensions {
   });
 }
 
-/// Table mystique circulaire adaptative inspirée du design Stitch.
-/// Dispose les joueurs (de 4 jusqu'à 30 participants) de façon réactive :
-/// - Dimensionnement dynamique par [LayoutBuilder] / [MediaQuery] pour s'adapter à l'écran.
-/// - Double anneau concentrique avec interfoliage angulaire pour N > 16 joueurs.
-/// - Hitbox tactile garantie d'au moins 48x48 dp pour chaque joueur ([HitTestBehavior.opaque]).
-/// - Transitions de repositionnement fluides via [AnimatedPositioned].
-/// - Optimisation Skia/Impeller avec [RepaintBoundary] et contrôleur de pulsation audio conditionnel.
 class MysticRadialTable extends StatefulWidget {
   final List<PlayerModel> players;
   final String? selectedPlayerId;
@@ -125,7 +117,6 @@ class _MysticRadialTableState extends State<MysticRadialTable>
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
 
-  // Animation de clignotement doré lors de la passation de pouvoir du Capitaine
   String? _currentCaptainId;
   String? _animatingNewCaptainId;
   late AnimationController _captainFlashController;
@@ -163,7 +154,6 @@ class _MysticRadialTableState extends State<MysticRadialTable>
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
 
-    // Ne lancer l'animation de pulsation que si un joueur a effectivement la parole
     if (_hasActiveSpeaker()) {
       _pulseController.repeat(reverse: true);
     }
@@ -201,13 +191,12 @@ class _MysticRadialTableState extends State<MysticRadialTable>
     if (newCaptainId != null &&
         _currentCaptainId != null &&
         newCaptainId != _currentCaptainId) {
-      // Passation autoritaire détectée : clignotement doré du nouvel élu
+
       _animatingNewCaptainId = newCaptainId;
       _captainFlashController.forward(from: 0.0);
     }
     _currentCaptainId = newCaptainId;
 
-    // Gestion intelligente du contrôleur de pulsation audio pour économiser la batterie
     final hasSpeaker = _hasActiveSpeaker();
     if (hasSpeaker && !_pulseController.isAnimating) {
       _pulseController.repeat(reverse: true);
@@ -238,7 +227,7 @@ class _MysticRadialTableState extends State<MysticRadialTable>
     required int totalPlayers,
     required bool isDoubleRing,
   }) {
-    // Rayon orbital calibré proportionnellement (tableSize * 0.38) pour éviter tout débordement
+
     final double maxRadius = tableSize * 0.38;
 
     if (isDoubleRing) {
@@ -261,7 +250,6 @@ class _MysticRadialTableState extends State<MysticRadialTable>
       );
     }
 
-    // Single ring (échelle 0.85-0.90)
     final double avatarSize;
     final double nodeWidth;
     final double fontSize;
@@ -275,7 +263,7 @@ class _MysticRadialTableState extends State<MysticRadialTable>
       nodeWidth = 37.0;
       fontSize = 8.5;
     } else {
-      // 13..16
+
       avatarSize = 28.0;
       nodeWidth = 33.0;
       fontSize = 7.5;
@@ -299,7 +287,6 @@ class _MysticRadialTableState extends State<MysticRadialTable>
     final totalPlayers = widget.players.length;
     final bool isDoubleRing = totalPlayers > 16;
 
-    // Trouver le joueur actuellement sélectionné
     PlayerModel? selectedPlayer;
     if (widget.selectedPlayerId != null) {
       for (final p in widget.players) {
@@ -310,7 +297,6 @@ class _MysticRadialTableState extends State<MysticRadialTable>
       }
     }
 
-    // Table circulaire recalibrée (diamètre 260px) pour résoudre l'empiètement vertical
     const double tableSize = 260.0;
     const double center = tableSize / 2;
 
@@ -320,7 +306,6 @@ class _MysticRadialTableState extends State<MysticRadialTable>
       isDoubleRing: isDoubleRing,
     );
 
-    // Pré-calculs hors-boucle O(1) pour éviter O(N^2) dans le layout des noeuds
     final isDevMode = widget.isDevModeActive || widget.isDevRoom;
     final isMeWolfTeam = widget.isMeEvil ||
         widget.myRole.isEvil ||
@@ -350,7 +335,7 @@ class _MysticRadialTableState extends State<MysticRadialTable>
         child: Stack(
           alignment: Alignment.center,
           children: [
-            // 1, 2, 3. Couche d'arrière-plan avec dégradé et anneaux runiques animés (Isolée)
+
             _MysticRadialBackgroundLayer(
               tableSize: tableSize,
               isDoubleRing: isDoubleRing,
@@ -358,7 +343,6 @@ class _MysticRadialTableState extends State<MysticRadialTable>
               rotationAnimation: _rotationController,
             ),
 
-                // 4. Carte d'état de cible OU Séquence cinématique 3D des défunts au centre (Isolée)
                 RepaintBoundary(
                   child: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 300),
@@ -386,7 +370,6 @@ class _MysticRadialTableState extends State<MysticRadialTable>
                   ),
                 ),
 
-                // 5. Noeuds radiaux des joueurs disposés à 360° (avec transitions AnimatedPositioned et Hitbox 48x48)
                 for (int i = 0; i < totalPlayers; i++)
                   _buildRadialPlayerNode(
                     player: widget.players[i],
@@ -412,7 +395,7 @@ class _MysticRadialTableState extends State<MysticRadialTable>
     double maxRadius = 140.0,
   }) {
     final double baseWidth = isCompact ? 80.0 : 98.0;
-    // Borner la boîte centrale pour qu'elle ne dépasse jamais 85% du rayon effectif
+
     final double cardWidth = math.min(baseWidth, maxRadius * 0.85);
     final double hPadding = isCompact ? 5.0 : 7.0;
     final double vPadding = isCompact ? 5.0 : 8.0;
@@ -439,7 +422,7 @@ class _MysticRadialTableState extends State<MysticRadialTable>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Badge CIBLE avec indicateur clignotant
+
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
             decoration: BoxDecoration(
@@ -476,7 +459,6 @@ class _MysticRadialTableState extends State<MysticRadialTable>
           ),
           const SizedBox(height: 4),
 
-          // Nom de la cible sélectionnée
           Text(
             selectedPlayer != null
                 ? selectedPlayer.name
@@ -492,7 +474,6 @@ class _MysticRadialTableState extends State<MysticRadialTable>
           ),
           const SizedBox(height: 2),
 
-          // Affichage sécurisé du rôle de la cible (uniquement si autorisé)
           if (selectedPlayer != null) ...[
             Builder(
               builder: (context) {
@@ -653,7 +634,6 @@ class _MysticRadialTableState extends State<MysticRadialTable>
             ),
           ],
 
-          // Message d'aide
           Text(
             selectedPlayer != null
                 ? (selectedPlayer.isAlive
@@ -771,7 +751,6 @@ class _MysticRadialTableState extends State<MysticRadialTable>
         ? (dimensions.avatarSize + 4.0)
         : dimensions.avatarSize;
 
-    // Calcul de l'angle et du rayon (mode simple anneau ou double anneau imbriqué)
     final double angle;
     final double currentRadius;
 
@@ -783,7 +762,7 @@ class _MysticRadialTableState extends State<MysticRadialTable>
         currentRadius = dimensions.radius;
       } else {
         final int innerIdx = index ~/ 2;
-        // Décalage angulaire de pi / innerCount pour intercaler parfaitement entre les joueurs extérieurs
+
         angle = (2 * math.pi * innerIdx / dimensions.innerCount) -
             (math.pi / 2) +
             (math.pi / dimensions.innerCount);
@@ -794,14 +773,12 @@ class _MysticRadialTableState extends State<MysticRadialTable>
       currentRadius = dimensions.radius;
     }
 
-    // Zone d'interaction tactile garantie minimale de 48x48 dp
     final double hitWidth = math.max(48.0, nodeWidth);
     final double hitHeight = math.max(48.0, nodeWidth + 16.0);
 
     final double x = center + (currentRadius * math.cos(angle)) - (hitWidth / 2);
     final double y = center + (currentRadius * math.sin(angle)) - (hitHeight / 2);
 
-    // Initiales
     final initials = player.name.trim().isNotEmpty
         ? (player.name.trim().length >= 2
             ? player.name.trim().substring(0, 2).toUpperCase()
@@ -831,7 +808,7 @@ class _MysticRadialTableState extends State<MysticRadialTable>
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Jeton de joueur avec animation spectrale de mort
+
                   GhostDeathBadge(
                     playerUid: player.id,
                     isAlive: player.isAlive,
@@ -839,14 +816,13 @@ class _MysticRadialTableState extends State<MysticRadialTable>
                       alignment: Alignment.center,
                       clipBehavior: Clip.none,
                       children: [
-                        // 1. Onde de choc et halo néon pulsant pour celui qui a la parole (Isolé)
+
                         if (isSpeaking)
                         _SpeakingPulseHalo(
                           pulseAnimation: _pulseAnimation,
                           avatarSize: avatarSize,
                         ),
 
-                      // 2. Halo pulsant fluide pour joueur charmé (Joueur de Flûte 🎵)
                       if (FogOfWarService.canSeeCharmedBadge(
                         targetIsCharmed: player.isCharmed,
                         observerRole: widget.myRole,
@@ -858,7 +834,6 @@ class _MysticRadialTableState extends State<MysticRadialTable>
                           child: const SizedBox.shrink(),
                         ),
 
-                      // 3. Avatar du joueur avec décoration et animation de flash Capitaine conditionnelle
                       _buildAvatarToken(
                         player: player,
                         isDead: isDead,
@@ -883,19 +858,16 @@ class _MysticRadialTableState extends State<MysticRadialTable>
                         fontSize: dimensions.fontSize + 1.5,
                       ),
 
-                      // 4. Flash d'impact et réticule du Chasseur 🎯
                       if (widget.hunterShotTargetId == player.id)
                         Positioned.fill(
                           child: HunterImpactEffect(size: avatarSize),
                         ),
 
-                      // 5. Propagation radiale de flammes du Pyromane 🔥
                       if (widget.pyroIgnitedPlayerIds?.contains(player.id) == true)
                         Positioned.fill(
                           child: PyroFlameBurstEffect(size: avatarSize),
                         ),
 
-                      // Badge Micro Néon pour celui qui a la parole
                       if (isSpeaking)
                         Positioned(
                           bottom: -4,
@@ -924,7 +896,6 @@ class _MysticRadialTableState extends State<MysticRadialTable>
                           ),
                         ),
 
-                      // Badge Micro Barré Rouge si Bâillonné (silence forcé)
                       if (player.isMuted && player.isAlive)
                         Positioned(
                           bottom: -4,
@@ -954,7 +925,6 @@ class _MysticRadialTableState extends State<MysticRadialTable>
                           ),
                         ),
 
-                      // Badge Hors-Ligne si Déconnecté en cours de partie
                       if (!player.isOnline && player.isAlive)
                         Positioned(
                           bottom: -4,
@@ -977,7 +947,6 @@ class _MysticRadialTableState extends State<MysticRadialTable>
                           ),
                         ),
 
-                      // Badge Flairage du Renard (visible uniquement pour le Renard ou DevMode)
                       if (isSniffed && !isMe)
                         Positioned(
                           top: -6,
@@ -1019,7 +988,6 @@ class _MysticRadialTableState extends State<MysticRadialTable>
                           ),
                         ),
 
-                      // Badge Allié Loup-Garou (visible pour les loups)
                       if (isWolfPeer && !isMe && (player.isAlive || isDevMode))
                         Positioned(
                           top: -6,
@@ -1044,7 +1012,6 @@ class _MysticRadialTableState extends State<MysticRadialTable>
                           ),
                         ),
 
-                      // Badge Rôle Sondé par la Voyante (visible uniquement par la voyante sur joueurs réellement sondés)
                       if (canSeeSeerInspection && seerDiscoveredRole != null && !isMe && (player.isAlive || isDevMode))
                         Positioned(
                           top: -6,
@@ -1069,7 +1036,6 @@ class _MysticRadialTableState extends State<MysticRadialTable>
                           ),
                         ),
 
-                      // Badge Bouclier du Salvateur (visible uniquement par le Salvateur ou DevMode)
                       if (isProtected && !isMe)
                         Positioned(
                           top: -6,
@@ -1094,7 +1060,6 @@ class _MysticRadialTableState extends State<MysticRadialTable>
                           ),
                         ),
 
-                      // Badge Potion de vie de la Sorcière (visible pour la Sorcière ou DevMode)
                       if (isWitchHealed && !isMe)
                         Positioned(
                           top: -6,
@@ -1119,7 +1084,6 @@ class _MysticRadialTableState extends State<MysticRadialTable>
                           ),
                         ),
 
-                      // Badge Potion de mort de la Sorcière (visible pour la Sorcière ou DevMode)
                       if (isWitchPoisoned && !isMe)
                         Positioned(
                           top: -6,
@@ -1144,7 +1108,6 @@ class _MysticRadialTableState extends State<MysticRadialTable>
                           ),
                         ),
 
-                      // Badge Victime des Loups (visible pour la Sorcière pendant son tour)
                       if (isWitchVictim && !isWitchHealed && !isMe)
                         Positioned(
                           top: -6,
@@ -1169,7 +1132,6 @@ class _MysticRadialTableState extends State<MysticRadialTable>
                           ),
                         ),
 
-                      // Badge Cible maudite du Corbeau (visible pour Corbeau la nuit, public le jour)
                       if (isCrowTarget && !isMe)
                         Positioned(
                           top: -6,
@@ -1194,7 +1156,6 @@ class _MysticRadialTableState extends State<MysticRadialTable>
                           ),
                         ),
 
-                      // Badge Modèle de l'Enfant Sauvage (visible uniquement par l'Enfant Sauvage ou DevMode)
                       if (isWildChildModel && !isMe)
                         Positioned(
                           top: -6,
@@ -1219,7 +1180,6 @@ class _MysticRadialTableState extends State<MysticRadialTable>
                           ),
                         ),
 
-                      // Badge Loup contaminé par l'Épée Rouillée (visible pour les loups ou DevMode)
                       if (isContaminatedWolf && !isMe)
                         Positioned(
                           bottom: -4,
@@ -1244,7 +1204,6 @@ class _MysticRadialTableState extends State<MysticRadialTable>
                           ),
                         ),
 
-                      // Badge Grognement du Montreur d'Ours au matin
                       if (isBearTamerGrowling && !isMe)
                         Positioned(
                           top: -6,
@@ -1269,7 +1228,6 @@ class _MysticRadialTableState extends State<MysticRadialTable>
                           ),
                         ),
 
-                      // Badge Capitaine (Étoile dorée uniquement si vivant)
                       if (player.isCaptain && player.isAlive)
                         Positioned(
                           top: -4,
@@ -1318,7 +1276,6 @@ class _MysticRadialTableState extends State<MysticRadialTable>
                                 ),
                         ),
 
-                      // Badge Amoureux (Cœur - strictement filtré par FogOfWarService)
                       if (FogOfWarService.canSeeLoverBadge(
                         targetIsLover: player.isLover,
                         observerRole: widget.myRole,
@@ -1341,7 +1298,6 @@ class _MysticRadialTableState extends State<MysticRadialTable>
                           ),
                         ),
 
-                      // Badge Maison Imbibée de Carburant (Pyromane)
                       if (player.isDoused &&
                           (isMe ||
                               widget.myRole == GameRole.pyromaniac ||
@@ -1363,7 +1319,6 @@ class _MysticRadialTableState extends State<MysticRadialTable>
                           ),
                         ),
 
-                      // Badge Envoûté (Joueur de Flûte - strictement filtré par FogOfWarService)
                       if (FogOfWarService.canSeeCharmedBadge(
                         targetIsCharmed: player.isCharmed,
                         observerRole: widget.myRole,
@@ -1394,7 +1349,6 @@ class _MysticRadialTableState extends State<MysticRadialTable>
                           ),
                         ),
 
-                      // Badge Infecté (Loup Infect)
                       if (player.isInfected &&
                           (isMe ||
                               widget.myRole.isEvil ||
@@ -1424,7 +1378,6 @@ class _MysticRadialTableState extends State<MysticRadialTable>
                           ),
                         ),
 
-                      // Badge Bâillonné / Muté (Loup Noir)
                       if (player.isMuted)
                         Positioned(
                           top: 10,
@@ -1450,7 +1403,6 @@ class _MysticRadialTableState extends State<MysticRadialTable>
                           ),
                         ),
 
-                      // Badge de votes reçus (avec étoile dorée si ciblé par le vote du Maire)
                       if (votes > 0)
                         Positioned(
                           bottom: -4,
@@ -1460,7 +1412,7 @@ class _MysticRadialTableState extends State<MysticRadialTable>
                                 horizontal: 4, vertical: 1),
                             decoration: BoxDecoration(
                               color: (widget.captainTargetVoteId == player.id)
-                                  ? const Color(0xFFD97706) // Doré/Ambre pour vote du Maire
+                                  ? const Color(0xFFD97706)
                                   : LupusColors.arcaneCrimson,
                               borderRadius: BorderRadius.circular(6),
                               border: (widget.captainTargetVoteId == player.id)
@@ -1502,7 +1454,6 @@ class _MysticRadialTableState extends State<MysticRadialTable>
                 ),
                 const SizedBox(height: 2),
 
-                  // Nom et numéro de siège avec icône loup si allié ou boule de cristal si sondé
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -1931,8 +1882,6 @@ class _MysticRadialTableState extends State<MysticRadialTable>
   }
 }
 
-/// Couche d'arrière-plan du sceau magique avec rotation runique et anneaux dorés.
-/// Entièrement isolée dans un [RepaintBoundary] avec réutilisation des widgets enfants.
 class _MysticRadialBackgroundLayer extends StatelessWidget {
   final double tableSize;
   final bool isDoubleRing;
@@ -1952,7 +1901,7 @@ class _MysticRadialBackgroundLayer extends StatelessWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // 1. Cercle magique d'arrière-plan avec dégradé radial
+
           Container(
             width: tableSize - 20,
             height: tableSize - 20,
@@ -1973,7 +1922,6 @@ class _MysticRadialBackgroundLayer extends StatelessWidget {
             ),
           ),
 
-          // 2. Anneau runique extérieur animé en rotation douce (child pré-alloué réutilisé)
           AnimatedBuilder(
             animation: rotationAnimation,
             child: Container(
@@ -1996,7 +1944,6 @@ class _MysticRadialBackgroundLayer extends StatelessWidget {
             },
           ),
 
-          // 3. Anneau runique intérieur secondaire pour mode double anneau (N > 16)
           if (isDoubleRing)
             AnimatedBuilder(
               animation: rotationAnimation,
@@ -2014,14 +1961,13 @@ class _MysticRadialBackgroundLayer extends StatelessWidget {
               ),
               builder: (context, child) {
                 return Transform.rotate(
-                  // Rotation en sens inverse pour un effet mystique saisissant
+
                   angle: -rotationAnimation.value * 2 * math.pi,
                   child: child,
                 );
               },
             ),
 
-          // 4. Anneau doré intérieur délimitant le centre
           Container(
             width: isDoubleRing ? (tableSize * 0.38) : (tableSize - 120),
             height: isDoubleRing ? (tableSize * 0.38) : (tableSize - 120),
@@ -2039,8 +1985,6 @@ class _MysticRadialBackgroundLayer extends StatelessWidget {
   }
 }
 
-/// Onde de choc et halo néon pulsant pour le joueur actif / en cours de parole.
-/// Isolé dans son propre [RepaintBoundary] pour éviter d'invalider le reste de la table ou de l'avatar.
 class _SpeakingPulseHalo extends StatelessWidget {
   final Animation<double> pulseAnimation;
   final double avatarSize;

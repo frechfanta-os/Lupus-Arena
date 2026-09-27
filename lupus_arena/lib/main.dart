@@ -13,15 +13,14 @@ import 'ui/theme/lupus_theme.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Empêche toute exception non gérée de fermer l'application
   FlutterError.onError = (details) {
     debugPrint('[FlutterError] ${details.exceptionAsString()}');
   };
   PlatformDispatcher.instance.onError = (error, stack) {
     debugPrint('[PlatformError] $error');
-    return true; // Annule le crash et maintient l'app ouverte
+    return true;
   };
-  // Éradication absolue du Grey Screen en cas d'erreur de rendu
+
   ErrorWidget.builder = (FlutterErrorDetails details) {
     debugPrint('[ErrorWidget] Erreur de rendu interceptée : ${details.exception}');
     return const Material(
@@ -47,10 +46,8 @@ void main() async {
     }
   }
 
-  // Démarrage du rafraîchisseur et moniteur d'autorisations en arrière-plan
   LupusPermissionService().startBackgroundPermissionMonitor();
 
-  // Initialisation de la langue persistée
   final localeProvider = LocaleProvider.instance;
   await localeProvider.loadSavedLocale();
 
@@ -87,8 +84,7 @@ class LupusArenaApp extends StatelessWidget {
             GlobalCupertinoLocalizations.delegate,
           ],
           builder: (context, child) {
-            // L'UI reste rigoureusement en LTR (non inversée), même en langue arabe,
-            // afin de préserver l'ergonomie, les repères visuels et la disposition des contrôles.
+
             return Directionality(
               textDirection: TextDirection.ltr,
               child: child ?? const SizedBox.shrink(),

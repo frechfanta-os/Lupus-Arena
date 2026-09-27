@@ -4,15 +4,6 @@ import 'package:flutter/widgets.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Service gérant les autorisations système requises par Lupus Arena :
-/// 1. Microphone (Agora RTC Voice Chat)
-/// 2. Baffles / Enceintes / Bluetooth Audio (BLUETOOTH_CONNECT)
-/// 3. Notifications de jeu (POST_NOTIFICATIONS)
-///
-/// Intègre un rafraîchisseur en arrière-plan et un observateur de cycle de vie (AppLifecycleState)
-/// pour détecter immédiatement les changements d'autorisations (ex: après mise à jour in-app,
-/// retour depuis les Paramètres Android ou bascule d'application) sans forcer l'utilisateur à
-/// redémarrer l'application.
 class LupusPermissionService with WidgetsBindingObserver {
   static final LupusPermissionService _instance =
       LupusPermissionService._internal();
@@ -28,18 +19,15 @@ class LupusPermissionService with WidgetsBindingObserver {
       'lupus_permission_bluetooth_granted';
   static const String _keyLastRequested = 'lupus_permissions_timestamp';
 
-  // Notifiers d'état réactifs en arrière-plan
   final ValueNotifier<bool> isMicGrantedNotifier = ValueNotifier(false);
   final ValueNotifier<bool> isNotificationGrantedNotifier = ValueNotifier(false);
   final ValueNotifier<bool> isBluetoothGrantedNotifier = ValueNotifier(false);
 
-  // Hook de rappel global pour la synchronisation Agora RTC
   static void Function()? onPermissionsRefreshed;
 
   Timer? _backgroundTimer;
   bool _isMonitoring = false;
 
-  /// Démarre le moniteur et rafraîchisseur d'autorisations en arrière-plan
   void startBackgroundPermissionMonitor() {
     if (_isMonitoring) return;
     _isMonitoring = true;
@@ -50,10 +38,8 @@ class LupusPermissionService with WidgetsBindingObserver {
       debugPrint('[LupusPermissionService] Erreur ajout observateur: $e');
     }
 
-    // Premier rafraîchissement silencieux immédiat
     refreshPermissionsSilently();
 
-    // Rafraîchissement périodique non-intrusif toutes les 15 secondes
     _backgroundTimer?.cancel();
     _backgroundTimer = Timer.periodic(const Duration(seconds: 15), (_) {
       refreshPermissionsSilently();
@@ -62,7 +48,6 @@ class LupusPermissionService with WidgetsBindingObserver {
     debugPrint('[LupusPermissionService] Moniteur de permissions en arrière-plan démarré.');
   }
 
-  /// Arrête le moniteur d'arrière-plan
   void stopBackgroundPermissionMonitor() {
     _isMonitoring = false;
     _backgroundTimer?.cancel();
@@ -80,10 +65,9 @@ class LupusPermissionService with WidgetsBindingObserver {
     }
   }
 
-  /// Liste des permissions requises selon la plateforme (Web vs Mobile/Desktop)
   static List<Permission> get requiredPermissions {
     if (kIsWeb) {
-      // Sur le Web, BluetoothConnect n'existe pas dans l'API W3C Permissions
+
       return const [
         Permission.microphone,
         Permission.notification,
@@ -96,7 +80,6 @@ class LupusPermissionService with WidgetsBindingObserver {
     ];
   }
 
-  /// Vérifie si l'application a déjà sollicité les autorisations au moins une fois
   Future<bool> hasRequestedPermissions() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -107,9 +90,6 @@ class LupusPermissionService with WidgetsBindingObserver {
     }
   }
 
-  /// Sollicite toutes les permissions nécessaires UNE SEULE FOIS.
-  /// Si elles ont déjà été demandées, vérifie silencieusement les statuts
-  /// sans réafficher de dialogues système intempestifs.
   Future<Map<Permission, PermissionStatus>> requestAllPermissionsOnce({
     bool force = false,
   }) async {
@@ -126,7 +106,7 @@ class LupusPermissionService with WidgetsBindingObserver {
     debugPrint('[LupusPermissionService] Première demande groupée des permissions...');
     final Map<Permission, PermissionStatus> statuses = {};
     try {
-      // Demande individuelle sécurisée pour tolérer les spécificités de chaque plateforme/navigateur
+
       for (final perm in requiredPermissions) {
         try {
           final status = await perm.request();
@@ -137,7 +117,6 @@ class LupusPermissionService with WidgetsBindingObserver {
         }
       }
 
-      // Sauvegarde des choix dans SharedPreferences
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_keyPermissionsRequested, true);
 
@@ -172,8 +151,6 @@ class LupusPermissionService with WidgetsBindingObserver {
     return statuses;
   }
 
-  /// Synchronise et rafraîchit en arrière-plan les statuts réels actuels auprès de l'OS
-  /// sans jamais bloquer l'UI ni afficher de boîte de dialogue intrusive.
   Future<Map<Permission, PermissionStatus>> refreshPermissionsSilently() async {
     final statuses = <Permission, PermissionStatus>{};
     try {
@@ -215,8 +192,6 @@ class LupusPermissionService with WidgetsBindingObserver {
     return statuses;
   }
 
-  /// Assure l'accès au microphone pour Agora Voice Service.
-  /// Si non encore accordé, sollicite l'autorisation auprès du système ou navigateur.
   Future<bool> ensureMicrophonePermission() async {
     try {
       final micStatus = await Permission.microphone.status;
@@ -225,7 +200,6 @@ class LupusPermissionService with WidgetsBindingObserver {
         return true;
       }
 
-      // Solliciter la permission microphone (déclenche la popup navigateur ou système)
       final requestStatus = await Permission.microphone.request();
       final isGranted = requestStatus.isGranted;
 
@@ -241,7 +215,6 @@ class LupusPermissionService with WidgetsBindingObserver {
     }
   }
 
-  /// Vérifie si le microphone est autorisé
   Future<bool> isMicGranted() async {
     try {
       final status = await Permission.microphone.status;
@@ -255,7 +228,6 @@ class LupusPermissionService with WidgetsBindingObserver {
     }
   }
 
-  /// Vérifie si les notifications sont autorisées
   Future<bool> isNotificationGranted() async {
     try {
       final status = await Permission.notification.status;
@@ -269,7 +241,6 @@ class LupusPermissionService with WidgetsBindingObserver {
     }
   }
 
-  /// Vérifie si la connexion aux baffles / casques bluetooth est autorisée
   Future<bool> isBluetoothGranted() async {
     try {
       final status = await Permission.bluetoothConnect.status;
@@ -283,7 +254,6 @@ class LupusPermissionService with WidgetsBindingObserver {
     }
   }
 
-  /// Réinitialise l'état mémorisé (pour tests ou réinitialisation par l'utilisateur)
   Future<void> resetPermissionsChoice() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_keyPermissionsRequested);

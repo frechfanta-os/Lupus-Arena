@@ -3,13 +3,9 @@ import 'package:crypto/crypto.dart';
 
 import '../models/game_role.dart';
 
-/// Service de chiffrement et de sécurisation des données de rôles sensibles.
-/// Empêche l'interception et l'inspection des rôles secrets des joueurs vivants
-/// sur le réseau ou dans les snapshots Firebase Realtime Database.
 class RoleSecurityService {
   static const String _globalSalt = 'LupusArena_Secure_2026_Key';
 
-  /// Obscurcit / chiffre un rôle de manière déterministe pour un joueur spécifique
   static String encryptRole(String roleId, String playerId, String roomCode) {
     final keyBytes = sha256
         .convert(utf8.encode('$playerId:$_globalSalt:${roomCode.toUpperCase()}'))
@@ -22,7 +18,6 @@ class RoleSecurityService {
     return base64Url.encode(encrypted);
   }
 
-  /// Déchiffre le rôle uniquement si le playerId et le roomCode correspondent
   static GameRole? decryptRole(
     String? encryptedToken,
     String playerId,
@@ -45,7 +40,6 @@ class RoleSecurityService {
     }
   }
 
-  /// Chiffre la liste des IDs des loups pour le canal meute
   static String encryptWolfRoster(List<String> wolfPlayerIds, String roomCode) {
     final keyBytes = sha256
         .convert(utf8.encode('WOLF_PACK:$_globalSalt:${roomCode.toUpperCase()}'))
@@ -59,7 +53,6 @@ class RoleSecurityService {
     return base64Url.encode(encrypted);
   }
 
-  /// Déchiffre la liste des IDs des loups
   static Set<String> decryptWolfRoster(String? encryptedRoster, String roomCode) {
     if (encryptedRoster == null || encryptedRoster.isEmpty) return {};
     try {

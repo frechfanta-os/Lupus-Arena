@@ -8,24 +8,24 @@ class PlayerModel {
   final String name;
   final int avatarIndex;
   final GameRole role;
-  final bool estDechu; // Si le rôle spécial (Sorcière, Voyante) est devenu Simple Villageois
+  final bool estDechu;
   final bool isAlive;
   final bool isHost;
   final bool isReady;
   final bool isOnline;
-  final bool isBot; // Vrai si le joueur est un bot passif (Mode Dev / Sandbox)
+  final bool isBot;
   final int? lastSeen;
   final bool isSpeaking;
   final bool isMuted;
   final String? targetVoteId;
   final bool isLover;
   final String? loverId;
-  final bool isCaptain; // Capitaine / Maire élu (voix double)
-  final bool isCharmed; // Envoûté par le Joueur de Flûte
-  final bool isDoused; // Aspergé d'huile/essence par le Pyromane
-  final bool isInfected; // Transformé en Loup par l'Infect Père des Loups
-  final bool isSniffed; // Ciblé par le flairage du Renard
-  final bool hasWolfSmell; // Présence d'un loup dans le trio flairé
+  final bool isCaptain;
+  final bool isCharmed;
+  final bool isDoused;
+  final bool isInfected;
+  final bool isSniffed;
+  final bool hasWolfSmell;
   final bool hasUsedHealPotion;
   final bool hasUsedPoisonPotion;
   final int agoraUid;
@@ -35,10 +35,10 @@ class PlayerModel {
   final int pv;
   final bool isReadyReplay;
   final bool wantsRematch;
-  final GameRole? initialRole; // Rôle initial immuable (carte de départ)
-  final int potionsVie; // Stock indépendant de potions de vie (Sorcière)
-  final int potionsMort; // Stock indépendant de potions de mort (Sorcière)
-  final int visionsRestantes; // Quota dynamique de visions (Voyante)
+  final GameRole? initialRole;
+  final int potionsVie;
+  final int potionsMort;
+  final int visionsRestantes;
 
   const PlayerModel({
     required this.id,
@@ -78,11 +78,9 @@ class PlayerModel {
     this.visionsRestantes = 1,
   });
 
-  /// Rôle initial de référence (préservé même si le rôle actif est déchu)
   GameRole get roleInitial => initialRole ?? role;
   GameRole get trueOriginalRole => initialRole ?? role;
 
-  /// Unification du titre de Maire
   bool get isMayor => isCaptain;
 
   PlayerModel copyWith({
@@ -165,11 +163,9 @@ class PlayerModel {
     );
   }
 
-  /// Indique si le joueur fait partie du camp des loups (incluant le Loup Blanc et les Infectés)
   bool get isWolf => role.isEvil || role == GameRole.whiteWerewolf || isInfected;
   bool get isWolfTeam => isWolf;
 
-  /// Déchiffre et résout le rôle véritable du joueur de façon déterministe
   GameRole resolveRealRole(String roomCode) {
     if (encryptedRole != null && encryptedRole!.isNotEmpty) {
       final decrypted = RoleSecurityService.decryptRole(

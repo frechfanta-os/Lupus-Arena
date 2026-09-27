@@ -3,8 +3,6 @@ import '../../models/game_role.dart';
 import '../../models/game_state.dart';
 import 'role_action_handler.dart';
 
-/// Gestionnaire de rôle pour Le Salvateur.
-/// Chaque nuit, immunise un joueur contre l'attaque des loups.
 class DefenderHandler extends RoleActionHandler {
   @override
   GameRole get role => GameRole.defender;
@@ -23,7 +21,7 @@ class DefenderHandler extends RoleActionHandler {
   }) {
     final targetId = actionPayload['targetId'] as String?;
     if (targetId == null || !state.isAlive(targetId)) return state;
-    if (targetId == state.lastProtectedPlayerId) return state; // Règle anti-répétition consécutive
+    if (targetId == state.lastProtectedPlayerId) return state;
 
     final acknowledged = Set<String>.from(state.nightAcknowledgedPlayerIds)..add(actorId);
     return state.copyWith(
@@ -34,7 +32,7 @@ class DefenderHandler extends RoleActionHandler {
 
   @override
   RoleUIControls getUIControls(GameState state, String playerId) {
-    // Exclure la cible protégée lors de la nuit précédente
+
     final targets = state.alivePlayerIds
         .where((id) => id != state.lastProtectedPlayerId)
         .toList();

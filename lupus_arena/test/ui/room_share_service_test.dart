@@ -49,21 +49,19 @@ void main() {
     });
 
     test('AppTranslations clés share_room_message et share_code présentes', () async {
-      // Test French
+
       await LocaleProvider.instance.setLocale('fr');
       expect(AppTranslations.tr('share_code'), equals('Partager le code'));
       final frMsg = AppTranslations.tr('share_room_message', {'ROOM_CODE': 'TEST1'});
       expect(frMsg, contains('Code de la room : TEST1'));
       expect(frMsg, contains('🌕 La pleine lune se lève sur Lupus Arena...'));
 
-      // Test Arabic
       await LocaleProvider.instance.setLocale('ar');
       expect(AppTranslations.tr('share_code'), equals('مشاركة الرمز'));
       final arMsg = AppTranslations.tr('share_room_message', {'ROOM_CODE': 'TEST2'});
       expect(arMsg, contains('🗝️ رمز الغرفة : TEST2'));
       expect(arMsg, contains('🌕 يكتمل القمر فوق Lupus Arena...'));
 
-      // Test English
       await LocaleProvider.instance.setLocale('en');
       expect(AppTranslations.tr('share_code'), equals('Share code'));
       final enMsg = AppTranslations.tr('share_room_message', {'ROOM_CODE': 'TEST3'});
@@ -124,17 +122,14 @@ void main() {
         ),
       );
 
-      // Codes textuels affichés
       expect(find.text('FR'), findsOneWidget);
       expect(find.text('AR'), findsOneWidget);
       expect(find.text('EN'), findsOneWidget);
 
-      // Noms des langues
       expect(find.text('Français'), findsOneWidget);
       expect(find.text('العربية'), findsOneWidget);
       expect(find.text('English'), findsOneWidget);
 
-      // Aucun drapeau emoji présent
       expect(find.textContaining('🇫🇷'), findsNothing);
       expect(find.textContaining('🇩🇿'), findsNothing);
       expect(find.textContaining('🇬🇧'), findsNothing);

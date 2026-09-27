@@ -3,8 +3,6 @@ import '../../models/game_state.dart';
 import '../../models/player_model.dart';
 import 'role_action_handler.dart';
 
-/// Gestionnaire de rôle pour Le Pyromane.
-/// Chaque nuit, il choisit d'asperger une maison d'essence ou d'enflammer toutes les maisons aspergées.
 class PyromaniacHandler extends RoleActionHandler {
   @override
   GameRole get role => GameRole.pyromaniac;
@@ -32,7 +30,7 @@ class PyromaniacHandler extends RoleActionHandler {
     final targetId = actionPayload['targetId'] as String?;
 
     if (action == 'ignite') {
-      // Éliminer tous les joueurs aspergés
+
       final dousedIds = state.alivePlayerIds.where((id) {
         return state.players[id]?.isDoused == true;
       }).toList();

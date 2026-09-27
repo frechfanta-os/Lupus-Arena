@@ -5,12 +5,6 @@ import '../../models/game_phase.dart';
 import '../../services/server_time_service.dart';
 import '../theme/lupus_theme.dart';
 
-/// Widget d'affichage réactif du compte à rebours de phase
-/// Fonction PURE du temps serveur Firebase RTDB :
-/// remaining = max(0, phaseEndsAt - currentServerEstimatedTime)
-///
-/// Aucun Timer persistant dans le build(), aucune dépendance au thread de l'hôte,
-/// immunisé contre le Doze mode, les mises en veille et les re-renders intempestifs.
 class ServerCountdownTimerBadge extends StatefulWidget {
   final int? phaseEndsAt;
   final int fallbackSeconds;
@@ -80,7 +74,6 @@ class _ServerCountdownTimerBadgeState extends State<ServerCountdownTimerBadge> {
         builder: (context, snapshot) {
           final remainingSeconds = max(0, snapshot.data ?? 0);
 
-          // Notification de tick et d'expiration asynchrone
           if (remainingSeconds != _lastDispatchedSecond) {
             _lastDispatchedSecond = remainingSeconds;
             if (widget.onTick != null) {
@@ -151,7 +144,6 @@ class _ServerCountdownTimerBadgeState extends State<ServerCountdownTimerBadge> {
   }
 }
 
-/// Constructeur réactif générique basé sur le temps serveur
 class ServerCountdownBuilder extends StatefulWidget {
   final int? phaseEndsAt;
   final int fallbackSeconds;

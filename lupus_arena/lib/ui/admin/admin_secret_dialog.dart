@@ -5,8 +5,6 @@ import '../../GameNotifier.dart';
 import '../theme/lupus_theme.dart';
 import 'admin_control_sheet.dart';
 
-/// Boîte de dialogue secrète demandant le code PIN à 8 chiffres ("03031994")
-/// pour déverrouiller le statut Maître du Jeu / Dev-Mode.
 class AdminSecretDialog extends ConsumerStatefulWidget {
   const AdminSecretDialog({super.key});
 
@@ -89,7 +87,7 @@ class _AdminSecretDialogState extends ConsumerState<AdminSecretDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // En-tête avec couronne dorée
+
             Container(
               width: 52,
               height: 52,
@@ -132,7 +130,6 @@ class _AdminSecretDialogState extends ConsumerState<AdminSecretDialog> {
             ),
             const SizedBox(height: 18),
 
-            // Indicateurs de chiffres (8 cercles / tirets)
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(8, (index) {
@@ -161,7 +158,6 @@ class _AdminSecretDialogState extends ConsumerState<AdminSecretDialog> {
             ),
             const SizedBox(height: 14),
 
-            // Message d'erreur éventuel
             if (_errorMessage != null) ...[
               Text(
                 _errorMessage!,
@@ -174,11 +170,9 @@ class _AdminSecretDialogState extends ConsumerState<AdminSecretDialog> {
               const SizedBox(height: 8),
             ],
 
-            // Pavé numérique compact
             _buildKeypad(),
             const SizedBox(height: 10),
 
-            // Bouton Annuler
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: const Text(

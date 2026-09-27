@@ -18,7 +18,6 @@ void main() {
   test('LupusPermissionService persists permissions choice in SharedPreferences', () async {
     final service = LupusPermissionService();
 
-    // Simule une demande initiale
     SharedPreferences.setMockInitialValues({
       'lupus_permissions_requested_once': true,
       'lupus_permission_mic_granted': true,
@@ -28,7 +27,6 @@ void main() {
 
     expect(await service.hasRequestedPermissions(), isTrue);
 
-    // Test reset
     await service.resetPermissionsChoice();
     expect(await service.hasRequestedPermissions(), isFalse);
   });

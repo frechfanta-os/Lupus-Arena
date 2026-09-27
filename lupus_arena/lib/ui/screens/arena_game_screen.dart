@@ -28,12 +28,10 @@ import '../../services/server_time_service.dart';
 import '../../services/death_registry_service.dart';
 import '../bento/language_dialog.dart';
 import 'game_over_screen.dart';
+import '../bento/room_report_dialog.dart';
 import 'lobby_screen.dart';
 import 'village_chronicles_screen.dart';
 
-/// Widget dédié et totalement isolé pour l'affichage du compte à rebours du tour.
-/// Encapsulé dans un RepaintBoundary avec ValueListenableBuilder pour éliminer
-/// tout rebuild et tout repaint de l'arbre de widgets parent (Arène, Table, Joueurs, Shaders).
 class CountdownTimerBadge extends StatelessWidget {
   final ValueListenable<int> countdownListenable;
   final bool isNight;
@@ -98,9 +96,6 @@ class CountdownTimerBadge extends StatelessWidget {
   }
 }
 
-/// Écran principal d'Arène inspiré directement de la maquette Stitch
-/// "Lupus Arena - Table de Nuit Ultime" (Design gothique nocturne,
-/// table circulaire mystique, carrousel de sélection de cible, HUD arcanique).
 class ArenaGameScreen extends ConsumerStatefulWidget {
   const ArenaGameScreen({super.key});
 
@@ -111,23 +106,19 @@ class ArenaGameScreen extends ConsumerStatefulWidget {
 class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
     with WidgetsBindingObserver {
   String? _selectedPlayerId;
-  bool _useRadialView = true; // Bascule entre Table Mystique et Grille Bento
+  bool _useRadialView = true;
   bool _isLeavingOrNavigating = false;
 
-  // Gestion du journal et badge de notification des Chroniques
   int _lastSeenLogCount = 0;
 
-  // Notifier réactif du compte à rebours (alimenté de façon pure par ServerCountdownTimerBadge)
   final ValueNotifier<int> _countdownNotifier = ValueNotifier<int>(40);
   GamePhase? _lastTrackedPhase;
   int? _lastTrackedRound;
   String? _lastTrackedSpeaker;
 
-  // File d'attente cinématique 3D d'annonce des morts (centre de la table mystique)
   final List<DeathAnnouncementEvent> _deathQueue = [];
   final Set<String> _processedDeathKeys = {};
 
-  // Minute vocale collective à la victoire (60 secondes)
   Timer? _victoryVoiceTimer;
   final ValueNotifier<int> _victoryVoiceCountdownNotifier =
       ValueNotifier<int>(60);
@@ -137,9 +128,9 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    // Arrêt propre / fade out de la musique du Lobby
+
     LupusAudioManager.instance.fadeOutAndStopLobbyMusic();
-    // Démarrage garanti de la musique de la Room en boucle à volume subtil (15%-20%)
+
     LupusAudioManager.instance.playRoomMusic();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && !LupusAudioManager.instance.isMusicMuted) {
@@ -163,7 +154,7 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
   }
 
   void _checkAndQueueDeathAnnouncements(GameRoom room) {
-    // 1. Source PRIORITAIRE : deathAnnouncementQueue (file ordonnée des défunts)
+
     if (room.deathAnnouncementQueue.isNotEmpty) {
       for (final entry in room.deathAnnouncementQueue) {
         final pid = (entry['joueurId'] ?? entry['playerId'] ?? '').toString();
@@ -179,7 +170,7 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
         }
       }
     }
-    // 2. Source SECONDAIRE : morningVictims (uniquement si deathAnnouncementQueue est vide)
+
     else if (room.phase == GamePhase.morningAnnouncement && room.morningVictims.isNotEmpty) {
       for (final victimId in room.morningVictims) {
         if (victimId.isEmpty) continue;
@@ -207,7 +198,7 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
         }
       }
     }
-    // 3. Source TERTIAIRE : lastDeathFlip (pour les éliminations unitaires isolées)
+
     else if (room.lastDeathFlip != null && room.lastDeathFlip is Map) {
       final flip = room.lastDeathFlip as Map;
       final pid = (flip['joueurId'] ?? flip['playerId'] ?? '').toString();
@@ -238,7 +229,6 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
     super.dispose();
   }
 
-  /// Déclenche un canal vocal ouvert à tous les joueurs (morts et vivants) pendant 60 secondes
   void _startVictoryVoiceCountdown() {
     _victoryVoiceTimer?.cancel();
     _victoryVoiceCountdownNotifier.value = 60;
@@ -254,7 +244,7 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
         _victoryVoiceCountdownNotifier.value--;
       } else {
         timer.cancel();
-        // Clôture de la minute vocale collective : coupe le micro de tous les joueurs
+
         AgoraVoiceService().setMute(true);
         ref.read(gameNotifierProvider.notifier).setVictoryVoiceExpired(true);
       }
@@ -266,9 +256,8 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
     final gameState = ref.watch(gameNotifierProvider);
     final room = gameState.room;
 
-    // Synchronisation réactive du décompte de phase lors des transitions
     if (room != null) {
-      // Maintien actif et ininterrompu de la musique de Room (Village at Night) pendant le jeu
+
       if (room.phase != GamePhase.lobby &&
           !LupusAudioManager.instance.isRoomPlaying &&
           !LupusAudioManager.instance.isMusicMuted) {
@@ -306,10 +295,10 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
       if (_lastTrackedPhase != room.phase ||
           _lastTrackedRound != room.round ||
           _lastTrackedSpeaker != room.currentSpeakerId) {
-        // Réinitialisation stricte de la cible à chaque transition de phase (Jour <-> Nuit)
+
         if (_lastTrackedPhase != room.phase || _lastTrackedRound != room.round) {
           _selectedPlayerId = null;
-          // Synchronisation immédiate du notifier de décompte pour éliminer toute latence visuelle
+
           final initialRemaining = ServerTimeService().calculateRemainingSeconds(
             room.phaseEndsAt,
             fallbackSeconds: room.timerSeconds > 0
@@ -323,7 +312,6 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
         _lastTrackedSpeaker = room.currentSpeakerId;
       }
 
-      // Dépouillement anticipé dès que tous les vivants ont voté pendant dayVoting
       if (room.phase == GamePhase.dayVoting &&
           room.alivePlayers.isNotEmpty &&
           room.alivePlayers.every((p) => p.targetVoteId != null)) {
@@ -331,7 +319,6 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
       }
     }
 
-    // Si la salle n'existe plus ou si la partie est revenue au lobby
     if (room == null || room.phase == GamePhase.lobby) {
       if (!_isLeavingOrNavigating) {
         _isLeavingOrNavigating = true;
@@ -365,7 +352,7 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
       backgroundColor: LupusColors.background,
       body: Stack(
         children: [
-          // 1. FOND ATMOSPHÉRIQUE STITCH (Isolé dans un RepaintBoundary pour mise en cache GPU)
+
           Positioned.fill(
             child: RepaintBoundary(
               child: LupusAssets.adaptiveImage(
@@ -377,7 +364,6 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
             ),
           ),
 
-          // VIGNETTES ET BRUMES ARCANES STITCH (Isolé dans un RepaintBoundary pour zéro re-draw GPU)
           Positioned.fill(
             child: RepaintBoundary(
               child: Container(
@@ -413,11 +399,10 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
             ),
           ),
 
-          // 2. CONTENU PRINCIPAL
           SafeArea(
             child: Column(
               children: [
-                // TOP HUD UNIFIÉ (Header Row: Quitter, Code Room, Mon Rôle, Chrono compact, Parchemin, Globe)
+
                 _buildStitchTopHUD(
                   context,
                   room,
@@ -428,17 +413,13 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
                   isNight,
                 ),
 
-                // BANNIÈRE D'ANNONCE DE PHASE (Stitch Phase Banner)
                 _buildStitchPhaseBanner(room, gameState, isMeEvil, myRole),
 
-                // MINI-TICKER : DERNIER ÉVÉNEMENT COMPACT (cliquable pour ouvrir les chroniques)
                 _buildMiniTicker(context, room.logs, room.roomCode, room, gameState),
 
-                // SÉLECTEUR DE VUE : TABLE MYSTIQUE RADIALE vs GRILLE BENTO
                 _buildViewModeToggle(),
                 const SizedBox(height: 2),
 
-                // ZONE CENTRALE (EXPANDED) : TABLE MYSTIQUE OU GRILLE BENTO (Zéro Scroll)
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -555,7 +536,6 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
                   ),
                 ),
 
-                // BAS : ACTIONS STRATÉGIQUES & CONTRÔLES VOCAUX (Zero-Scroll, toujours visibles)
                 SafeArea(
                   top: false,
                   child: Padding(
@@ -563,7 +543,7 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // PANNEAU D'ACTIONS STRATÉGIQUES STITCH (Isolé via RepaintBoundary)
+
                         RepaintBoundary(
                           child: BentoActionPanel(
                             room: room,
@@ -660,7 +640,6 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
                         ),
                         const SizedBox(height: 8),
 
-                        // CONTRÔLES VOCAUX AGORA
                         BentoVoiceControls(
                           isAlive: isMeAlive,
                           isCurrentSpeaker:
@@ -682,7 +661,6 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
             ),
           ),
 
-          // OVERLAY DE FIN DE PARTIE
           if (room.phase == GamePhase.gameOver)
             _buildGameOverOverlay(context, room, gameState),
         ],
@@ -690,9 +668,6 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
     );
   }
 
-  /// Top HUD & Navigation Bar unifié :
-  /// Disposition horizontale (Row) unique bien espacée et centrée :
-  /// [Bouton Quitter] -> [Code Room] -> [Mon Rôle (centré via Expanded)] -> [Chrono compact] -> [Parchemin] -> [Globe de langue]
   Widget _buildStitchTopHUD(
     BuildContext context,
     dynamic room,
@@ -714,7 +689,7 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // 1. Bouton Quitter circulaire en verre (fermer la salle)
+
           GestureDetector(
             onTap: () => _confirmLeave(context),
             child: Container(
@@ -740,7 +715,6 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
           ),
           const SizedBox(width: 6),
 
-          // 2. [Code Room] : Le badge #ZVEFR (bordure ambrée, déclencheur secret admin)
           GestureDetector(
             behavior: HitTestBehavior.opaque,
             onLongPress: () => _openAdminTrigger(context),
@@ -816,7 +790,6 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
             ),
           ),
 
-          // 3. [Mon Rôle] : Bouton/capsule "MON RÔLE", placé et centré/ajusté dans l'espace disponible
           Expanded(
             child: Center(
               child: Padding(
@@ -877,7 +850,6 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
             ),
           ),
 
-          // 4. [Chrono compact] : Minuteur de tour réactif en pilule compacte
           ServerCountdownTimerBadge(
             isCompact: true,
             phaseEndsAt: room.phaseEndsAt,
@@ -895,7 +867,7 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
               if (currentRoom == null) return;
               if (currentRoom.phase != room.phase ||
                   currentRoom.round != room.round) {
-                // La phase ou le tour a déjà progressé entre-temps, ignorer l'expiration orpheline !
+
                 return;
               }
               if (gameState.isHost &&
@@ -907,7 +879,6 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
           ),
           const SizedBox(width: 6),
 
-          // 5. [Parchemin] : Journal des Chroniques avec Badge de notification
           Builder(
             builder: (_) {
               final logList =
@@ -995,11 +966,41 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
           ),
           const SizedBox(width: 6),
 
-          // 6. [Bouton Mute Musique] : Mute indépendant d'Agora RTC
           const MusicMuteButton(isCompact: true, size: 32),
           const SizedBox(width: 6),
 
-          // 7. [Globe de langue] : Bouton circulaire avec l'icône globe tout à droite
+          GestureDetector(
+            onTap: () => RoomReportDialog.show(
+              context,
+              room: room,
+              currentUserId: gameState.currentUserId,
+            ),
+            child: Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: const Color(0xC012182E),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: LupusColors.border,
+                  width: 1.0,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.3),
+                    blurRadius: 6,
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.shield_outlined,
+                size: 16,
+                color: LupusColors.textSecondary,
+              ),
+            ),
+          ),
+          const SizedBox(width: 6),
+
           GestureDetector(
             onTap: () =>
                 LanguageDialog.show(context, LocaleProvider.instance),
@@ -1025,7 +1026,6 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
     );
   }
 
-  /// Bannière d'annonce de phase selon le design Stitch
   Widget _buildStitchPhaseBanner(
     dynamic room,
     dynamic gameState,
@@ -1094,7 +1094,6 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
             ),
           ),
 
-          // Alerte Notification Canal Privé des Loups-Garous (sans overflow)
           if (phase == GamePhase.nightWerewolves) ...[
             Container(
               margin: const EdgeInsets.only(top: 6),
@@ -1271,7 +1270,6 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
             ),
           ],
 
-          // Alerte Victime des Loups pour la Sorcière
           if (phase == GamePhase.nightWitch &&
               (gameState.myRole == GameRole.witch || gameState.isAdmin)) ...[
             Builder(
@@ -1362,8 +1360,6 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
     );
   }
 
-  /// Filtrage confidentiel des logs selon le rôle et la phase :
-  /// Les villageois innocents ne doivent JAMAIS voir les actions occultes des Loups (proie, silence) durant la nuit.
   List<String> _filterConfidentialLogs(
     List<String> logs,
     GameRoom room,
@@ -1386,7 +1382,6 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
     }).toList();
   }
 
-  /// Recherche optimisée O(1) en balayage inverse du dernier log visible pour le mini-ticker
   String? _findLatestVisibleLog(
     List<String> logs,
     GameRoom room,
@@ -1411,7 +1406,6 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
     return null;
   }
 
-  /// Mini-Ticker compact affichant uniquement le dernier log du village
   Widget _buildMiniTicker(
     BuildContext context,
     List<String> logs,
@@ -1478,12 +1472,10 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
     );
   }
 
-  /// Formate et traduit les logs clés du village pour l'affichage en temps réel
   String _formatLogForDisplay(BuildContext context, String log) {
     return context.translateLog(log);
   }
 
-  /// Sélecteur de vue (Table Mystique vs Grille Bento)
   Widget _buildViewModeToggle() {
     return Center(
       child: Container(
@@ -1574,7 +1566,6 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
     );
   }
 
-  /// Vignette thématique d'espionnage pour la Petite Fille (yeux entrouverts / fermés)
   Widget _buildLittleGirlVignette(BuildContext context, bool isEyesOpen) {
     return Positioned.fill(
       child: IgnorePointer(
@@ -1640,7 +1631,6 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
     );
   }
 
-  /// Titres et sous-titres adaptés à chaque phase canonique
   String _getPhaseTitle(BuildContext context, GamePhase phase) {
     switch (phase) {
       case GamePhase.nightThief:
@@ -1780,7 +1770,6 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
     return context.tr('no_target');
   }
 
-  /// Carte modale centrée (Dialog / Pop-up) au format tarot compact
   void _showSecretRoleModal(
     BuildContext context,
     dynamic myRole,
@@ -1815,7 +1804,7 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
           child: Container(
             constraints: const BoxConstraints(maxWidth: 320),
             decoration: BoxDecoration(
-              color: const Color(0xF5151C33), // #151C33 sombre translucide
+              color: const Color(0xF5151C33),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
                 color: color.withValues(alpha: 0.65),
@@ -1840,7 +1829,7 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Barre supérieure de la carte : Badge et bouton fermer
+
                   Container(
                     padding: const EdgeInsets.fromLTRB(16, 12, 12, 10),
                     decoration: BoxDecoration(
@@ -1889,13 +1878,12 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
                     ),
                   ),
 
-                  // Contenu principal de la carte de tarot
                   Padding(
                     padding: const EdgeInsets.fromLTRB(20, 16, 20, 18),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Illustration grand format avec coins arrondis et ombre
+
                         Container(
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(14),
@@ -1923,7 +1911,6 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
                         ),
                         const SizedBox(height: 14),
 
-                        // Nom officiel du rôle en gras
                         Text(
                           role.displayName,
                           textAlign: TextAlign.center,
@@ -1943,7 +1930,6 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
                         ),
                         const SizedBox(height: 6),
 
-                        // Badge du Camp (Villageois, Meute, Solo)
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 10,
@@ -1981,7 +1967,6 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
                           ),
                         ),
 
-                        // Badges spéciaux contextuels (Capitaine, Amoureux, Mort)
                         if (gameState != null &&
                             ((gameState.isCaptain as bool? ?? false) ||
                                 (gameState.isLover as bool? ?? false) ||
@@ -2069,7 +2054,6 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
                         ],
                         const SizedBox(height: 12),
 
-                        // Courte description des pouvoirs du rôle
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 12,
@@ -2094,7 +2078,6 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
                         ),
                         const SizedBox(height: 16),
 
-                        // Bouton Compris / Replier
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
@@ -2134,7 +2117,6 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
     );
   }
 
-  /// Overlay de victoire finale et débriefing
   Widget _buildGameOverOverlay(
     BuildContext context,
     GameRoom room,
@@ -2188,7 +2170,6 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
     }
   }
 
-  /// Déporte et ouvre les Chroniques du Village dans un Modal BottomSheet Glassmorphism
   void _openChroniclesBottomSheet(
     BuildContext context,
     List<String> logs,

@@ -5,8 +5,6 @@ import '../../services/app_translations.dart';
 import '../theme/lupus_theme.dart';
 import 'ghost_death_badge.dart';
 
-/// Carrousel horizontal de sélection de cibles inspiré du composant Stitch
-/// ("Choisissez votre victime • Phase d'accord").
 class BentoTargetCarousel extends StatelessWidget {
   final String title;
   final String? subtitle;
@@ -49,7 +47,7 @@ class BentoTargetCarousel extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // En-tête de section Stitch sans overflow
+
         SafeArea(
           top: false,
           bottom: false,
@@ -104,7 +102,6 @@ class BentoTargetCarousel extends StatelessWidget {
         ),
         const SizedBox(height: 6),
 
-        // Carrousel horizontal de cartes
         SizedBox(
           height: 116,
           child: ListView.separated(
@@ -203,7 +200,7 @@ class BentoTargetCarousel extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Avatar circulaire avec néon si parle ou rouge si allié loup et animation spectrale
+
                       GhostDeathBadge(
                         playerUid: player.id,
                         isAlive: player.isAlive,
@@ -265,7 +262,6 @@ class BentoTargetCarousel extends StatelessWidget {
                       ),
                       const SizedBox(height: 5),
 
-                      // Nom du joueur avec indicateur loup si allié
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         mainAxisSize: MainAxisSize.min,
@@ -293,7 +289,6 @@ class BentoTargetCarousel extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
 
-                      // Indicateur de votes
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         mainAxisSize: MainAxisSize.min,
