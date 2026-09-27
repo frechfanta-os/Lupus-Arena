@@ -123,32 +123,23 @@ jobs:
           tag_name: ${{ env.APP_VERSION }}
           name: "Lupus Arena ${{ env.APP_VERSION }}"
           body: |
-            ### 🐺 Lupus Arena - ${{ env.APP_VERSION }} (Continuité Audio en Jeu · Nettoyage Permissions Play Store · Deck Officiel · Partage Multilingue)
+            ### 🐺 Lupus Arena - ${{ env.APP_VERSION }} (Boutons d'Accueil Gothiques · Plage de Saisie Code Salon Interactive · Migration Firebase & Package com.ghdinteractivestudio.lupusarena · i18n FR/AR/EN)
 
             #### 🌟 Nouveautés & Améliorations de cette Release
 
-            **🎵 Maintien Continu de la Musique en Jeu & Mixage Audio Optimal**
-            - Correction de la coupure de la musique *Village at Night* lors du passage du salon d'attente à la partie en cours : suppression de l'arrêt prématuré dans le cycle de vie du lobby et renforcement du monitoring de reprise dans l'arène de jeu.
-            - Configuration de l'AudioContext en mode `AndroidUsageType.game` garantissant la coexistence et le mixage matériel natif sans atténuation ni coupure avec la VoIP Agora RTC.
-            - Pistes dédiées en boucle continue :
-              • Lobby : *Aldeas de Niebla* avec fondu (*fade-out*) à l'entrée dans la Room.
-              • Room (attente et en cours de jeu) : *Village at Night* avec volume subtil (18%) préservant la clarté des échanges vocaux.
-            - Bouton Mute Musique dédié (`MusicMuteButton`), 100% indépendant d'Agora (ne coupe jamais le micro ni les voix des joueurs).
+            **🏰 Refonte Visuelle de l'Écran d'Accueil (Lobby Screen)**
+            - Intégration fidèle des assets gothiques de haute qualité (`UI LOBBY`) selon la composition officielle `DESPOSITION.jpg`.
+            - Plaques de pierre gravées avec emblèmes sculptés et alignement millimétré sous la poutre Lupus Arena :
+              • Bouton de gauche : *CRÉE UN SALON* avec tête de loup arcanique violette et animation de compression tactile (scale 0.93) au toucher.
+              • Plaque centrale : *CODE SALON* transformée en véritable plage de texte interactive (`TextField`) intégrée à la pierre, avec typographie luminescente violette (`#F3E8FF` / `#C084FC`), passage automatique en majuscules et hint contextuel.
+              • Bouton de droite : *REJOINDRE* avec double tête de loup et portail ouvert, validant la saisie pour entrer dans le salon.
 
-            **🛡️ Nettoyage des Permissions & Conformité Google Play Store**
-            - Élimination des permissions superflues ou bloquantes pour le Google Play Store :
-              • Retrait de `REQUEST_INSTALL_PACKAGES` (interdit sur le Play Store pour les apps standard).
-              • Retrait de `READ_PHONE_STATE` (permission sensible restreinte).
-              • Retrait de `READ_EXTERNAL_STORAGE` et `READ_MEDIA_AUDIO` ainsi que `requestLegacyExternalStorage` (les fichiers audio sont gérés en assets et cache applicatif interne).
-            - Conservation exclusive des permissions essentielles à Agora RTC, au réseau et aux accessoires : `INTERNET`, `RECORD_AUDIO`, `MODIFY_AUDIO_SETTINGS`, `ACCESS_NETWORK_STATE`, `BLUETOOTH_CONNECT`, `WAKE_LOCK`.
+            **🔥 Migration Firebase & Unification du Package**
+            - Basculement complet sur le nouveau projet Firebase `lupusarena` (ID `1050312347949`) avec Realtime Database `europe-west1`.
+            - Harmonisation intégrale du package name `com.ghdinteractivestudio.lupusarena` sur toute l'arborescence Android, Gradle et configurations clientes.
 
-            **🃏 Deck Officiel & Graphismes**
-            - Remplacement intégral de l'ancien jeu de cartes par la collection officielle dans `assets/cards/`.
-            - Nouveau fond d'écran officiel du Lobby (`lobby screen.jpg` / `lobby_screen.jpg` / `backlobby.jpg`).
-
-            **📲 Partage Natif du Code de Room & UI Multilingue Épurée**
-            - Bouton de partage natif `Icons.share` avec messages d'invitation dynamiques multilingues (Arabe, Français, Anglais) et support iPad.
-            - Retrait intégral de tous les drapeaux dans l'interface au profit d'un affichage textuel épuré (`FR`, `AR`, `EN`).
+            **🌐 Internationalisation & Localisation Complète**
+            - Support intégral et symétrique de 3 langues : Français (FR), Arabe (AR) et Anglais (EN) sans aucune clé manquante.
 
             ---
             #### 📲 Binaires Téléchargeables
