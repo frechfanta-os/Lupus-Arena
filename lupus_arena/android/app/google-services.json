@@ -8,9 +8,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1050312347949:android:9a78ceacb3b207d1dd03a4",
+        "mobilesdk_app_id": "1:1050312347949:android:8f88f65c1a282a95dd03a4",
         "android_client_info": {
-          "package_name": "DZ.LUPUSARENA"
+          "package_name": "com.ghdinteractivestudio.lupusarena"
         }
       },
       "oauth_client": [

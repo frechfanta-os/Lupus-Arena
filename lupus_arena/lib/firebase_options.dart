@@ -17,7 +17,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions web = FirebaseOptions(
     apiKey: 'AIzaSyDvR2rJGNha9DaP0VGuCQAvpCYQeMc7GGQ',
-    appId: '1:1050312347949:web:9a78ceacb3b207d1dd03a4',
+    appId: '1:1050312347949:web:8f88f65c1a282a95dd03a4',
     messagingSenderId: '1050312347949',
     projectId: 'lupusarena',
     databaseURL:
@@ -27,7 +27,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyDvR2rJGNha9DaP0VGuCQAvpCYQeMc7GGQ',
-    appId: '1:1050312347949:android:9a78ceacb3b207d1dd03a4',
+    appId: '1:1050312347949:android:8f88f65c1a282a95dd03a4',
     messagingSenderId: '1050312347949',
     projectId: 'lupusarena',
     databaseURL:

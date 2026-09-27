@@ -49,7 +49,7 @@ class UpdateService {
   static const String defaultRepo = 'LUPUS-ARENA';
 
   static const MethodChannel _nativeInstaller =
-      MethodChannel('com.anisghdlab.lupusarena/installer');
+      MethodChannel('com.ghdinteractivestudio.lupusarena/installer');
 
   static Future<bool> canRequestPackageInstalls() async {
     if (!Platform.isAndroid) return true;

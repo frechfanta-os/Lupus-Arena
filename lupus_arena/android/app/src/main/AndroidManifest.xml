@@ -37,7 +37,7 @@
         </provider>
 
         <activity
-            android:name="DZ.LUPUSARENA.MainActivity"
+            android:name="com.ghdinteractivestudio.lupusarena.MainActivity"
             android:exported="true"
             android:launchMode="singleTask"
             android:theme="@style/LaunchTheme"

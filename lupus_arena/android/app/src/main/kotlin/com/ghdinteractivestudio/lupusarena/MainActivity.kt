@@ -1,4 +1,4 @@
-package DZ.LUPUSARENA
+package com.ghdinteractivestudio.lupusarena
 
 import android.content.Intent
 import android.net.Uri
@@ -13,7 +13,7 @@ import io.flutter.plugin.common.MethodChannel
 import java.io.File
 
 open class MainActivity : FlutterActivity() {
-    private val INSTALLER_CHANNEL = "com.anisghdlab.lupusarena/installer"
+    private val INSTALLER_CHANNEL = "com.ghdinteractivestudio.lupusarena/installer"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         try {
@@ -65,7 +65,6 @@ open class MainActivity : FlutterActivity() {
                         return@setMethodCallHandler
                     }
 
-                    // Vérifier si l'autorisation d'installer des APKs inconnus est accordée sur Android 8+
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         if (!packageManager.canRequestPackageInstalls()) {
                             try {
@@ -77,7 +76,6 @@ open class MainActivity : FlutterActivity() {
                                 result.success("PERMISSION_REQUIRED")
                                 return@setMethodCallHandler
                             } catch (e: Exception) {
-                                // Poursuivre vers la tentative de FileProvider
                             }
                         }
                     }
@@ -95,7 +93,6 @@ open class MainActivity : FlutterActivity() {
                             addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
                         }
 
-                        // Accorder explicitement la permission de lecture à tous les gestionnaires d'installation
                         val resInfoList = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                             packageManager.queryIntentActivities(
                                 installIntent,
