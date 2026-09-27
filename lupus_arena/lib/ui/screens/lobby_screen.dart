@@ -129,7 +129,8 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> with WidgetsBindingOb
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     LobbyAudioManager.instance.stopLobbyMusic();
-    LobbyAudioManager.instance.stopRoomMusic();
+    // Ne jamais arrêter la musique de la Room ici : elle doit continuer de jouer
+    // de manière fluide lors de la transition vers ArenaGameScreen avec les autres joueurs.
     _nameController.dispose();
     _codeController.dispose();
     super.dispose();

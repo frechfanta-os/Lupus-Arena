@@ -139,8 +139,13 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
     WidgetsBinding.instance.addObserver(this);
     // Arrêt propre / fade out de la musique du Lobby
     LupusAudioManager.instance.fadeOutAndStopLobbyMusic();
-    // Démarrage de la musique de la Room en boucle à volume subtil (15%-20%)
+    // Démarrage garanti de la musique de la Room en boucle à volume subtil (15%-20%)
     LupusAudioManager.instance.playRoomMusic();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && !LupusAudioManager.instance.isMusicMuted) {
+        LupusAudioManager.instance.playRoomMusic();
+      }
+    });
   }
 
   @override
@@ -263,6 +268,19 @@ class _ArenaGameScreenState extends ConsumerState<ArenaGameScreen>
 
     // Synchronisation réactive du décompte de phase lors des transitions
     if (room != null) {
+      // Maintien actif et ininterrompu de la musique de Room (Village at Night) pendant le jeu
+      if (room.phase != GamePhase.lobby &&
+          !LupusAudioManager.instance.isRoomPlaying &&
+          !LupusAudioManager.instance.isMusicMuted) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted &&
+              !LupusAudioManager.instance.isRoomPlaying &&
+              !LupusAudioManager.instance.isMusicMuted) {
+            LupusAudioManager.instance.playRoomMusic();
+          }
+        });
+      }
+
       if (room.phase == GamePhase.lobby) {
         _deathQueue.clear();
         _processedDeathKeys.clear();

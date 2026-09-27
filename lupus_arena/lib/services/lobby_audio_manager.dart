@@ -135,7 +135,7 @@ class LobbyAudioManager {
         isSpeakerphoneOn: false,
         stayAwake: false,
         contentType: AndroidContentType.music,
-        usageType: AndroidUsageType.media,
+        usageType: AndroidUsageType.game, // USAGE_GAME pour mixage sans coupure avec la VoIP Agora
         audioFocus: AndroidAudioFocus.none, // Ne vole jamais le focus VoIP d'Agora
       ),
       iOS: AudioContextIOS(
@@ -319,10 +319,15 @@ class LobbyAudioManager {
       return;
     }
 
+    if (_roomPlayer != null && _roomPlayer!.state == PlayerState.paused && !resetPosition) {
+      try {
+        await _roomPlayer!.resume();
+        debugPrint('[LobbyAudioManager] 🌙 Musique Room ($roomSourcePath) reprise depuis pause.');
+        return;
+      } catch (_) {}
+    }
+
     try {
-      if (_roomPlayer != null) {
-        await _roomPlayer!.stop();
-      }
       if (!_isRoomExplicitlyStopped && _roomPlayer != null) {
         _roomPlayer!.audioCache.prefix = '';
         await _roomPlayer!.setReleaseMode(ReleaseMode.loop);
