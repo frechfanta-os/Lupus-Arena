@@ -87,12 +87,12 @@ jobs:
         run: |
           if [ -n "$KEYSTORE_BASE64" ]; then
             echo "$KEYSTORE_BASE64" | base64 -d > android/app/upload-keystore.jks
-            cat <<EOF > android/key.properties
-storePassword=$KEYSTORE_PASSWORD
-keyPassword=$KEY_PASSWORD
-keyAlias=$KEY_ALIAS
-storeFile=upload-keystore.jks
-EOF
+            {
+              echo "storePassword=$KEYSTORE_PASSWORD"
+              echo "keyPassword=$KEY_PASSWORD"
+              echo "keyAlias=$KEY_ALIAS"
+              echo "storeFile=upload-keystore.jks"
+            } > android/key.properties
           else
             echo "Avertissement: KEYSTORE_BASE64 non défini dans les secrets, utilisation du keystore par défaut."
           fi
