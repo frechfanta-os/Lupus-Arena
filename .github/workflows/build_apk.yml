@@ -1,4 +1,4 @@
-name: Build & Release Flutter APK
+name: Build Play Store AAB & Release Assets
 
 on:
   push:
@@ -39,12 +39,12 @@ jobs:
         run: flutter analyze --no-fatal-infos
         working-directory: lupus_arena
 
-      - name: Tests unitaires critiques de non-régression
+      - name: Tests unitaires
         run: flutter test
         working-directory: lupus_arena
 
   build:
-    name: Compilation Multi-ABI & Release
+    name: Compilation Google Play Bundle (AAB) & APKs
     needs: quality_check
     runs-on: ubuntu-latest
     env:
@@ -78,32 +78,61 @@ jobs:
         run: dart run flutter_launcher_icons
         working-directory: lupus_arena
 
+      - name: Setup Android Keystore for Play Store signing
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > android/app/upload-keystore.jks
+            cat <<EOF > android/key.properties
+          storePassword=$KEYSTORE_PASSWORD
+          keyPassword=$KEY_PASSWORD
+          keyAlias=$KEY_ALIAS
+          storeFile=upload-keystore.jks
+          EOF
+          else
+            echo "Avertissement: KEYSTORE_BASE64 non défini dans les secrets, utilisation du keystore par défaut."
+          fi
+        working-directory: lupus_arena
+
       - name: Prepare Release Assets Directory
-        run: mkdir -p release_assets
-        working-directory: lupus_arena
-
-      - name: Build Universal APK
         run: |
+          mkdir -p release_assets
           mkdir -p build/app/outputs/symbols
-          flutter build apk --release --obfuscate --split-debug-info=build/app/outputs/symbols --android-skip-build-dependency-validation
-          cp build/app/outputs/flutter-apk/app-release.apk release_assets/LupusArena.apk
         working-directory: lupus_arena
 
-      - name: Build Split-per-ABI APKs (32-bit, 64-bit, x86_64)
+      # Construction du format requis par Google Play Console : Android App Bundle (.aab)
+      - name: Build Google Play Bundle (AAB)
         run: |
-          flutter build apk --release --split-per-abi --obfuscate --split-debug-info=build/app/outputs/symbols --android-skip-build-dependency-validation
+          flutter build appbundle --release --obfuscate --split-debug-info=build/app/outputs/symbols
+          cp build/app/outputs/bundle/release/app-release.aab release_assets/LupusArena-release.aab
+          
+          # Archivage des symboles de désobfuscation à soumettre à Google Play
+          cd build/app/outputs/symbols && zip -r ../../../../release_assets/symbols.zip . && cd ../../../..
+        working-directory: lupus_arena
+
+      # Construction optionnelle des APKs autonomes pour les testeurs directs et la release GitHub
+      - name: Build Split-per-ABI APKs
+        run: |
+          flutter build apk --release --split-per-abi --obfuscate --split-debug-info=build/app/outputs/symbols
           cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk release_assets/LupusArena-arm64.apk
           cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk release_assets/LupusArena-arm32.apk
           cp build/app/outputs/flutter-apk/app-x86_64-release.apk release_assets/LupusArena-x86_64.apk
-          echo "=== Taille des APKs générés ==="
+          echo "=== Fichiers prêts pour distribution ==="
           ls -lh release_assets/
         working-directory: lupus_arena
 
-      - name: Upload APK Artifacts
+      - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: lupus-arena-apks
-          path: lupus_arena/release_assets/LupusArena*.apk
+          name: google-play-bundle-and-apks
+          path: |
+            lupus_arena/release_assets/*.aab
+            lupus_arena/release_assets/*.apk
+            lupus_arena/release_assets/symbols.zip
 
       - name: Determine Version
         id: version_step
@@ -115,7 +144,6 @@ jobs:
             TAG="v$RAW_VER"
           fi
           echo "APP_VERSION=$TAG" >> $GITHUB_ENV
-          echo "Building version: $TAG"
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
@@ -123,45 +151,17 @@ jobs:
           tag_name: ${{ env.APP_VERSION }}
           name: "Lupus Arena ${{ env.APP_VERSION }}"
           body: |
-            ### 🐺 Lupus Arena - ${{ env.APP_VERSION }} (Splash Screen Officiel ghdinteractivestudio · Consultation Cartes Deck · Agora RTC)
+            ### 🐺 Lupus Arena - ${{ env.APP_VERSION }}
 
-            #### 🌟 Nouveautés & Correctifs de cette Release
-
-            **🎬 Écran de Démarrage Officiel Immersif (`splashscreen_ghdinteractivestudio`)**
-            - Intégration du package officiel avec animation fluide d'entrée, mouvement cinétique de respiration organique et transition de sortie en fondu vers le lobby.
-            - Logo officiel du sceau des loups et typographie serif avec signature "from ghdinteractivestudio" en dégradé arcanique.
-            - Possibilité de passer l'animation au toucher (`skipOnTap`) et enchaînement automatique avec la musique d'ambiance du lobby.
-
-            **🃏 Consultation & Lecture des Cartes dans la Composition du Deck**
-            - Clic sur n'importe quelle carte dans la composition du deck pour ouvrir une fenêtre modale immersive avec l'illustration grand format, le camp, l'icône et la description complète et lisible des règles et pouvoirs du rôle.
-            - Icône indicatrice discrète invitant à la consultation sur chaque carte.
-
-            **🧹 Épuration des Émojis dans la Composition du Deck**
-            - Retrait des émojis superflus relatifs aux loups, au village et aux solitaires dans les filtres de rôles (Français, Arabe, Anglais).
-            - Nettoyage des émojis dans la composition des rôles de l'administration.
-
-            **👤 En-tête du Lobby Compact & Pseudo Préservé**
-            - Capsule de profil compacte et harmonieuse : nom d'utilisateur de taille réduite et élégante avec limitation stricte du débordement.
-
-            **🚫 Élimination Totale & Définitive de la Fonctionnalité d'Update**
-            - Suppression définitive de toute détection, dialogue, bouton et icône de mise à jour in-app.
-
-            **🎙️ Chat Vocal Agora RTC 100% Opérationnel & Audio Lifecycle**
-            - Chat vocal haute fidélité et coupure instantanée de la musique lors de la mise en arrière-plan.
-
-            **⌨️ Clavier Virtuel & Rendu Multilingue Fluide**
-            - Boutons du lobby idéalement positionnés 12dp au-dessus du clavier virtuel.
-
-            ---
-            #### 📲 Binaires Téléchargeables
-            * **`LupusArena.apk`** — Universel (recommandé)
-            * **`LupusArena-arm64.apk`** — 64-bit (smartphones récents)
-            * **`LupusArena-arm32.apk`** — 32-bit (anciens smartphones)
-            * **`LupusArena-x86_64.apk`** — x86_64 (émulateurs)
+            #### 📦 Fichiers Play Console & Binaires
+            * **`LupusArena-release.aab`** : Fichier à uploader directement sur la console Google Play.
+            * **`symbols.zip`** : Fichier de symboles natifs/Dart pour les stacktraces désobfusquées.
+            * **APKs découpés par ABI** : Pour tests manuels sans passer par le store (`arm64`, `arm32`, `x86_64`).
           draft: false
           prerelease: false
           files: |
-            lupus_arena/release_assets/LupusArena.apk
+            lupus_arena/release_assets/LupusArena-release.aab
+            lupus_arena/release_assets/symbols.zip
             lupus_arena/release_assets/LupusArena-arm64.apk
             lupus_arena/release_assets/LupusArena-arm32.apk
             lupus_arena/release_assets/LupusArena-x86_64.apk
