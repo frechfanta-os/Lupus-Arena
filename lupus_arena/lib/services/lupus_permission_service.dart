@@ -18,10 +18,12 @@ class LupusPermissionService with WidgetsBindingObserver {
   static const String _keyBluetoothGranted =
       'lupus_permission_bluetooth_granted';
   static const String _keyLastRequested = 'lupus_permissions_timestamp';
+  static const String _keyTermsAccepted = 'lupus_terms_accepted';
 
   final ValueNotifier<bool> isMicGrantedNotifier = ValueNotifier(false);
   final ValueNotifier<bool> isNotificationGrantedNotifier = ValueNotifier(false);
   final ValueNotifier<bool> isBluetoothGrantedNotifier = ValueNotifier(false);
+  final ValueNotifier<bool> isTermsAcceptedNotifier = ValueNotifier(false);
 
   static void Function()? onPermissionsRefreshed;
 
@@ -254,6 +256,27 @@ class LupusPermissionService with WidgetsBindingObserver {
     }
   }
 
+  Future<bool> hasAcceptedTerms() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final val = prefs.getBool(_keyTermsAccepted) ?? false;
+      isTermsAcceptedNotifier.value = val;
+      return val;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> setTermsAccepted(bool accepted) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_keyTermsAccepted, accepted);
+      isTermsAcceptedNotifier.value = accepted;
+    } catch (e) {
+      debugPrint('[LupusPermissionService] Erreur setTermsAccepted: $e');
+    }
+  }
+
   Future<void> resetPermissionsChoice() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_keyPermissionsRequested);
@@ -261,9 +284,11 @@ class LupusPermissionService with WidgetsBindingObserver {
     await prefs.remove(_keyNotificationGranted);
     await prefs.remove(_keyBluetoothGranted);
     await prefs.remove(_keyLastRequested);
+    await prefs.remove(_keyTermsAccepted);
     isMicGrantedNotifier.value = false;
     isNotificationGrantedNotifier.value = false;
     isBluetoothGrantedNotifier.value = false;
+    isTermsAcceptedNotifier.value = false;
     debugPrint('[LupusPermissionService] Choix des permissions réinitialisé.');
   }
 }

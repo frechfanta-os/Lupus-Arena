@@ -30,4 +30,18 @@ void main() {
     await service.resetPermissionsChoice();
     expect(await service.hasRequestedPermissions(), isFalse);
   });
+
+  test('LupusPermissionService persists terms acceptance correctly', () async {
+    final service = LupusPermissionService();
+
+    expect(await service.hasAcceptedTerms(), isFalse);
+
+    await service.setTermsAccepted(true);
+    expect(await service.hasAcceptedTerms(), isTrue);
+    expect(service.isTermsAcceptedNotifier.value, isTrue);
+
+    await service.resetPermissionsChoice();
+    expect(await service.hasAcceptedTerms(), isFalse);
+    expect(service.isTermsAcceptedNotifier.value, isFalse);
+  });
 }

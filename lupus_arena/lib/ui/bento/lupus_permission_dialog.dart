@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../services/app_translations.dart';
 import '../../services/lupus_permission_service.dart';
@@ -47,7 +48,12 @@ class LupusPermissionDialog extends StatefulWidget {
 class _LupusPermissionDialogState extends State<LupusPermissionDialog> {
   final LupusPermissionService _service = LupusPermissionService();
 
+  static const String _privacyUrl =
+      'https://ghdinteractivestudio.github.io/lupus-arena-privacy.html';
+
   bool _isRequesting = false;
+  bool _termsAccepted = false;
+  bool _showTermsWarning = false;
   bool? _micGranted;
   bool? _notifGranted;
   bool? _bluetoothGranted;
@@ -62,20 +68,50 @@ class _LupusPermissionDialogState extends State<LupusPermissionDialog> {
     final mic = await _service.isMicGranted();
     final notif = await _service.isNotificationGranted();
     final bt = await _service.isBluetoothGranted();
+    final terms = await _service.hasAcceptedTerms();
 
     if (mounted) {
       setState(() {
         _micGranted = mic;
         _notifGranted = notif;
         _bluetoothGranted = bt;
+        _termsAccepted = terms;
       });
     }
   }
 
+  Future<void> _openPrivacyUrl() async {
+    final uri = Uri.parse(_privacyUrl);
+    try {
+      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+        debugPrint('[LupusPermissionDialog] Impossible d\'ouvrir $_privacyUrl');
+      }
+    } catch (e) {
+      debugPrint('[LupusPermissionDialog] Erreur ouverture URL: $e');
+    }
+  }
+
   Future<void> _requestAll() async {
-    setState(() => _isRequesting = true);
+    if (!_termsAccepted) {
+      setState(() => _showTermsWarning = true);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.tr('perm_terms_required')),
+          backgroundColor: LupusColors.arcaneCrimson,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _showTermsWarning = false;
+      _isRequesting = true;
+    });
 
     try {
+      await _service.setTermsAccepted(true);
       final statuses = await _service.requestAllPermissionsOnce(force: true);
 
       final micOk = statuses[Permission.microphone]?.isGranted ?? false;
@@ -130,7 +166,6 @@ class _LupusPermissionDialogState extends State<LupusPermissionDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-
               Center(
                 child: Container(
                   width: 64,
@@ -204,14 +239,18 @@ class _LupusPermissionDialogState extends State<LupusPermissionDialog> {
                 isRequired: false,
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
+
+              _buildTermsTile(),
+
+              const SizedBox(height: 20),
 
               SizedBox(
                 height: 48,
                 child: ElevatedButton.icon(
                   onPressed: _isRequesting ? null : _requestAll,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: allGranted
+                    backgroundColor: (allGranted && _termsAccepted)
                         ? LupusColors.poisonGreen
                         : LupusColors.arcanePurple,
                     foregroundColor: Colors.white,
@@ -229,11 +268,13 @@ class _LupusPermissionDialogState extends State<LupusPermissionDialog> {
                             color: Colors.white,
                           ),
                         )
-                      : Icon(allGranted ? Icons.check_circle : Icons.security),
+                      : Icon((allGranted && _termsAccepted)
+                          ? Icons.check_circle
+                          : Icons.security),
                   label: Text(
                     _isRequesting
                         ? context.tr('perm_requesting')
-                        : (allGranted
+                        : ((allGranted && _termsAccepted)
                             ? context.tr('perm_confirmed')
                             : context.tr('perm_grant_all')),
                     style: const TextStyle(
@@ -251,7 +292,9 @@ class _LupusPermissionDialogState extends State<LupusPermissionDialog> {
                 child: TextButton(
                   onPressed: _skip,
                   child: Text(
-                    allGranted ? context.tr('perm_close') : context.tr('perm_later'),
+                    (allGranted && _termsAccepted)
+                        ? context.tr('perm_close')
+                        : context.tr('perm_later'),
                     style: TextStyle(
                       fontSize: 11.5,
                       color: Colors.white.withValues(alpha: 0.5),
@@ -262,6 +305,94 @@ class _LupusPermissionDialogState extends State<LupusPermissionDialog> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildTermsTile() {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 250),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: _showTermsWarning
+            ? LupusColors.arcaneCrimson.withValues(alpha: 0.15)
+            : LupusColors.surfaceLight,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: _showTermsWarning
+              ? LupusColors.arcaneCrimson
+              : (_termsAccepted
+                  ? LupusColors.poisonGreen.withValues(alpha: 0.6)
+                  : LupusColors.border),
+          width: (_showTermsWarning || _termsAccepted) ? 1.4 : 1.0,
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Theme(
+            data: ThemeData(
+              unselectedWidgetColor: Colors.white54,
+            ),
+            child: Checkbox(
+              value: _termsAccepted,
+              activeColor: LupusColors.poisonGreen,
+              checkColor: Colors.black,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(5),
+              ),
+              onChanged: (val) {
+                final accepted = val ?? false;
+                setState(() {
+                  _termsAccepted = accepted;
+                  if (accepted) _showTermsWarning = false;
+                });
+                _service.setTermsAccepted(accepted);
+              },
+            ),
+          ),
+          Expanded(
+            child: Wrap(
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                Text(
+                  context.tr('perm_terms_prefix'),
+                  style: const TextStyle(
+                    fontSize: 11.5,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                InkWell(
+                  onTap: _openPrivacyUrl,
+                  borderRadius: BorderRadius.circular(4),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 2.0),
+                    child: Text(
+                      context.tr('perm_terms_link'),
+                      style: const TextStyle(
+                        fontSize: 11.5,
+                        color: LupusColors.daylightCyan,
+                        fontWeight: FontWeight.w800,
+                        decoration: TextDecoration.underline,
+                        decorationColor: LupusColors.daylightCyan,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: const Icon(
+              Icons.open_in_new_rounded,
+              size: 16,
+              color: LupusColors.daylightCyan,
+            ),
+            tooltip: context.tr('perm_terms_link'),
+            onPressed: _openPrivacyUrl,
+          ),
+        ],
       ),
     );
   }
